@@ -33,6 +33,6 @@
 
 - Validated 2026-10-13. One decision was taken as an assumption rather than a clarification
   marker: how servers enter the initial list (maintainer-curated from public directories with
-  opt-out, plus opt-in). It is recorded under Assumptions and raised with the project owner for
-  confirmation before `/speckit.plan`.
+  opt-out, plus opt-in). It is recorded under Assumptions and was confirmed by the project owner
+  on 2026-10-13.
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
