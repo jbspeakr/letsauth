@@ -1,0 +1,218 @@
+---
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path for the canonical URL, e.g. "/atlas/mcp". Defaults to the current path. */
+  path?: string;
+  /** When set, the page is excluded from search indexing and the sitemap hint. */
+  noindex?: boolean;
+}
+
+const { title, description, path, noindex = false } = Astro.props;
+const site = Astro.site ?? new URL("https://letsauth.eu");
+const canonical = new URL(path ?? Astro.url.pathname, site);
+const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
+const fullTitle =
+  title === "letsauth" ? "letsauth — the lab for agent auth" : `${title} · letsauth`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="letsauth" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={new URL("/og.png", site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <script is:inline>
+      // Apply a stored theme before first paint. Stored value is a per-viewer convenience only.
+      try {
+        const t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+    {
+      plausibleDomain && (
+        <script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" />
+      )
+    }
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap site-header__row">
+        <a class="brand" href="/" aria-label="letsauth home">
+          <span class="brand__mark" aria-hidden="true"></span>
+          <span class="brand__name">letsauth</span>
+        </a>
+        <nav aria-label="Primary">
+          <a href="/atlas/mcp">MCP auth atlas</a>
+          <a href="/atlas/mcp/contribute">Contribute</a>
+          <a href="https://github.com/jbspeakr/letsauth" rel="noopener">Source</a>
+        </nav>
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Toggle colour theme"
+          title="Toggle colour theme"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main id="main" class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap site-footer__row">
+        <p>
+          letsauth is an independent lab for agent authentication. Data is CC BY 4.0, code is MIT.
+          The atlas contacts no server; every cell cites its source.
+        </p>
+        <p>
+          <a href="/atlas/mcp/data.json">Download the data</a> ·
+          <a href="https://github.com/jbspeakr/letsauth" rel="noopener">GitHub</a> ·
+          Hosted in the EU.
+        </p>
+      </div>
+    </footer>
+    <script>
+      const btn = document.getElementById("theme-toggle");
+      btn?.addEventListener("click", () => {
+        const root = document.documentElement;
+        const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+        const current = root.dataset.theme ?? (prefersDark ? "dark" : "light");
+        const next = current === "dark" ? "light" : "dark";
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem("theme", next);
+        } catch {}
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: var(--space-4);
+    top: -3rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    z-index: 10;
+  }
+  .skip:focus {
+    top: var(--space-2);
+  }
+  .site-header {
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .site-header__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    min-height: 3.5rem;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-size: 1.15rem;
+  }
+  .brand__mark {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: conic-gradient(from 200deg, var(--accent), var(--accent-2), var(--accent));
+  }
+  nav {
+    display: flex;
+    gap: var(--space-4);
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  nav a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  nav a:hover {
+    color: var(--ink);
+  }
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--bg-elevated);
+    color: var(--ink-muted);
+    cursor: pointer;
+  }
+  .theme-toggle:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .site-main {
+    flex: 1;
+    padding-block: var(--space-6) var(--space-8);
+  }
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding-block: var(--space-6);
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+  .site-footer p {
+    margin-bottom: var(--space-2);
+  }
+  @media (max-width: 40rem) {
+    .site-header__row {
+      gap: var(--space-3);
+    }
+    nav {
+      gap: var(--space-3);
+    }
+  }
+</style>

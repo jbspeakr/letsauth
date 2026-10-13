@@ -1,0 +1,9 @@
+id: cloudflare-workers
+name: "Cloudflare Workers"
+vendor: "Cloudflare"
+url: https://bindings.mcp.cloudflare.com/sse
+homepage: https://cloudflare.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

@@ -1,0 +1,8 @@
+id: github
+name: "GitHub"
+url: https://api.githubcopilot.com/mcp
+homepage: https://github.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1-no-dcr

@@ -1,0 +1,8 @@
+id: buildkite
+name: "Buildkite"
+url: https://mcp.buildkite.com/mcp
+homepage: https://buildkite.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

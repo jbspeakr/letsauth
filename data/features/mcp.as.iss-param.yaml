@@ -1,0 +1,13 @@
+id: mcp.as.iss-param
+name: "Issuer identifier in authorization responses"
+description: >
+  The authorization server returns the iss parameter on authorization responses (RFC 9207) and
+  advertises authorization_response_iss_parameter_supported: true.
+category: authorization
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Authorization Response Validation"
+    level: SHOULD

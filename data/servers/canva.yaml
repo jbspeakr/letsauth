@@ -1,0 +1,8 @@
+id: canva
+name: "Canva"
+url: https://mcp.canva.com/mcp
+homepage: https://canva.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

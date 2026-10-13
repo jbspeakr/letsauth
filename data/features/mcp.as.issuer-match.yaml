@@ -1,0 +1,17 @@
+id: mcp.as.issuer-match
+name: "Metadata issuer matches the discovery URL"
+description: >
+  The issuer value inside the metadata document equals the issuer identifier used to construct the
+  well-known URL, so clients can detect a substituted document.
+category: discovery
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Authorization Server Metadata Discovery"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Authorization Server Metadata Discovery"
+    level: MUST

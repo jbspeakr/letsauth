@@ -1,0 +1,19 @@
+id: mcp.prm.well-known
+name: "PRM reachable at a well-known URI"
+description: >
+  The metadata document is served at the path-aware or root well-known location derived from the
+  MCP server URL, so a client can find it without a prior 401.
+category: discovery
+party: mcp-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements"
+    level: MUST
+    levelNote: "One of two discovery mechanisms the server must offer."
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements"
+    level: MUST
+    levelNote: "One of two discovery mechanisms the server must offer."

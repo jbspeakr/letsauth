@@ -1,0 +1,32 @@
+---
+import { resolveCitation } from "@/lib/citations";
+import { getDataset } from "@/lib/data";
+import type { FeatureRevision } from "@/schema";
+
+interface Props {
+  entry: FeatureRevision;
+  /** Show the revision id after the section. */
+  withRevision?: boolean;
+}
+
+const { entry, withRevision = false } = Astro.props;
+const cite = resolveCitation(getDataset(), entry);
+---
+
+<cite class="citation">
+  <a href={cite.url} rel="noopener">{cite.section}</a>
+  {withRevision && <span class="rev">{cite.specName} {cite.revisionId}</span>}
+</cite>
+
+<style>
+  .citation {
+    font-style: normal;
+    font-size: var(--text-sm);
+  }
+  .rev {
+    color: var(--ink-muted);
+    margin-left: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+</style>

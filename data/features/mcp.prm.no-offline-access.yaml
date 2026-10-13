@@ -1,0 +1,13 @@
+id: mcp.prm.no-offline-access
+name: "No offline_access in advertised scopes"
+description: >
+  The server does not advertise or request the offline_access scope; refresh-token issuance is
+  left to the authorization server's own policy.
+category: token
+party: mcp-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Refresh Tokens"
+    level: SHOULD

@@ -1,0 +1,9 @@
+id: monday-com
+name: "monday.com"
+vendor: "monday MCP"
+url: https://mcp.monday.com/sse
+homepage: https://github.com/mondaycom/mcp
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

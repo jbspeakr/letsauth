@@ -1,0 +1,92 @@
+---
+import type { Cell } from "@/lib/atlas";
+import type { Feature, Server } from "@/schema";
+import StatusCell from "./StatusCell.astro";
+
+interface Props {
+  cell: Cell;
+  server: Server;
+  feature: Feature;
+}
+
+const { cell, server, feature } = Astro.props;
+const obs = cell.observation;
+const evidenceIsUrl = obs ? /^https:\/\/\S+$/.test(obs.evidence) : false;
+const date = obs ? obs.observedAt.slice(0, 10) : undefined;
+---
+
+<div class="detail" data-detail>
+  <p class="detail__head">
+    <a href={`/atlas/mcp/servers/${server.id}`}>{server.name}</a>
+    <span aria-hidden="true">×</span>
+    <a href={`/atlas/mcp/features/${feature.id}`}>{feature.name}</a>
+  </p>
+  <p><StatusCell status={cell.status} derived={cell.derived} variant="label" /></p>
+  {
+    obs ? (
+      <dl>
+        <dt>Method</dt>
+        <dd>{obs.method}</dd>
+        <dt>Observed</dt>
+        <dd>
+          <time datetime={obs.observedAt}>{date}</time> by {obs.observedBy}
+        </dd>
+        <dt>Evidence</dt>
+        <dd>
+          {evidenceIsUrl ? (
+            <a href={obs.evidence} rel="noopener">
+              {obs.evidence}
+            </a>
+          ) : (
+            obs.evidence
+          )}
+        </dd>
+        <dt>Revision</dt>
+        <dd>{obs.revision.revision}</dd>
+      </dl>
+    ) : (
+      <p class="muted">
+        No observation recorded for this server and feature under revision {cell.revision}.
+        {cell.status === "not-applicable"
+          ? " The server has no HTTP transport, so the feature does not apply."
+          : " Unknown means nobody has looked yet, not that the feature is missing."}
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .detail {
+    font-size: var(--text-sm);
+    min-width: 16rem;
+  }
+  .detail__head {
+    font-family: var(--font-display);
+    font-weight: 600;
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-2);
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+  }
+  dt {
+    color: var(--ink-muted);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 0.2em;
+  }
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .muted {
+    color: var(--ink-muted);
+  }
+</style>

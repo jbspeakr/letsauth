@@ -1,0 +1,17 @@
+id: mcp.as.pkce-s256
+name: "PKCE with S256 advertised"
+description: >
+  The metadata lists code_challenge_methods_supported including S256, which MCP clients require
+  before they will start an authorization flow.
+category: authorization
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Authorization Code Protection"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Authorization Code Protection"
+    level: MUST

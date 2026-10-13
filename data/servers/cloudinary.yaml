@@ -1,0 +1,8 @@
+id: cloudinary
+name: "Cloudinary"
+url: https://asset-management.mcp.cloudinary.com/sse
+homepage: https://cloudinary.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

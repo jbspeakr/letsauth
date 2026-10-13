@@ -1,0 +1,10 @@
+- server: webflow
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: unknown
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."

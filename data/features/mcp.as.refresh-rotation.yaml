@@ -1,0 +1,16 @@
+id: mcp.as.refresh-rotation
+name: "Refresh token rotation for public clients"
+description: >
+  Refresh tokens issued to public clients are rotated or sender-constrained as OAuth 2.1 requires.
+category: token
+party: authorization-server
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Token Theft"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Token Theft"
+    level: MUST

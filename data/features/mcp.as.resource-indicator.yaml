@@ -1,0 +1,19 @@
+id: mcp.as.resource-indicator
+name: "Resource indicators honoured"
+description: >
+  The authorization server accepts the RFC 8707 resource parameter and binds the audience of
+  issued tokens to the requested MCP server.
+category: token
+party: authorization-server
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Token Audience Binding and Validation"
+    level: MUST
+    levelNote: "Required for the audience binding that the MCP server must enforce."
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Token Audience Binding and Validation"
+    level: MUST
+    levelNote: "Required for the audience binding that the MCP server must enforce."

@@ -1,0 +1,16 @@
+id: mcp.rs.401-on-invalid
+name: "401 for missing or invalid tokens"
+description: >
+  Requests without a token, or with an invalid or expired one, receive HTTP 401 Unauthorized.
+category: token
+party: mcp-server
+observable: active
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Access Token Usage › Token Handling"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Token Handling"
+    level: MUST

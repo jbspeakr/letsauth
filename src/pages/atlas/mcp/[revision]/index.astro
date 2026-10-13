@@ -1,0 +1,24 @@
+---
+import MatrixPage from "@/components/MatrixPage.astro";
+import Base from "@/layouts/Base.astro";
+import { currentRevision, getSpec } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+export function getStaticPaths() {
+  const data = getDataset();
+  const current = currentRevision(data);
+  return getSpec(data)
+    .revisions.filter((r) => r.id !== current.id)
+    .map((r) => ({ params: { revision: r.id } }));
+}
+
+const { revision } = Astro.params;
+---
+
+<Base
+  title={`MCP auth atlas, revision ${revision}`}
+  description={`Which public MCP servers support which features of the MCP Authorization specification as of revision ${revision}.`}
+  path={`/atlas/mcp/${revision}`}
+>
+  <MatrixPage revisionId={revision} />
+</Base>

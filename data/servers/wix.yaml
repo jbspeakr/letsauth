@@ -1,0 +1,8 @@
+id: wix
+name: "Wix"
+url: https://mcp.wix.com/sse
+homepage: https://wix.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

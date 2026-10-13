@@ -1,0 +1,18 @@
+id: mcp.as.cimd
+name: "Client ID Metadata Documents supported"
+description: >
+  The authorization server accepts an HTTPS URL as client_id and fetches the client's metadata
+  document, advertising client_id_metadata_document_supported: true.
+category: registration
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Client ID Metadata Documents"
+    level: SHOULD
+    levelNote: "Became the recommended registration method in this revision."
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Client Registration › Client ID Metadata Documents"
+    level: SHOULD

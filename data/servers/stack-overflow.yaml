@@ -1,0 +1,9 @@
+id: stack-overflow
+name: "Stack Overflow"
+vendor: "StackOverflow"
+url: https://mcp.stackoverflow.com
+homepage: https://stackoverflow.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

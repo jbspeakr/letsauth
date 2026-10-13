@@ -1,0 +1,17 @@
+id: mcp.prm
+name: "Protected Resource Metadata served"
+description: >
+  The MCP server publishes an OAuth 2.0 Protected Resource Metadata document (RFC 9728) that tells
+  clients which authorization servers protect it.
+category: discovery
+party: mcp-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Authorization Server Location"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Authorization Server Location"
+    level: MUST

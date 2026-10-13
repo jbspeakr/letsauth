@@ -1,0 +1,8 @@
+id: prisma-postgres
+name: "Prisma Postgres"
+url: https://mcp.prisma.io/mcp
+homepage: https://www.prisma.io/docs/postgres/integrations/mcp-server#remote-mcp-server
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

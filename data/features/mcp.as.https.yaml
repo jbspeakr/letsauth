@@ -1,0 +1,16 @@
+id: mcp.as.https
+name: "All endpoints served over HTTPS"
+description: >
+  Every authorization server endpoint listed in its metadata uses HTTPS.
+category: transport
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Communication Security"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Communication Security"
+    level: MUST

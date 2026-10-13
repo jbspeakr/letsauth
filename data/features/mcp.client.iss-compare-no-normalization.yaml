@@ -1,0 +1,13 @@
+id: mcp.client.iss-compare-no-normalization
+name: "Exact iss comparison"
+description: >
+  The client compares the iss value in the authorization response byte for byte with the expected
+  issuer, without URL normalisation.
+category: authorization
+party: client
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Authorization Response Validation"
+    level: MUST

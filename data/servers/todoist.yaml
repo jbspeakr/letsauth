@@ -1,0 +1,9 @@
+id: todoist
+name: "Todoist"
+vendor: "Doist"
+url: https://ai.todoist.net/mcp
+homepage: https://todoist.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

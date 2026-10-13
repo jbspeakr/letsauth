@@ -1,0 +1,8 @@
+id: linear
+name: "Linear"
+url: https://mcp.linear.app/sse
+homepage: https://linear.app
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

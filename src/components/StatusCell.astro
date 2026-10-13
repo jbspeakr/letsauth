@@ -1,0 +1,83 @@
+---
+import { STATUS_META } from "@/lib/labels";
+import type { ObservationStatus } from "@/schema";
+
+interface Props {
+  status: ObservationStatus;
+  derived?: boolean;
+  /** "cell" renders the compact glyph used in the matrix; "label" adds the status word. */
+  variant?: "cell" | "label";
+}
+
+const { status, derived = false, variant = "cell" } = Astro.props;
+
+const meta = STATUS_META[status];
+---
+
+<span
+  class:list={["status", `status-${status}`, variant, { derived }]}
+  data-status={status}
+  title={derived ? `${meta.label} (no observation recorded)` : meta.label}
+>
+  <span class="glyph" aria-hidden="true">{meta.glyph}</span>
+  <span class:list={[{ "visually-hidden": variant === "cell" }]}>
+    {meta.label}{derived && variant === "label" ? " (no observation)" : ""}
+  </span>
+</span>
+
+<style>
+  .status {
+    --c: var(--status-unknown);
+    --c-soft: var(--status-unknown-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--c);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    line-height: 1;
+  }
+  .glyph {
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--c-soft);
+    border: 1.5px solid var(--c);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .status-supported {
+    --c: var(--status-supported);
+    --c-soft: var(--status-supported-soft);
+  }
+  .status-partial {
+    --c: var(--status-partial);
+    --c-soft: var(--status-partial-soft);
+  }
+  .status-unsupported {
+    --c: var(--status-unsupported);
+    --c-soft: var(--status-unsupported-soft);
+  }
+  .status-unknown {
+    --c: var(--status-unknown);
+    --c-soft: var(--status-unknown-soft);
+  }
+  .status-unknown .glyph {
+    border-style: dashed;
+  }
+  .status-not-applicable {
+    --c: var(--status-not-applicable);
+    --c-soft: var(--status-not-applicable-soft);
+  }
+  .status-not-applicable .glyph {
+    border-style: dotted;
+    opacity: 0.7;
+  }
+  .derived .glyph {
+    border-width: 1px;
+  }
+</style>
