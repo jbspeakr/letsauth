@@ -13,8 +13,10 @@ Read first, in this order:
 - `pnpm dev` — dev server on http://localhost:4321.
 - `pnpm validate:data` — schema and cross-reference checks over `data/`. Run after any data edit.
 - `pnpm check` — validate:data, lint (Biome), typecheck, unit tests, build. Must pass before a push.
-- `pnpm test:e2e` — Playwright against `astro preview` (run `pnpm build` first). Screenshots live
-  next to the tests; update with `pnpm test:e2e --update-snapshots` only for intended changes.
+- `pnpm test:e2e` — Playwright against `astro preview` (run `pnpm build` first). Screenshot
+  baselines live in `tests/e2e/__screenshots__` and must come from Playwright's pinned Chromium:
+  `pnpm test:e2e --update-snapshots` with that build, or the `refresh-screenshots` label on the
+  pull request (see `docs/atlas-maintenance.md`). Update them only for intended changes.
 - `pnpm check:append-only` — fails if an existing observation entry was edited or removed.
 
 ## Conventions

@@ -83,3 +83,14 @@ pages, the sitemap and `data.json`; its page shows the notice; its observations 
 Ids are public URLs and export keys. If a rename is unavoidable, add a redirect (see
 `docs/deploy.md`), keep the old id in `supersedes` where the model allows it, and mention it in
 the pull request description.
+
+## Refresh screenshot baselines
+
+The Playwright screenshot tests compare against baselines in `tests/e2e/__screenshots__`.
+Baselines are only valid for the Chromium build Playwright pins, because another build
+rasterises fonts a few percent differently. After an intended visual change, either run
+`pnpm exec playwright install chromium && pnpm build && pnpm test:e2e --update-snapshots`
+locally with that pinned build, or add the `refresh-screenshots` label to the pull request:
+the screenshots workflow regenerates the baselines with CI's browser, commits them to the
+branch and removes the label. A push made by that workflow does not start CI, so push any
+further commit (or merge the base branch) to get a green run.
