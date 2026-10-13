@@ -168,7 +168,7 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 - [ ] T045 [US5] Create `src/pages/atlas/mcp/[revision]/index.astro` reusing the matrix rendering from T030 (extract the table into `src/components/MatrixTable.astro` and use it from both pages) with `getStaticPaths` over non-current revisions, and a revision switcher in the header of both pages (depends on T030)
 - [ ] T046 [US5] Create `src/pages/atlas/mcp/changes/[range].astro` with `getStaticPaths` over adjacent revision pairs, rendering `revisionDiff(from, to)` as three lists: level changed (old → new), added, removed, each with `Citation` (depends on T020, T029)
-- [ ] T047 [US5] Mark changed-level columns in the matrix header with a "changed in this revision" badge linking to the changes page (depends on T045, T046)
+- [ ] T047 [US5] Mark changed-level columns in the matrix header in `src/components/MatrixTable.astro` with a "changed in this revision" badge linking to the changes page (depends on T045, T046)
 
 **Checkpoint**: All five stories are independently functional
 
