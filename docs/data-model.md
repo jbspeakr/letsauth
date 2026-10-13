@@ -1,0 +1,195 @@
+# Shared Data Model
+
+This is the one model every letsauth.eu product reads and writes (Constitution, Principle I).
+The normative version is the Zod schema that implements it; until that exists, this document is
+the contract. Data lives as YAML under `data/`, one entity per file, and is validated at build
+time.
+
+```text
+data/
+├── specs/          # one file per spec (spec.yaml) with its revisions
+├── features/       # one file per feature
+├── relations.yaml  # edges between specs
+├── servers/        # one file per public MCP server (or other agent endpoint)
+├── observations/   # append-only, one file per server, a list of observations
+├── scenarios/      # explorer scenarios
+└── vulnerabilities/
+```
+
+## Entities
+
+### Spec
+
+A standard, draft or protocol document family. Example: the MCP authorization specification,
+OAuth 2.0 Token Exchange, draft-hardt-oauth-aauth-protocol.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | Stable kebab-case id, e.g. `mcp-authorization`, `rfc8693`, `aauth` |
+| `name` | string | Display name |
+| `body` | enum | `ietf-oauth`, `ietf-wimse`, `ietf-other`, `openid`, `mcp`, `a2a`, `vendor`, `eu` |
+| `family` | enum | `protocol`, `profile`, `discovery`, `credential-format`, `regulation` |
+| `summary` | string | One or two sentences |
+| `url` | url | Canonical home |
+| `revisions` | Revision[] | At least one |
+
+### Revision
+
+A dated version of a spec. Features and citations point at revisions, never at bare specs.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | e.g. `2026-07-28`, `draft-09`, `rfc` |
+| `date` | date | Publication date |
+| `status` | enum | `draft`, `current`, `superseded`, `withdrawn`, `final` |
+| `url` | url | Exact document for this revision |
+| `supersedes` | string? | Previous revision id |
+| `changes` | string? | Implementer-facing summary of what changed and what breaks |
+
+### Feature
+
+A discrete, testable capability or requirement defined by a revision. Example: "Client ID
+Metadata Documents", "RFC 9207 `iss` validation", "Resource indicators (RFC 8707)".
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | e.g. `mcp.cimd`, `mcp.iss-validation`, `oauth.pkce-s256` |
+| `name` | string | |
+| `definedBy` | ref | `{ spec, revision, section }`, section as the document's own heading or anchor |
+| `level` | enum | `MUST`, `SHOULD`, `MAY`, `DEPRECATED`, `REMOVED` |
+| `category` | enum | `discovery`, `registration`, `authorization`, `token`, `session`, `transport`, `delegation`, `consent` |
+| `description` | string | |
+| `supersedes` | string? | Feature id this replaces (e.g. CIMD supersedes DCR as the default) |
+| `observable` | enum | `passive`, `active`, `manual` — how support can be verified |
+
+### Relation
+
+An edge between two specs, for the standards atlas.
+
+| Field | Type | Notes |
+|---|---|---|
+| `from`, `to` | spec id | |
+| `type` | enum | `builds-on`, `profiles`, `competes-with`, `solves-same-problem-as`, `references`, `replaces` |
+| `note` | string? | One line |
+| `source` | url? | Where the relation is stated |
+
+### Server
+
+A public MCP server (or, later, another agent endpoint) that the MCP Atlas tracks.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | kebab-case |
+| `name` | string | |
+| `vendor` | string? | |
+| `url` | url | MCP endpoint |
+| `homepage` | url? | |
+| `transport` | enum | `streamable-http`, `sse`, `stdio-only` |
+| `listed` | enum | `opt-in`, `public-directory`, `maintainer-added` — why it is in the atlas |
+| `notes` | string? | |
+
+### Observation
+
+One dated statement that a server does or does not support a feature. Append-only; the newest
+observation per `(server, feature)` is the current one, older ones are history.
+
+| Field | Type | Notes |
+|---|---|---|
+| `server` | server id | |
+| `feature` | feature id | |
+| `status` | enum | `supported`, `partial`, `unsupported`, `unknown`, `not-applicable` |
+| `method` | enum | `manual`, `vendor-claim`, `passive-scan`, `active-scan` |
+| `observedAt` | datetime | |
+| `observedBy` | string | handle or `scanner@<version>` |
+| `evidence` | url or string | Metadata URL, doc link, or a short note |
+| `revision` | ref | Spec revision the feature was judged against |
+
+### Scenario
+
+A Delegation Chain Explorer scenario: actors, steps, tokens at each hop, attack toggles.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | |
+| `title` | string | |
+| `actors` | Actor[] | `{ id, kind: user/agent/mcp-client/mcp-server/authorization-server/resource/idp, name }` |
+| `features` | feature id[] | Features the scenario exercises |
+| `steps` | Step[] | `{ id, from, to, message, cites: ref, token?: TokenView }` |
+| `toggles` | Toggle[] | `{ id, name, kind: attack/misconfiguration, replaces: stepId → Step[], cites: ref, vulnerability?: id }` |
+
+A `TokenView` is a decoded token (`header`, `claims`) plus annotations on claims that changed since
+the previous hop.
+
+### Vulnerability
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | CVE id or advisory slug |
+| `title` | string | |
+| `class` | enum | `confused-deputy`, `token-passthrough`, `audience-missing`, `scope-accumulation`, `consent-bypass`, `issuer-confusion`, `other` |
+| `affects` | string[] | Products or servers |
+| `features` | feature id[] | Features whose absence or misuse caused it |
+| `scenario` | scenario id? | Replay in the explorer |
+| `sources` | url[] | |
+
+## Rules
+
+1. Ids are stable. Renaming an id is a migration with a redirect.
+2. Every `cites` or `definedBy` reference must resolve to a revision that exists in `data/specs`.
+   The build fails otherwise.
+3. Observations are never edited or deleted, only appended. Corrections are new observations.
+4. `unknown` is written explicitly and rendered as unknown, never as unsupported.
+5. A feature's `level` belongs to the revision that defines it. When a new revision changes the
+   level (for example DCR moving to `DEPRECATED`), a new feature entry with the same base id and a
+   revision suffix is added, and `supersedes` links them.
+
+## Examples
+
+```yaml
+# data/specs/mcp-authorization.yaml
+id: mcp-authorization
+name: MCP Authorization
+body: mcp
+family: profile
+summary: OAuth 2.1 profile for MCP clients obtaining access to MCP servers.
+url: https://modelcontextprotocol.io/specification/
+revisions:
+  - id: "2025-11-25"
+    date: 2025-11-25
+    status: superseded
+    url: https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
+  - id: "2026-07-28"
+    date: 2026-07-28
+    status: current
+    supersedes: "2025-11-25"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+    changes: >
+      Deprecates Dynamic Client Registration in favour of Client ID Metadata Documents,
+      requires RFC 9207 iss validation, keys stored credentials by issuer, removes sessions.
+```
+
+```yaml
+# data/features/mcp.cimd.yaml
+id: mcp.cimd
+name: Client ID Metadata Documents
+definedBy: { spec: mcp-authorization, revision: "2026-07-28", section: "Client Registration" }
+level: SHOULD
+category: registration
+observable: passive
+description: >
+  Clients identify themselves with a URL that serves their metadata instead of registering
+  dynamically. Preferred over Dynamic Client Registration from this revision on.
+supersedes: mcp.dcr
+```
+
+```yaml
+# data/observations/example-mcp.yaml
+- server: example-mcp
+  feature: mcp.cimd
+  status: unknown
+  method: manual
+  observedAt: 2026-10-13T00:00:00Z
+  observedBy: jbspeakr
+  evidence: "No public statement; passive scan not yet run."
+  revision: { spec: mcp-authorization, revision: "2026-07-28" }
+```
