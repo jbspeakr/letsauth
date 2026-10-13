@@ -10,13 +10,6 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
 }
 
 body {
@@ -98,6 +91,7 @@ code {
   background: var(--bg-sunken);
   padding: 0.08em 0.35em;
   border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
 }
 
 pre {
@@ -143,7 +137,7 @@ hr {
 }
 
 .visually-hidden {
-  position: absolute !important;
+  position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;

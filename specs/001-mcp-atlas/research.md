@@ -4,9 +4,9 @@ Phase 0 output of `/speckit.plan`. All Technical Context unknowns are resolved b
 
 ## R1. Site framework and island runtime
 
-**Decision**: Astro 6 with `@astrojs/svelte` 9 and Svelte 5 for the single interactive island.
+**Decision**: Astro 7 with `@astrojs/svelte` 9 and Svelte 5 for the single interactive island.
 
-**Rationale**: The constitution fixes Astro and Svelte. Astro 6 is the current major; its Svelte
+**Rationale**: The constitution fixes Astro and Svelte. Astro 7 is the current major; its Svelte
 integration is at major 9 and requires Svelte 5 (Svelte 3/4 need `@astrojs/svelte@5`). Content
 collections render the matrix, server and feature pages as plain HTML; only the matrix filter
 and cell detail need client JavaScript, which keeps the JS budget trivially satisfied.

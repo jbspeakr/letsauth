@@ -28,7 +28,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 ---
 
 <div class="matrix-scroll" tabindex="0" role="region" aria-label="Support matrix, scrolls horizontally">
-  <table class="matrix" id="matrix" data-revision={revision.id}>
+  <table class="matrix" id="matrix" data-matrix-revision={revision.id}>
     <caption class="visually-hidden">
       Support for each feature of MCP Authorization {revision.id} by server. Rows are servers in
       alphabetical order; columns are features grouped by category.
@@ -127,6 +127,8 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 
 <style>
   .matrix-scroll {
+    /* positioned so visually-hidden (absolute) labels inside the table stay inside the clip */
+    position: relative;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     border: 1px solid var(--line);
@@ -278,7 +280,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     width: 22rem;
     max-width: 80vw;
   }
-  [hidden] {
-    display: none !important;
+  .matrix [hidden] {
+    display: none;
   }
 </style>

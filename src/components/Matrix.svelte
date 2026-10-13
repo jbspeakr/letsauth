@@ -90,6 +90,7 @@ onMount(() => {
     if (v && el) el.value = v;
   }
   apply(false);
+  table.dataset.enhanced = "true";
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   controls.q?.addEventListener("input", () => {

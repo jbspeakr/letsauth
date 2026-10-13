@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parse } from "yaml";
-import type { ZodType } from "zod";
+import { type ZodType, z } from "zod";
 import {
   type Feature,
   featureSchema,
   type Observation,
-  observationFileSchema,
+  observationSchema,
   type Server,
   type Spec,
   serverSchema,
@@ -18,6 +18,8 @@ export interface Dataset {
   features: Feature[];
   servers: Server[];
   observations: Observation[];
+  /** Where each loaded observation came from (`data/observations/<id>.yaml[i]`), for messages. */
+  locations?: WeakMap<Observation, string>;
 }
 
 export interface DataIssue {
@@ -80,6 +82,7 @@ function loadFile<T>(
  */
 export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssue[] } {
   const issues: DataIssue[] = [];
+  const locations = new WeakMap<Observation, string>();
   const specs: Spec[] = [];
   const features: Feature[] = [];
   const servers: Server[] = [];
@@ -98,10 +101,19 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
     if (server) servers.push(server);
   }
   for (const f of listYaml(join(root, "observations"))) {
-    const list = loadFile(f, root, observationFileSchema, issues);
+    // entries are validated one by one so a bad entry does not hide the others from crossCheck
+    const list = loadFile(f, root, z.array(z.unknown()), issues);
     if (!list) continue;
     const fileServer = basename(f).replace(/\.ya?ml$/, "");
-    for (const [i, obs] of list.entries()) {
+    for (const [i, raw] of list.entries()) {
+      const parsed = observationSchema.safeParse(raw);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          issues.push({ path: formatPath(f, root, [i, ...issue.path]), message: issue.message });
+        }
+        continue;
+      }
+      const obs = parsed.data;
       if (obs.server !== fileServer) {
         issues.push({
           path: formatPath(f, root, [i, "server"]),
@@ -109,10 +121,11 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
         });
         continue;
       }
+      locations.set(obs, formatPath(f, root, [i]));
       observations.push(obs);
     }
   }
-  return { data: { specs, features, servers, observations }, issues };
+  return { data: { specs, features, servers, observations, locations }, issues };
 }
 
 /** Cross-reference checks from the data model that a per-file schema cannot express. */
@@ -146,7 +159,7 @@ export function crossCheck(data: Dataset): DataIssue[] {
   for (const obs of data.observations) {
     const index = perFile.get(obs.server) ?? 0;
     perFile.set(obs.server, index + 1);
-    const at = `data/observations/${obs.server}.yaml[${index}]`;
+    const at = data.locations?.get(obs) ?? `data/observations/${obs.server}.yaml[${index}]`;
     if (!serverIds.has(obs.server)) {
       issues.push({ path: `${at}.server`, message: `server "${obs.server}" does not exist` });
     }

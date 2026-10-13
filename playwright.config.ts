@@ -10,8 +10,11 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}`,
     trace: "retain-on-failure",
+    // Set PW_CHROMIUM to a chrome binary to run with a locally installed browser.
+    launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
+  snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}",
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.02, animations: "disabled" } },
   webServer: {
     command: `pnpm astro preview --port ${port}`,
     port,

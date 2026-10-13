@@ -12,7 +12,7 @@
   --bg-sunken: #efeadf;
   --ink: #1b1a1f;
   --ink-muted: #5b5962;
-  --ink-faint: #8d8a95;
+  --ink-faint: #6b6873;
   --line: #ddd7c9;
   --line-strong: #b9b2a2;
 
@@ -27,13 +27,13 @@
   /* status colours, each with a soft fill and a strong ink */
   --status-supported: #1f7a3f;
   --status-supported-soft: #d8efdf;
-  --status-partial: #b26b00;
+  --status-partial: #8a5300;
   --status-partial-soft: #f8e8c6;
   --status-unsupported: #b3261e;
   --status-unsupported-soft: #f7d9d6;
   --status-unknown: #6f6c78;
   --status-unknown-soft: #e7e4ea;
-  --status-not-applicable: #8d8a95;
+  --status-not-applicable: #6f6c78;
   --status-not-applicable-soft: transparent;
 
   /* requirement levels */
@@ -92,7 +92,7 @@
   --bg-sunken: #0b0d11;
   --ink: #ebe8e1;
   --ink-muted: #a7a4ad;
-  --ink-faint: #767381;
+  --ink-faint: #8e8b99;
   --line: #2a2e38;
   --line-strong: #434856;
   --accent: #5fd3bd;
@@ -109,7 +109,7 @@
   --status-unsupported-soft: #3f1a18;
   --status-unknown: #9d9aa8;
   --status-unknown-soft: #23232b;
-  --status-not-applicable: #767381;
+  --status-not-applicable: #9d9aa8;
   --level-should: #e0b85a;
   --level-may: #8fb3e6;
   --level-deprecated: #9d9aa8;
@@ -124,7 +124,7 @@
     --bg-sunken: #0b0d11;
     --ink: #ebe8e1;
     --ink-muted: #a7a4ad;
-    --ink-faint: #767381;
+    --ink-faint: #8e8b99;
     --line: #2a2e38;
     --line-strong: #434856;
     --accent: #5fd3bd;
@@ -141,7 +141,7 @@
     --status-unsupported-soft: #3f1a18;
     --status-unknown: #9d9aa8;
     --status-unknown-soft: #23232b;
-    --status-not-applicable: #767381;
+    --status-not-applicable: #9d9aa8;
     --level-should: #e0b85a;
     --level-may: #8fb3e6;
     --level-deprecated: #9d9aa8;

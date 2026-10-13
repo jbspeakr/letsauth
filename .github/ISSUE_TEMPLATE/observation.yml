@@ -1,0 +1,86 @@
+name: Observation, correction or withdrawal
+description: Report what an MCP server supports, correct an existing cell, or withdraw your server from the atlas.
+title: "[atlas] "
+labels: ["data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. Every field mirrors one line of an observation entry in `data/observations/<server>.yaml`.
+        A maintainer turns an accepted issue into a pull request; nothing is published without review.
+        Observations are append-only: a correction adds a newer entry, it never edits an old one.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this?
+      options:
+        - new observation
+        - correction
+        - withdraw my server
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server id
+      description: The id from the server page URL, e.g. `stripe`. For a new server, give its name and MCP endpoint URL instead.
+      placeholder: stripe
+    validations:
+      required: true
+  - type: input
+    id: feature
+    attributes:
+      label: Feature id
+      description: From the feature page URL, e.g. `mcp.as.cimd`. Leave empty for a withdrawal.
+      placeholder: mcp.as.cimd
+  - type: input
+    id: revision
+    attributes:
+      label: Specification revision
+      description: The revision the observation is made against.
+      value: "2026-07-28"
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - supported
+        - partial
+        - unsupported
+        - unknown
+        - not-applicable
+  - type: dropdown
+    id: method
+    attributes:
+      label: Method
+      description: How you established the status.
+      options:
+        - manual
+        - vendor-claim
+        - passive-scan
+        - active-scan
+  - type: input
+    id: date
+    attributes:
+      label: Observed at
+      description: ISO 8601 date and time, UTC.
+      placeholder: 2026-10-13T18:40:00Z
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: A URL that shows the behaviour (metadata document, documentation page, response capture) or a precise note. For a withdrawal, state that you maintain the server and give a URL that lets us verify it.
+    validations:
+      required: true
+  - type: input
+    id: handle
+    attributes:
+      label: Your handle
+      description: Recorded as `observedBy`.
+      placeholder: jbspeakr
+    validations:
+      required: true

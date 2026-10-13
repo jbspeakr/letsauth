@@ -82,7 +82,7 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 ### Tests for User Story 1
 
-- [ ] T028 [P] [US1] Playwright test `tests/e2e/matrix.spec.ts`: revision named at top; row count equals non-withdrawn servers; column count equals non-client features; every cell has a status; opening a cell shows status, method, date, observer, evidence link; closing returns focus to the cell; a seeded server with no observations shows `unknown` in every cell and never `unsupported`; `?level=MUST&q=stripe` in a fresh page yields the filtered view; with JavaScript disabled the full matrix renders; default row order is by server name and no column or control sorts or scores servers (FR-014); keyboard-only walkthrough opens and closes a cell dialog; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
+- [x] T028 [P] [US1] Playwright test `tests/e2e/matrix.spec.ts`: revision named at top; row count equals non-withdrawn servers; column count equals non-client features; every cell has a status; opening a cell shows status, method, date, observer, evidence link; closing returns focus to the cell; a seeded server with no observations shows `unknown` in every cell and never `unsupported`; `?level=MUST&q=stripe` in a fresh page yields the filtered view; with JavaScript disabled the full matrix renders; default row order is by server name and no column or control sorts or scores servers (FR-014); keyboard-only walkthrough opens and closes a cell dialog; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
 
 ### Implementation for User Story 1
 
@@ -105,12 +105,12 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 ### Tests for User Story 2
 
-- [ ] T035 [P] [US2] Playwright test `tests/e2e/server-page.spec.ts`: for a server with two observations on one feature, current status equals the newest and the older one is listed under history with method and date; listing reason and source link shown; withdrawn server renders the withdrawal notice and no matrix row; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
+- [x] T035 [P] [US2] Playwright test `tests/e2e/server-page.spec.ts`: for a server with two observations on one feature, current status equals the newest and the older one is listed under history with method and date; listing reason and source link shown; withdrawn server renders the withdrawal notice and no matrix row; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
 
 ### Implementation for User Story 2
 
-- [ ] T036 [US2] Create `src/pages/atlas/mcp/servers/[id].astro` with `getStaticPaths` over all servers (withdrawn included): profile block (name, vendor, endpoint, transport, `listed` with `source` link, `authClaimed`), a feature table grouped by party with `StatusCell` and `Citation`, an expandable history list per feature from `cellHistory`, and a withdrawal notice branch when `withdrawn` is set (depends on T029, T030)
-- [ ] T037 [US2] Link each matrix row's server name in `src/pages/atlas/mcp/index.astro` to its server page, and add "Contribute a correction" and "Withdraw this server" links on the server page pointing at `/atlas/mcp/contribute` (depends on T036)
+- [x] T036 [US2] Create `src/pages/atlas/mcp/servers/[id].astro` with `getStaticPaths` over all servers (withdrawn included): profile block (name, vendor, endpoint, transport, `listed` with `source` link, `authClaimed`), a feature table grouped by party with `StatusCell` and `Citation`, an expandable history list per feature from `cellHistory`, and a withdrawal notice branch when `withdrawn` is set (depends on T029, T030)
+- [x] T037 [US2] Link each matrix row's server name in `src/pages/atlas/mcp/index.astro` to its server page, and add "Contribute a correction" and "Withdraw this server" links on the server page pointing at `/atlas/mcp/contribute` (depends on T036)
 
 **Checkpoint**: Server pages render for every seeded server and pass T035
 
@@ -124,12 +124,12 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 ### Tests for User Story 3
 
-- [ ] T038 [P] [US3] Playwright test `tests/e2e/feature-page.spec.ts`: citation link href equals the revision URL and the section text is shown; share excludes unknown and not-applicable and both counts are shown; server lists per status match the matrix column; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
+- [x] T038 [P] [US3] Playwright test `tests/e2e/feature-page.spec.ts`: citation link href equals the revision URL and the section text is shown; share excludes unknown and not-applicable and both counts are shown; server lists per status match the matrix column; `@axe-core/playwright` reports no serious or critical violations; screenshots in light and dark
 
 ### Implementation for User Story 3
 
-- [ ] T039 [US3] Create `src/pages/atlas/mcp/features/[id].astro` with `getStaticPaths` over all features (client-party included but marked "not shown in the matrix"): definition, `level` plus `levelNote`, `party`, `category`, `observable`, `Citation`, adoption share from `featureShare` rendered as text plus a proportional bar with the counts, servers grouped by status with links, and a "level by revision" table from `revisions[]` (depends on T030)
-- [ ] T040 [US3] Link each matrix column header in `src/pages/atlas/mcp/index.astro` to its feature page (depends on T039)
+- [x] T039 [US3] Create `src/pages/atlas/mcp/features/[id].astro` with `getStaticPaths` over all features (client-party included but marked "not shown in the matrix"): definition, `level` plus `levelNote`, `party`, `category`, `observable`, `Citation`, adoption share from `featureShare` rendered as text plus a proportional bar with the counts, servers grouped by status with links, and a "level by revision" table from `revisions[]` (depends on T030)
+- [x] T040 [US3] Link each matrix column header in `src/pages/atlas/mcp/index.astro` to its feature page (depends on T039)
 
 **Checkpoint**: Feature pages render for every feature and pass T038
 
@@ -143,13 +143,13 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 ### Tests for User Story 4
 
-- [ ] T041 [P] [US4] Unit test `tests/unit/validate-data.test.ts`: running the validator over a fixture directory with an observation missing `evidence` exits non-zero and the message contains `evidence: required`; an unknown feature id names the field `feature`; a changed existing entry fails the append-only check with the entry index
+- [x] T041 [P] [US4] Unit test `tests/unit/validate-data.test.ts`: running the validator over a fixture directory with an observation missing `evidence` exits non-zero and the message contains `evidence: required`; an unknown feature id names the field `feature`; a changed existing entry fails the append-only check with the entry index
 
 ### Implementation for User Story 4
 
-- [ ] T042 [P] [US4] Create the issue form `.github/ISSUE_TEMPLATE/observation.yml` with required fields mirroring the entry format (type selector `new observation` / `correction` / `withdraw my server`, server, feature, revision, status, method, date, evidence, handle) and `.github/ISSUE_TEMPLATE/config.yml` disabling blank issues
-- [ ] T043 [P] [US4] Create the contribution page `src/pages/atlas/mcp/contribute.astro` from contracts/contribution.md: both paths, the YAML entry format, the append-only rule, how withdrawal works, with links to the issue form and the repository
-- [ ] T044 [US4] Add `.github/pull_request_template.md` with a checklist for data PRs (evidence link per new observation, no edited entries) and make `scripts/validate-data.ts` message format match T041 exactly (depends on T018, T041)
+- [x] T042 [P] [US4] Create the issue form `.github/ISSUE_TEMPLATE/observation.yml` with required fields mirroring the entry format (type selector `new observation` / `correction` / `withdraw my server`, server, feature, revision, status, method, date, evidence, handle) and `.github/ISSUE_TEMPLATE/config.yml` disabling blank issues
+- [x] T043 [P] [US4] Create the contribution page `src/pages/atlas/mcp/contribute.astro` from contracts/contribution.md: both paths, the YAML entry format, the append-only rule, how withdrawal works, with links to the issue form and the repository
+- [x] T044 [US4] Add `.github/pull_request_template.md` with a checklist for data PRs (evidence link per new observation, no edited entries) and make `scripts/validate-data.ts` message format match T041 exactly (depends on T018, T041)
 
 **Checkpoint**: A contributor can submit through either path and CI rejects incomplete entries with a field-level message
 
@@ -163,12 +163,12 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 ### Tests for User Story 5
 
-- [ ] T045 [P] [US5] Playwright test `tests/e2e/revision.spec.ts`: `/atlas/mcp/2025-11-25` shows that revision's name and feature set; `/atlas/mcp/changes/2025-11-25/2026-07-28` lists `mcp.as.dcr` with old and new level and `mcp.as.iss-param` as added; the current revision redirects or canonicalises to `/atlas/mcp`
+- [x] T045 [P] [US5] Playwright test `tests/e2e/revision.spec.ts`: `/atlas/mcp/2025-11-25` shows that revision's name and feature set; `/atlas/mcp/changes/2025-11-25/2026-07-28` lists `mcp.as.dcr` with old and new level and `mcp.as.iss-param` as added; the current revision redirects or canonicalises to `/atlas/mcp`
 
 ### Implementation for User Story 5
 
 - [x] T046 [US5] Create `src/pages/atlas/mcp/[revision]/index.astro` reusing the matrix rendering from T031 (extract the table into `src/components/MatrixTable.astro` and use it from both pages) with `getStaticPaths` over non-current revisions, and a revision switcher in the header of both pages (depends on T031)
-- [ ] T047 [US5] Create `src/pages/atlas/mcp/changes/[from]/[to].astro` with `getStaticPaths` over adjacent revision pairs, rendering `revisionDiff(from, to)` as three lists: level changed (old → new), added, removed, each with `Citation` (depends on T021, T030)
+- [x] T047 [US5] Create `src/pages/atlas/mcp/changes/[from]/[to].astro` with `getStaticPaths` over adjacent revision pairs, rendering `revisionDiff(from, to)` as three lists: level changed (old → new), added, removed, each with `Citation` (depends on T021, T030)
 - [x] T048 [US5] Mark changed-level columns in the matrix header in `src/components/MatrixTable.astro` with a "changed in this revision" badge linking to the changes page (depends on T046, T047)
 
 **Checkpoint**: All five stories are independently functional
@@ -179,15 +179,15 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 **Purpose**: Export, search, analytics, documentation and the full quickstart run
 
-- [ ] T049 [P] Implement the full export `src/pages/atlas/mcp/data.json.ts` and per-server export `src/pages/atlas/mcp/servers/[id].json.ts` per contracts/data-export.md (`version: 1`, `generatedAt`, `license` read from `LICENSE-DATA`, `spec`, `features` with their `revisions[]`, `servers`, `cells`, `observations`; withdrawn servers omitted)
-- [ ] T050 [P] Add `LICENSE` (code: MIT) and `LICENSE-DATA` (data: CC BY 4.0) at the repository root and reference both from `README.md` and the contribution page `src/pages/atlas/mcp/contribute.astro`
-- [ ] T051 [P] Unit test `tests/unit/export.test.ts`: the built `data.json` validates against `src/schema/` and its `cells` equal `matrixFor(currentRevision)`
+- [x] T049 [P] Implement the full export `src/pages/atlas/mcp/data.json.ts` and per-server export `src/pages/atlas/mcp/servers/[id].json.ts` per contracts/data-export.md (`version: 1`, `generatedAt`, `license` read from `LICENSE-DATA`, `spec`, `features` with their `revisions[]`, `servers`, `cells`, `observations`; withdrawn servers omitted)
+- [x] T050 [P] Add `LICENSE` (code: MIT) and `LICENSE-DATA` (data: CC BY 4.0) at the repository root and reference both from `README.md` and the contribution page `src/pages/atlas/mcp/contribute.astro`
+- [x] T051 [P] Unit test `tests/unit/export.test.ts`: the built `data.json` validates against `src/schema/` and its `cells` equal `matrixFor(currentRevision)`
 - [x] T052 [P] Add Plausible (EU) script tag to `src/layouts/Base.astro` behind a `PUBLIC_PLAUSIBLE_DOMAIN` env var so local builds load nothing
 - [x] T053 [P] Add redirect support `public/_redirects` or Bunny edge rule notes in `docs/deploy.md` for renamed ids, per contracts/routes.md
 - [x] T054 [P] Add `robots.txt`, `sitemap` (via `@astrojs/sitemap`) and Open Graph meta in `src/layouts/Base.astro`
-- [ ] T055 [P] Write `docs/atlas-maintenance.md`: how to add a revision, add or change a feature, seed servers, review a data PR, and run the append-only check locally
-- [ ] T056 Update `docs/roadmap.md` status for 001 and the README links to the live atlas
-- [ ] T057 Run every quickstart.md scenario (1 to 14) against a production build and record results in `specs/001-mcp-atlas/checklists/quickstart-run.md`
+- [x] T055 [P] Write `docs/atlas-maintenance.md`: how to add a revision, add or change a feature, seed servers, review a data PR, and run the append-only check locally
+- [x] T056 Update `docs/roadmap.md` status for 001 and the README links to the live atlas
+- [x] T057 Run every quickstart.md scenario (1 to 14) against a production build and record results in `specs/001-mcp-atlas/checklists/quickstart-run.md`
 
 ---
 

@@ -11,7 +11,9 @@ interface Props {
 
 const { cell, server, feature } = Astro.props;
 const obs = cell.observation;
-const evidenceIsUrl = obs ? /^https:\/\/\S+$/.test(obs.evidence) : false;
+const evidenceMatch = obs ? obs.evidence.match(/^(https:\/\/\S+)(.*)$/s) : null;
+const evidenceUrl = evidenceMatch?.[1];
+const evidenceNote = evidenceMatch?.[2]?.trim();
 const date = obs ? obs.observedAt.slice(0, 10) : undefined;
 ---
 
@@ -33,10 +35,13 @@ const date = obs ? obs.observedAt.slice(0, 10) : undefined;
         </dd>
         <dt>Evidence</dt>
         <dd>
-          {evidenceIsUrl ? (
-            <a href={obs.evidence} rel="noopener">
-              {obs.evidence}
-            </a>
+          {evidenceUrl ? (
+            <>
+              <a href={evidenceUrl} rel="noopener">
+                {evidenceUrl}
+              </a>
+              {evidenceNote && <span class="muted"> {evidenceNote}</span>}
+            </>
           ) : (
             obs.evidence
           )}

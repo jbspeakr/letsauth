@@ -11,7 +11,7 @@
 A pre-rendered matrix of public MCP servers against the features of the MCP authorization
 specification (revision 2026-07-28 as current, 2025-11-25 as the prior revision), with server
 pages, feature pages, a revision switcher and a reviewed contribution path. Data is YAML in the
-repository validated by Zod schemas at build time; the site is Astro 6 with one Svelte 5 island
+repository validated by Zod schemas at build time; the site is Astro 7 with one Svelte 5 island
 for the interactive matrix, deployed as static files to Bunny. This feature also bootstraps the
 project: the Astro app, the shared schema, data validation, CI and deployment land here because
 nothing else exists yet.
@@ -20,7 +20,7 @@ nothing else exists yet.
 
 **Language/Version**: TypeScript 5.x (strict), Node.js 22 LTS
 
-**Primary Dependencies**: Astro 6, @astrojs/svelte 9 with Svelte 5, Zod 3, yaml, Pagefind (via astro-pagefind), Biome, Vitest, Playwright
+**Primary Dependencies**: Astro 7, @astrojs/svelte 9 with Svelte 5, Zod 3, yaml, Pagefind (via astro-pagefind), Biome, Vitest, Playwright
 
 **Storage**: YAML files under `data/` in the repository (no database). Build-time JSON export for reuse.
 
