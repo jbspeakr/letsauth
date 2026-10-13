@@ -61,6 +61,8 @@ Metadata Documents", "RFC 9207 `iss` validation", "Resource indicators (RFC 8707
 | `description` | string | |
 | `supersedes` | string? | Feature id this replaces (e.g. CIMD supersedes DCR as the default) |
 | `observable` | enum | `passive`, `active`, `manual` — how support can be verified |
+| `party` | enum | `mcp-server`, `authorization-server`, `client` — who the requirement is on |
+| `levelNote` | string? | Qualifier rendered next to the level, e.g. "one of two mechanisms" |
 
 ### Relation
 
@@ -86,6 +88,9 @@ A public MCP server (or, later, another agent endpoint) that the MCP Atlas track
 | `homepage` | url? | |
 | `transport` | enum | `streamable-http`, `sse`, `stdio-only` |
 | `listed` | enum | `opt-in`, `public-directory`, `maintainer-added` — why it is in the atlas |
+| `source` | url | Where the listing came from; required unless `opt-in` |
+| `authClaimed` | enum? | `oauth2.1`, `oauth2.1-no-dcr`, `api-key`, `open`, `unknown` — the directory's own claim, separate from observations |
+| `withdrawn` | object? | `{ at, reason }`; a withdrawn server is excluded from pages and exports |
 | `notes` | string? | |
 
 ### Observation
