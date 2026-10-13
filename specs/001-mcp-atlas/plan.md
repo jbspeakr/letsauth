@@ -43,7 +43,7 @@ nothing else exists yet.
 | Principle | Status | How this plan complies |
 |---|---|---|
 | I. One Model, Many Views | PASS | The feature adds no private entities. It implements the shared schema (`src/schema/`) that `docs/data-model.md` describes and reads `data/` through Astro content collections. Later features import the same schema. |
-| II. Every Claim Cites a Revision | PASS | `Feature.definedBy` is required and validated at build time against `data/specs`; the build fails on a dangling citation. Observations carry the revision they were judged against. The feature page renders the citation link. |
+| II. Every Claim Cites a Revision | PASS | Every `Feature.revisions[]` entry is required to cite a section and is validated at build time against `data/specs`; the build fails on a dangling citation. Observations carry the revision they were judged against. The feature page renders the citation link. |
 | III. Neutral and Passive by Default | PASS | The atlas contacts no server. Observations record `method` and `evidence`; `unknown` is explicit and rendered distinctly (FR-003). No vendor scoring (FR-014). |
 | IV. Static First, Open Data | PASS | Fully pre-rendered. Data lives in `data/` and changes by PR. A JSON export is published (FR-013). No backend in this feature. |
 | V. Craft and Budgets | PASS | One token system in `src/styles/tokens.css`; light and dark; reduced motion; Lighthouse CI with the stated budgets; the island is the only JS and is budgeted. |
@@ -97,10 +97,12 @@ src/
 ├── content.config.ts        # Astro content collections over data/ using the schemas
 ├── lib/
 │   ├── atlas.ts             # derivations: current status per cell, history, revision diff, shares
-│   └── citations.ts         # resolve definedBy / revision refs, fail build on dangling refs
+│   └── citations.ts         # resolve revisions[] refs, fail build on dangling refs
 ├── layouts/
 ├── styles/tokens.css        # design tokens (light/dark, type, spacing, motion)
+├── styles/fonts.css         # self-hosted @font-face declarations (constitution VII)
 ├── components/
+│   ├── MatrixTable.astro    # server-rendered table, shared by the current and other revisions
 │   ├── Matrix.svelte        # the one island: filter, search, cell detail
 │   ├── StatusCell.astro
 │   └── Citation.astro
@@ -110,11 +112,20 @@ src/
         ├── [revision]/index.astro       # matrix for another revision
         ├── servers/[id].astro
         ├── features/[id].astro
+        ├── changes/[from]/[to].astro    # revision diff
+        ├── contribute.astro
         ├── data.json.ts                 # full export
         └── servers/[id].json.ts         # per-server export
 
 scripts/
-└── validate-data.ts         # loads data/, runs schemas and cross-reference checks, prints field-level errors
+├── validate-data.ts         # loads data/, runs schemas and cross-reference checks, prints field-level errors
+└── check-observations-append-only.ts
+
+public/_redirects            # renamed ids (or Bunny edge rules, see docs/deploy.md)
+docs/deploy.md               # Bunny secrets and the deploy workflow
+docs/atlas-maintenance.md    # how to add revisions, features, servers; review data PRs
+LICENSE                      # code licence
+LICENSE-DATA                 # data licence (CC BY 4.0)
 
 tests/
 ├── unit/                    # schema and atlas.ts derivations

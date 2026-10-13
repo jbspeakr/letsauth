@@ -55,14 +55,13 @@ Metadata Documents", "RFC 9207 `iss` validation", "Resource indicators (RFC 8707
 |---|---|---|
 | `id` | string | e.g. `mcp.cimd`, `mcp.iss-validation`, `oauth.pkce-s256` |
 | `name` | string | |
-| `definedBy` | ref | `{ spec, revision, section }`, section as the document's own heading or anchor |
-| `level` | enum | `MUST`, `SHOULD`, `MAY`, `DEPRECATED`, `REMOVED` |
+| `revisions` | list | One entry per revision that defines the feature: `{ spec, revision, section, level, levelNote? }`; `section` is the document's own heading or anchor; `level` is `MUST`, `SHOULD`, `MAY`, `DEPRECATED` or `REMOVED`. The first entry is the revision that introduced the feature. |
 | `category` | enum | `discovery`, `registration`, `authorization`, `token`, `session`, `transport`, `delegation`, `consent` |
 | `description` | string | |
 | `supersedes` | string? | Feature id this replaces (e.g. CIMD supersedes DCR as the default) |
 | `observable` | enum | `passive`, `active`, `manual` — how support can be verified |
 | `party` | enum | `mcp-server`, `authorization-server`, `client` — who the requirement is on |
-| `levelNote` | string? | Qualifier rendered next to the level, e.g. "one of two mechanisms" |
+| | | (`levelNote` lives inside each `revisions` entry) |
 
 ### Relation
 
@@ -140,13 +139,13 @@ the previous hop.
 ## Rules
 
 1. Ids are stable. Renaming an id is a migration with a redirect.
-2. Every `cites` or `definedBy` reference must resolve to a revision that exists in `data/specs`.
+2. Every `cites` or `revisions[]` reference must resolve to a revision that exists in `data/specs`.
    The build fails otherwise.
 3. Observations are never edited or deleted, only appended. Corrections are new observations.
 4. `unknown` is written explicitly and rendered as unknown, never as unsupported.
 5. A feature's `level` belongs to the revision that defines it. When a new revision changes the
-   level (for example DCR moving to `DEPRECATED`), a new feature entry with the same base id and a
-   revision suffix is added, and `supersedes` links them.
+   level (for example DCR moving to `DEPRECATED`), a new entry is appended to that feature's
+   `revisions` list; the id stays the same, and the revision diff is derived from the list.
 
 ## Examples
 
@@ -177,8 +176,9 @@ revisions:
 # data/features/mcp.cimd.yaml
 id: mcp.cimd
 name: Client ID Metadata Documents
-definedBy: { spec: mcp-authorization, revision: "2026-07-28", section: "Client Registration" }
-level: SHOULD
+revisions:
+  - { spec: mcp-authorization, revision: "2025-11-25", section: "Client Registration", level: SHOULD }
+  - { spec: mcp-authorization, revision: "2026-07-28", section: "Client Registration › Client ID Metadata Documents", level: SHOULD }
 category: registration
 observable: passive
 description: >

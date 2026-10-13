@@ -31,7 +31,7 @@ pnpm test:e2e           # Playwright against the built site, including screensho
 | 3 | Unknown is distinct (FR-003, SC-006) | Seed a server with no observations; open the matrix | Every cell reads "unknown" with the unknown style; none reads "unsupported". Covered by a unit test on `atlas.ts` and an e2e assertion. |
 | 4 | Filters are shareable (FR-008) | Filter by `level=MUST`, search `stripe`; copy the URL into a new tab | Same filtered view. With JS disabled the full matrix still renders. |
 | 5 | Server page history (US2, FR-004) | Open a server with two observations for one feature | Current status equals the newest; the older one appears under history with its method. |
-| 6 | Feature citation (US3, FR-005, SC-002) | Open any feature page | Citation links to the revision URL and names the section. A unit test asserts every feature's `definedBy` resolves. |
+| 6 | Feature citation (US3, FR-005, SC-002) | Open any feature page | Citation links to the revision URL and names the section. A unit test asserts every feature's `revisions[]` entries resolve. |
 | 7 | Adoption share (US3) | Feature page with mixed statuses | Share excludes unknown and not-applicable; both counts are shown. |
 | 8 | Contribution validation (US4, FR-010, SC-005) | Add an observation without `evidence`; run `pnpm validate:data` | Non-zero exit; message names file, index and field. |
 | 9 | Append-only (FR-011) | Change an existing observation entry in a branch; run the CI append-only check | Check fails naming the changed entry. |

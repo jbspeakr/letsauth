@@ -20,7 +20,7 @@ component and pull more JS); Eleventy (no first-class islands or typed collectio
 
 **Decision**: Astro content collections with the built-in `glob` loader over `data/**/*.yaml`,
 with the Zod schemas from `src/schema/` passed as the collection schema. Cross-reference checks
-(a feature's `definedBy` must resolve, an observation's `server` and `feature` must exist) run in
+(a feature's `revisions[]` entries must resolve, an observation's `server` and `feature` must exist) run in
 `scripts/validate-data.ts`, which the build invokes before Astro.
 
 **Rationale**: The `glob` loader reads YAML natively, so data files need no front matter or

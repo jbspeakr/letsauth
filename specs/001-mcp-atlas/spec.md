@@ -145,8 +145,9 @@ are listed.
   cell reads "not applicable", not "unsupported".
 - A server has no observations at all: it appears with every cell "unknown" and the page invites
   contributions.
-- A vendor claim contradicts a scan: both are shown; the scan is current, the claim stays in
-  history with its method visible.
+- A vendor claim contradicts a scan: the newer observation is current, whichever method it has,
+  and the other stays in history with its method visible, so a reader can always see that the
+  two disagree.
 
 ## Requirements *(mandatory)*
 

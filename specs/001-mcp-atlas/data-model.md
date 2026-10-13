@@ -19,22 +19,29 @@ As in the shared model. Validation added here:
 
 ### Feature (`data/features/*.yaml`)
 
-Fields as in the shared model, plus two atlas-specific fields:
+One file per feature id. A feature's level and section are recorded per revision in a
+`revisions` list, so one file holds the feature's whole history across revisions:
 
 | Field | Type | Notes |
 |---|---|---|
+| `id` | string | Matches `^[a-z0-9]+(\.[a-z0-9-]+)+$` (dotted namespace, e.g. `mcp.as.cimd`). |
+| `name`, `description`, `category`, `observable`, `supersedes` | as shared model | |
 | `party` | enum | `mcp-server`, `authorization-server`, `client`. The matrix shows `mcp-server` and `authorization-server` features; `client` features are stored for the explorer and hidden here. |
-| `levelNote` | string? | Qualifier such as "one of two mechanisms" or "deprecated" rendered next to the level. |
+| `revisions` | list, min 1 | `{ spec, revision, section, level, levelNote? }`. One entry per revision in which the feature is defined. A revision with no entry does not define the feature. |
+
+`definedBy` from the shared model is the first `revisions` entry (the revision that introduced
+the feature) and is not stored separately.
 
 Validation:
 
-- `id` matches `^[a-z0-9]+(\.[a-z0-9-]+)+$` (dotted namespace, e.g. `mcp.as.cimd`).
-- `definedBy.spec` and `definedBy.revision` must resolve to an existing revision (cross-reference
-  check in `scripts/validate-data.ts`; build fails otherwise).
-- `definedBy.section` is a non-empty string and is rendered verbatim with the revision link.
+- Every `revisions[].spec` and `revisions[].revision` must resolve to an existing revision
+  (cross-reference check in `scripts/validate-data.ts`; build fails otherwise).
+- `revisions[].revision` is unique within the feature; `section` is non-empty and rendered
+  verbatim with the revision link; `level` is one of `MUST`, `SHOULD`, `MAY`, `DEPRECATED`,
+  `REMOVED`.
 - `supersedes`, when present, must name an existing feature id.
-- A feature id may appear once per revision. The same id under a later revision with a different
-  `level` is how level changes are recorded; the revision diff lists these.
+- The revision diff compares `revisions[].level` between two revisions and lists features present
+  in only one of them.
 
 ### Server (`data/servers/*.yaml`)
 
