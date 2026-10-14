@@ -47,4 +47,16 @@ const observations = defineCollection({
   },
 });
 
-export const collections = { specs, features, servers, observations };
+const relations = defineCollection({
+  loader: {
+    name: "letsauth-relations",
+    load: async ({ store }) => {
+      store.clear();
+      for (const rel of getDataset().relations) {
+        store.set({ id: `${rel.from}-${rel.type}-${rel.to}`, data: rel });
+      }
+    },
+  },
+});
+
+export const collections = { specs, features, servers, observations, relations };

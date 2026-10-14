@@ -73,6 +73,7 @@ function obs(
 }
 
 const data: Dataset = {
+  relations: [],
   specs: [
     {
       id: SPEC,

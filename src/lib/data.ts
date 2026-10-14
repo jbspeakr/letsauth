@@ -1,12 +1,16 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parse } from "yaml";
 import { type ZodType, z } from "zod";
 import {
   type Feature,
   featureSchema,
+  isDependency,
+  isSymmetric,
   type Observation,
   observationSchema,
+  type Relation,
+  relationSchema,
   type Server,
   type Spec,
   serverSchema,
@@ -18,6 +22,8 @@ export interface Dataset {
   features: Feature[];
   servers: Server[];
   observations: Observation[];
+  /** Edges between specs, from `data/relations.yaml`. */
+  relations: Relation[];
   /** Where each loaded observation came from (`data/observations/<id>.yaml[i]`), for messages. */
   locations?: WeakMap<Observation, string>;
 }
@@ -87,6 +93,7 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
   const features: Feature[] = [];
   const servers: Server[] = [];
   const observations: Observation[] = [];
+  const relations: Relation[] = [];
 
   for (const f of listYaml(join(root, "specs"))) {
     const spec = loadFile(f, root, specSchema, issues);
@@ -125,7 +132,90 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
       observations.push(obs);
     }
   }
-  return { data: { specs, features, servers, observations, locations }, issues };
+  const relationsFile = join(root, "relations.yaml");
+  if (existsSync(relationsFile)) {
+    // entries are validated one by one so a bad entry does not hide the others from crossCheck
+    const list = loadFile(relationsFile, root, z.array(z.unknown()), issues);
+    for (const [i, raw] of (list ?? []).entries()) {
+      const parsed = relationSchema.safeParse(raw);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          issues.push({
+            path: formatPath(relationsFile, root, [i, ...issue.path]),
+            message: issue.message,
+          });
+        }
+        continue;
+      }
+      relations.push(parsed.data);
+    }
+  }
+  return { data: { specs, features, servers, observations, relations, locations }, issues };
+}
+
+/** Relation rules the data model states (rule 7) that a per-entry schema cannot express. */
+export function crossCheckRelations(data: Dataset): DataIssue[] {
+  const issues: DataIssue[] = [];
+  const specIds = new Set(data.specs.map((s) => s.id));
+  const seen = new Map<string, number>();
+  const at = (i: number, field?: string) => `data/relations.yaml[${i}]${field ? `.${field}` : ""}`;
+
+  data.relations.forEach((rel, i) => {
+    for (const end of ["from", "to"] as const) {
+      if (!specIds.has(rel[end])) {
+        issues.push({ path: at(i, end), message: `spec "${rel[end]}" does not exist` });
+      }
+    }
+    const keys = [`${rel.from}>${rel.to}>${rel.type}`];
+    if (isSymmetric(rel.type)) keys.push(`${rel.to}>${rel.from}>${rel.type}`);
+    const earlier = keys.map((k) => seen.get(k)).find((v) => v !== undefined);
+    if (earlier !== undefined) {
+      issues.push({
+        path: at(i),
+        message: `duplicates entry [${earlier}] (${rel.from} ${rel.type} ${rel.to}${
+          isSymmetric(rel.type) ? ", a symmetric type stored once per pair" : ""
+        })`,
+      });
+    } else {
+      for (const k of keys) seen.set(k, i);
+    }
+  });
+
+  // dependency edges must form a DAG: the map lays specs out along them
+  const out = new Map<string, { to: string; index: number }[]>();
+  data.relations.forEach((rel, index) => {
+    if (!isDependency(rel.type)) return;
+    const list = out.get(rel.from) ?? [];
+    list.push({ to: rel.to, index });
+    out.set(rel.from, list);
+  });
+  const state = new Map<string, "visiting" | "done">();
+  const stack: string[] = [];
+  const reported = new Set<string>();
+  const visit = (id: string) => {
+    state.set(id, "visiting");
+    stack.push(id);
+    for (const edge of out.get(id) ?? []) {
+      const s = state.get(edge.to);
+      if (s === "visiting") {
+        const cycle = [...stack.slice(stack.indexOf(edge.to)), edge.to];
+        const key = cycle.join(">");
+        if (!reported.has(key)) {
+          reported.add(key);
+          issues.push({
+            path: at(edge.index),
+            message: `dependency cycle ${cycle.join(" -> ")} (builds-on, profiles and replaces must not loop)`,
+          });
+        }
+      } else if (s === undefined) {
+        visit(edge.to);
+      }
+    }
+    stack.pop();
+    state.set(id, "done");
+  };
+  for (const id of out.keys()) if (!state.has(id)) visit(id);
+  return issues;
 }
 
 /** Cross-reference checks from the data model that a per-file schema cannot express. */
@@ -188,6 +278,7 @@ export function crossCheck(data: Dataset): DataIssue[] {
       });
     }
   }
+  issues.push(...crossCheckRelations(data));
   return issues;
 }
 
