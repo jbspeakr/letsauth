@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: supabase
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://supabase.com/docs/guides/ai-tools/mcp — "By default the hosted Supabase MCP server uses dynamic client registration to authenticate with your Supabase org."
+- server: supabase
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://supabase.com/docs/guides/ai-tools/mcp — "If your MCP client requires an OAuth client ID and secret (e.g. Azure API Center), you can manually create an OAuth app in your Supabase account. [...] After creating the OAuth app, copy the client ID and client secret to your MCP client." (Docs say to grant write access to all scopes: ''In the future, the MCP server will support more fine-grained scopes, but for now all scopes are required.'')'

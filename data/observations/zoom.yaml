@@ -8,3 +8,53 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: zoom
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: unsupported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — "Zoom remote MCP servers only support manual client registration through app creation and do not support other client registration methods such as Dynamic Client Registration (DCR) or Client ID Metadata Documents (CIMD)."
+- server: zoom
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: unsupported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — "Zoom remote MCP servers only support manual client registration through app creation and do not support other client registration methods such as Dynamic Client Registration (DCR) or Client ID Metadata Documents (CIMD)."
+- server: zoom
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — "Zoom remote MCP servers require manual client registration. [...] Get from your Zoom app's configuration page on the Zoom App Marketplace." (Client developer creates an app in the Zoom App Marketplace, takes the OAuth Client ID and Client Secret from the app's Basic information page, and enters the MCP client's callback in the OAuth redirect URL field (examples given for Claude and ChatGPT).)
+- server: zoom
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — "While Zoom uses traditional OAuth 2.0, the MCP specification mandates OAuth 2.1 compliance, so ensure your client includes the required code_verifier (PKCE) during the exchange." (PKCE is stated as required; the S256 challenge method is not named.)
+- server: zoom
+  feature: mcp.rs.bearer-header
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.zoom.us/docs/mcp/servers/connect-to-zoom-mcp-servers/ — "Once you have the access token, your MCP client must include it as a Bearer token in the Authorization header for all requests to the Zoom MCP server." (Docs require the Authorization header; they do not say whether tokens in the query string are rejected.)

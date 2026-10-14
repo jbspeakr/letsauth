@@ -8,3 +8,13 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: figma
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/ — "Only clients listed in the Figma MCP Catalog are able to connect to the Figma MCP Server. If you're a developer interested in connecting a new MCP client, you can join the waitlist." (The only documented path for a new client is a waitlist; no self-service way to obtain client credentials is described.)

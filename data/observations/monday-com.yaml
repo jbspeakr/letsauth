@@ -8,3 +8,63 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: monday-com
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/mcp-dynamic-client-registration — "Instead, they authenticate through OAuth 2.0 Dynamic Client Registration" (Registration endpoint listed as https://mcp.monday.com/register. New connections show 'Admin approval required' until an account admin approves the connector and its redirect URIs.)
+- server: monday-com
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/control-mcp-access-with-oauth-app — "Scroll down to the App Credentials section and copy your Client ID and Client Secret" (Create a monday app, enable the 'New OAuth flow' toggle, add callback URL, then 'pass the MCP server URL plus your Client ID and Client Secret into your client's OAuth configuration'.)
+- server: monday-com
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/mcp-dynamic-client-registration — "then runs the standard authorization code + PKCE flow." (PKCE is stated; the S256 method is not named in the docs.)
+- server: monday-com
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/mcp-dynamic-client-registration — "The server publishes its OAuth metadata through standard discovery documents" (Authorization server metadata URL listed as https://mcp.monday.com/.well-known/oauth-authorization-server.)
+- server: monday-com
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/mcp-dynamic-client-registration — "The server publishes its OAuth metadata through standard discovery documents" (Protected resource metadata URL listed as https://mcp.monday.com/.well-known/oauth-protected-resource.)
+- server: monday-com
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.monday.com/api-reference/docs/mcp-dynamic-client-registration — "The server publishes its OAuth metadata through standard discovery documents" (Docs list the root well-known location https://mcp.monday.com/.well-known/oauth-protected-resource for the MCP endpoint https://mcp.monday.com/mcp.)

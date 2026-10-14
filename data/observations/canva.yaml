@@ -8,3 +8,33 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: canva
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://www.canva.dev/docs/apps/mcp/access/ — "Your OAuth client_id is an HTTPS URL that points to a JSON document describing your client [...] Many popular AI tools already publish a CIMD document and work out of the box." (Quickstart says CIMD clients without a client secret that are not already recognised join a waitlist and use https://mcp.canva.com/mcp.)
+- server: canva
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://www.canva.dev/docs/apps/mcp/access/ — "Dynamic Client Registration (DCR) is deprecated in favor of CIMD, but it remains available for backward compatibility." (Deprecated; still offered for backward compatibility.)
+- server: canva
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://www.canva.dev/docs/apps/quickstart/ — "You get a client ID and client secret straight away, and you manage your own redirect URLs." (App created in the Canva Developer Portal with 'Canva MCP' turned on; such clients use https://api.canva.com/connect/v1/mcp per the quickstart.)

@@ -8,3 +8,13 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: plaid
+  feature: mcp.rs.401-on-invalid
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://plaid.com/docs/resources/mcp/ — "Access tokens for the MCP server expire after 15 minutes." (Docs say expired tokens make MCP requests 'fail with a `401` status code or a provider-specific authentication error'; the 401 is stated for direct calls, missing/invalid tokens are not addressed.)

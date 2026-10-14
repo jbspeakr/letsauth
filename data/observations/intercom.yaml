@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: intercom
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.intercom.com/docs/guides/mcp — "OAuth client registration is automatic — the server supports Dynamic Client Registration. However, every redirect URI a client registers is checked against an allowlist, which controls where the server will send authorization responses." (OAuth with a callback on localhost or 127.0.0.1 is allowed on any port; any other callback needs an allowlist entry requested via Intercom Customer Support before the flow will complete.)
+- server: intercom
+  feature: mcp.proxy.consent
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://developers.intercom.com/docs/guides/mcp — "This names the application asking to connect, lists what it will be able to do in your workspace, and shows its Client ID and the address it redirects to after you approve. [...] This asks you to authorize access for Intercom MCP, the server, rather than for the application." (Two screens: the Intercom MCP consent page for the dynamically registered client, then Intercom''s own authorization screen for the MCP server''s upstream client. Docs add that the application name is supplied by the application and not verified by Intercom.)'

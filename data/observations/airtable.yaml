@@ -8,3 +8,43 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: airtable
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://airtable.com/developers/agents/mcp/getting-started — "Our server supports Dynamic Client Registration (DCR)."
+- server: airtable
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://airtable.com/developers/agents/mcp/other — "Some organizations want all users to authenticate through a single, allow-listable OAuth client instead of DCR. [...] Enter its OAuth client ID in your client's config file." (Client is registered through Airtable's OAuth integration setup with the redirect URI the MCP client requires; client secret optional.)
+- server: airtable
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://airtable.com/developers/web/api/oauth-reference — "code_challenge_method: The string "S256". [...] S256 was not passed as code_challenge_method (listed as an invalid_grant cause)." (Stated in Airtable''s general OAuth reference for the authorization server the MCP server uses, not on an MCP-specific page.)'
+- server: airtable
+  feature: mcp.as.refresh-rotation
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://airtable.com/developers/web/api/oauth-reference — "the previous access and refresh tokens are invalidated and new tokens are returned." (Stated in Airtable's general OAuth reference; refresh tokens valid 60 days, access tokens 60 minutes.)

@@ -8,3 +8,13 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: square
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.squareup.com/docs/mcp — "Square maintains an allowlist of MCP clients in order to protect against malicious client registration attempts." (Docs speak of client registration being restricted to allowlisted clients without naming RFC 7591; Square staff in the developer forum add requested redirect domains to the allowlist (https://developer.squareup.com/forums/t/mcp-allowlist-request-lovable/27684).)
