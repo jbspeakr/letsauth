@@ -26,4 +26,10 @@ Read first, in this order:
 - `unknown` is a real status. Never render missing data as `unsupported`.
 - Nothing in this repo contacts third-party servers. Seed data is `vendor-claim` or `manual`.
 - One token system: `src/styles/tokens.css`. Components use tokens, never literal colours.
+  Colours are OKLCH pairs resolved with `light-dark()`; `data-theme` only flips `color-scheme`.
+  Type is Bricolage Grotesque for headlines, Geist for text and interface, Geist Mono for ids
+  and code. Shared surfaces (`.card`, `.button`, `.pill`, `.level`, `.kv`, `.field`, `.crumbs`,
+  `.eyebrow`) live in `src/styles/global.css`; reuse them before adding page-local styles.
+- Status glyphs come from `StatusCell`: observed statuses are filled chips, a recorded `unknown`
+  is a dashed ring, a derived one (no observation) a faint dot. Keep that distinction.
 - Islands only where interaction needs them. Pages must read fully without JavaScript.

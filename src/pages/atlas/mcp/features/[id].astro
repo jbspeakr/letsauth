@@ -80,7 +80,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
         <h2 id="definition">In revision {revision.id}</h2>
         {
           entry ? (
-            <dl>
+            <dl class="kv">
               <dt>Level</dt>
               <dd>
                 <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
@@ -154,7 +154,8 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     {
       share && (
         <section class="adoption" aria-labelledby="adoption">
-          <h2 id="adoption">Adoption across listed servers</h2>
+          <p class="eyebrow">Adoption</p>
+          <h2 id="adoption">Across the listed servers</h2>
           <p class="share-line">
             {share.share === null ? (
               <>
@@ -179,15 +180,6 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
             <span class="seg unsupported" style={`flex-basis:${pct(share.unsupported)}%`} />
             {known === 0 && <span class="seg empty" style="flex-basis:100%" />}
           </div>
-          <ul class="counts">
-            {STATUS_ORDER.map((s) => (
-              <li>
-                <StatusCell status={s} variant="label" />
-                <span class="n">{s === "not-applicable" ? share.notApplicable : share[s]}</span>
-              </li>
-            ))}
-          </ul>
-
           <div class="status-lists">
             {STATUS_ORDER.map((s) => {
               const servers = byStatus.get(s) ?? [];
@@ -195,7 +187,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
               return (
                 <section aria-labelledby={`list-${s}`}>
                   <h3 id={`list-${s}`}>
-                    <StatusCell status={s} variant="label" /> <span class="n">{servers.length}</span>
+                    <StatusCell status={s} variant="label" /> <span class="n num">{servers.length}</span>
                   </h3>
                   <ul>
                     {servers.map((server) => (
@@ -215,12 +207,6 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 </Base>
 
 <style>
-  .crumbs {
-    font-family: var(--font-display);
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    margin-bottom: var(--space-4);
-  }
   .head {
     margin-bottom: var(--space-5);
   }
@@ -232,28 +218,11 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-8);
   }
   .card h2 {
-    font-size: var(--text-lg);
-  }
-  dl {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: var(--space-2) var(--space-4);
-    margin: 0;
-    font-size: var(--text-sm);
-  }
-  dt {
-    font-family: var(--font-display);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ink-muted);
-    padding-top: 0.25em;
-  }
-  dd {
-    margin: 0;
+    font-size: var(--text-md);
+    margin-bottom: var(--space-4);
   }
   .note {
     color: var(--ink-muted);
@@ -268,6 +237,11 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
     color: var(--ink);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .levels tbody tr:last-child > * {
+    border-bottom: 0;
   }
   .levels .pill {
     margin-left: var(--space-2);
@@ -275,19 +249,25 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   .adoption h2 {
     font-size: var(--text-xl);
   }
+  .share-line {
+    max-width: none;
+  }
   .share-line strong {
     font-family: var(--font-display);
-    font-size: var(--text-xl);
+    font-size: var(--text-2xl);
     font-weight: 700;
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+    margin-right: var(--space-2);
   }
   .bar {
     display: flex;
-    height: 0.9rem;
+    gap: 2px;
+    height: 0.75rem;
     border-radius: 999px;
     overflow: hidden;
     background: var(--bg-sunken);
-    border: 1px solid var(--line);
-    margin: var(--space-3) 0;
+    margin: var(--space-4) 0 var(--space-6);
     max-width: 48rem;
   }
   .seg {
@@ -311,30 +291,33 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
       var(--status-unknown-soft) 6px 12px
     );
   }
-  .counts {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3) var(--space-5);
-    font-size: var(--text-sm);
-  }
   .n {
-    font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 600;
     margin-left: var(--space-1);
   }
   .status-lists {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
     gap: var(--space-4);
   }
+  .status-lists section {
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm), var(--inset-highlight);
+  }
   .status-lists h3 {
-    font-size: var(--text-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-soft);
   }
   .status-lists ul {
     list-style: none;
     padding: 0;
+    margin: 0;
     columns: 2;
     column-gap: var(--space-4);
     font-size: var(--text-sm);
@@ -344,6 +327,12 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
   }
   .status-lists li a {
     display: inline-block;
-    padding: 0.25em 0;
+    padding: 0.2em 0;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .status-lists li a:hover {
+    color: var(--accent);
+    text-decoration: underline;
   }
 </style>

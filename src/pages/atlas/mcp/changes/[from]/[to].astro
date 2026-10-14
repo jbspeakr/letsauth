@@ -154,19 +154,15 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
 </Base>
 
 <style>
-  .crumbs {
-    font-family: var(--font-display);
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    margin-bottom: var(--space-4);
-  }
   .head {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-6);
   }
   .head h1 a {
     font-family: var(--font-mono);
     font-weight: 600;
-    font-size: 0.8em;
+    font-size: 0.75em;
+    letter-spacing: -0.01em;
+    text-decoration-thickness: 2px;
   }
   .links {
     color: var(--ink-muted);
@@ -176,17 +172,26 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     gap: var(--space-4);
+    align-items: start;
   }
   .card h2 {
-    font-size: var(--text-lg);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font-size: var(--text-md);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-soft);
   }
   .n {
     font-family: var(--font-mono);
-    color: var(--ink-muted);
+    color: var(--ink-faint);
     font-weight: 500;
+    font-size: var(--text-sm);
   }
   .note {
     color: var(--ink-muted);
+    font-size: var(--text-sm);
   }
   .list {
     list-style: none;
@@ -197,23 +202,33 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
   }
   .list li {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
     padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-soft);
   }
   .list li:last-child {
     border-bottom: 0;
+    padding-bottom: 0;
   }
-  .list a {
-    font-family: var(--font-display);
+  .list li > a {
     font-weight: 600;
     color: var(--ink);
+    text-decoration: none;
+  }
+  .list li > a:hover {
+    color: var(--accent);
+    text-decoration: underline;
   }
   .levels {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--text-sm);
+    color: var(--ink-faint);
   }
   .meta {
     font-size: var(--text-xs);
     color: var(--ink-muted);
+    line-height: 1.5;
   }
 </style>

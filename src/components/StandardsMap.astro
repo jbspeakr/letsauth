@@ -156,6 +156,7 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--bg-elevated);
+    box-shadow: var(--shadow), var(--inset-highlight);
     max-height: 80vh;
   }
   .map-frame:focus-visible {
@@ -164,7 +165,7 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
   }
   svg {
     display: block;
-    font-family: var(--font-display);
+    font-family: var(--font-body);
   }
   figcaption {
     margin-top: var(--space-2);
@@ -182,9 +183,9 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
     fill: var(--bg-sunken);
   }
   .lane-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     fill: var(--ink-muted);
   }
@@ -262,9 +263,9 @@ function edgeTitle(type: RelationType, fromId: string, toId: string, note?: stri
     fill: var(--ink);
   }
   .node-meta {
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     fill: var(--ink-muted);
   }

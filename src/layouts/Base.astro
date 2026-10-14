@@ -3,8 +3,8 @@ import "@/styles/global.css";
 // The three fonts every page paints with, preloaded so text does not reflow when they swap in
 // (the fontsource CSS declares them with font-display: swap; Vite gives both the same hashed URL).
 import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
-import fontMono from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
-import fontBody from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
+import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
+import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
 
 interface Props {
   title: string;
@@ -21,6 +21,27 @@ const canonical = new URL(path ?? Astro.url.pathname, site);
 const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN as string | undefined;
 const fullTitle =
   title === "letsauth" ? "letsauth — the lab for agent auth" : `${title} · letsauth`;
+const here = path ?? Astro.url.pathname;
+const nav = [
+  {
+    href: "/atlas/mcp/",
+    label: "MCP auth atlas",
+    short: "MCP atlas",
+    match: (p: string) => p.startsWith("/atlas/mcp/") && !p.startsWith("/atlas/mcp/contribute/"),
+  },
+  {
+    href: "/atlas/standards/",
+    label: "Agent auth atlas",
+    short: "Standards",
+    match: (p: string) => p.startsWith("/atlas/standards/"),
+  },
+  {
+    href: "/atlas/mcp/contribute/",
+    label: "Contribute",
+    short: "Contribute",
+    match: (p: string) => p.startsWith("/atlas/mcp/contribute/"),
+  },
+];
 ---
 
 <!doctype html>
@@ -39,8 +60,8 @@ const fullTitle =
     <meta property="og:url" content={canonical.href} />
     <meta property="og:image" content={new URL("/og.png", site).href} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {
       [fontBody, fontDisplay, fontMono].map((href) => (
@@ -64,17 +85,51 @@ const fullTitle =
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
+    <div class="site-bg" aria-hidden="true"></div>
     <header class="site-header">
       <div class="wrap site-header__row">
         <a class="brand" href="/" aria-label="letsauth home">
-          <span class="brand__mark" aria-hidden="true"></span>
+          <svg class="brand__mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+            <defs>
+              <linearGradient id="brand-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--accent)" />
+                <stop offset="1" stop-color="var(--accent-2)" />
+              </linearGradient>
+            </defs>
+            <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#brand-g)" />
+            <path
+              d="M11 15.5v-3a5 5 0 0 1 10 0v3"
+              fill="none"
+              stroke="var(--bg-elevated)"
+              stroke-width="2.4"
+              stroke-linecap="round"
+            />
+            <rect x="9" y="14.5" width="14" height="10" rx="3" fill="var(--bg-elevated)" />
+            <circle cx="16" cy="19.5" r="1.6" fill="var(--accent-strong)" />
+          </svg>
           <span class="brand__name">letsauth</span>
         </a>
-        <nav aria-label="Primary">
-          <a href="/atlas/mcp/">MCP auth atlas</a>
-          <a href="/atlas/standards/">Agent auth atlas</a>
-          <a href="/atlas/mcp/contribute/">Contribute</a>
-          <a href="https://github.com/jbspeakr/letsauth" rel="noopener">Source</a>
+        <nav class="site-nav" aria-label="Primary">
+          {
+            nav.map((item) => (
+              <a
+                href={item.href}
+                aria-label={item.label}
+                aria-current={item.match(here) ? "page" : undefined}
+              >
+                <span class="nav-long">{item.label}</span>
+                <span class="nav-short" aria-hidden="true">
+                  {item.short}
+                </span>
+              </a>
+            ))
+          }
+          <a href="https://github.com/jbspeakr/letsauth" rel="noopener" class="external">
+            Source
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M3.5 2.5h6v6M9.5 2.5l-7 7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
         </nav>
         <button
           id="theme-toggle"
@@ -83,17 +138,12 @@ const fullTitle =
           aria-label="Toggle colour theme"
           title="Toggle colour theme"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="5" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" />
+          <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" />
+          </svg>
+          <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
           </svg>
         </button>
       </div>
@@ -102,17 +152,27 @@ const fullTitle =
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="wrap site-footer__row">
-        <p>
-          letsauth is an independent lab for agent authentication. Data is CC BY 4.0, code is MIT.
-          The atlas contacts no server; every cell cites its source.
-        </p>
-        <p>
-          <a href="/atlas/mcp/data.json">MCP atlas data</a> ·
-          <a href="/atlas/standards/data.json">Standards data</a> ·
-          <a href="https://github.com/jbspeakr/letsauth" rel="noopener">GitHub</a> ·
-          Hosted in the EU.
-        </p>
+      <div class="wrap site-footer__grid">
+        <div class="site-footer__about">
+          <p class="site-footer__brand">letsauth</p>
+          <p>
+            An independent lab for authentication in the agent era. The atlas contacts no server;
+            every cell cites its source.
+          </p>
+        </div>
+        <nav class="site-footer__links" aria-label="Footer">
+          <a href="/atlas/mcp/">MCP auth atlas</a>
+          <a href="/atlas/standards/">Agent auth atlas</a>
+          <a href="/atlas/mcp/contribute/">Contribute</a>
+          <a href="/atlas/mcp/data.json">MCP atlas data</a>
+          <a href="/atlas/standards/data.json">Standards data</a>
+          <a href="https://github.com/jbspeakr/letsauth" rel="noopener">GitHub</a>
+        </nav>
+        <ul class="site-footer__meta" aria-label="Licences and hosting">
+          <li><span class="dot" aria-hidden="true"></span> Data CC BY 4.0</li>
+          <li><span class="dot" aria-hidden="true"></span> Code MIT</li>
+          <li><span class="dot" aria-hidden="true"></span> Hosted in the EU</li>
+        </ul>
       </div>
     </footer>
     <script>
@@ -145,19 +205,55 @@ const fullTitle =
   .skip:focus {
     top: var(--space-2);
   }
+
+  /* ambient background: a faint dot grid that fades out, and a soft accent glow near the top */
+  .site-bg {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: min(70vh, 48rem);
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(
+        60rem 28rem at 12% -6rem,
+        var(--accent-glow),
+        transparent 70%
+      ),
+      radial-gradient(
+        circle at 1px 1px,
+        color-mix(in oklch, var(--ink) 9%, transparent) 1px,
+        transparent 0
+      );
+    background-size:
+      100% 100%,
+      22px 22px;
+    mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+  }
+  body {
+    position: relative;
+  }
+  .site-header,
+  .site-main,
+  .site-footer {
+    position: relative;
+    z-index: 1;
+  }
+
   .site-header {
-    border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
     z-index: 5;
+    background: var(--bg-glass);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border-bottom: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
   }
   .site-header__row {
     display: flex;
     align-items: center;
     gap: var(--space-5);
-    min-height: 3.5rem;
+    min-height: var(--header-h);
   }
   .brand {
     display: inline-flex;
@@ -168,68 +264,175 @@ const fullTitle =
     font-family: var(--font-display);
     font-weight: 700;
     letter-spacing: -0.02em;
-    font-size: 1.15rem;
+    font-size: 1.2rem;
+    line-height: 1;
   }
   .brand__mark {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: conic-gradient(from 200deg, var(--accent), var(--accent-2), var(--accent));
+    flex: none;
+    filter: drop-shadow(0 1px 2px color-mix(in oklch, var(--accent) 30%, transparent));
   }
-  nav {
+  .site-nav {
     display: flex;
-    gap: var(--space-4);
+    align-items: center;
+    gap: var(--space-1);
     margin-left: auto;
-    font-family: var(--font-display);
     font-size: var(--text-sm);
     font-weight: 500;
   }
-  nav a {
+  .site-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
     color: var(--ink-muted);
     text-decoration: none;
+    padding: 0.45em 0.75em;
+    border-radius: 999px;
+    transition:
+      color var(--dur-fast) var(--ease),
+      background var(--dur-fast) var(--ease);
   }
-  nav a:hover {
+  .site-nav a:hover {
     color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+  }
+  .site-nav a[aria-current="page"] {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 8%, transparent);
+  }
+  .site-nav .external svg {
+    opacity: 0.6;
+  }
+  .nav-short {
+    display: none;
   }
   .theme-toggle {
     display: inline-grid;
     place-items: center;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 50%;
     border: 1px solid var(--line);
     background: var(--bg-elevated);
     color: var(--ink-muted);
     cursor: pointer;
+    box-shadow: var(--shadow-sm), var(--inset-highlight);
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease),
+      transform var(--dur-fast) var(--ease);
   }
   .theme-toggle:hover {
     color: var(--ink);
     border-color: var(--line-strong);
+    transform: rotate(15deg);
   }
+  .theme-toggle .icon-moon {
+    display: none;
+  }
+  :root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: none;
+  }
+  :root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: block;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun {
+      display: none;
+    }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon {
+      display: block;
+    }
+  }
+
   .site-main {
     flex: 1;
-    padding-block: var(--space-6) var(--space-8);
+    padding-block: var(--space-7) var(--space-9);
   }
+
   .site-footer {
     border-top: 1px solid var(--line);
-    padding-block: var(--space-6);
+    background: var(--bg-sunken);
+    padding-block: var(--space-7) var(--space-7);
     color: var(--ink-muted);
     font-size: var(--text-sm);
   }
-  .site-footer p {
+  .site-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .site-footer__brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 1.1rem;
     margin-bottom: var(--space-2);
+    letter-spacing: -0.02em;
+  }
+  .site-footer__about p:last-child {
+    margin: 0;
+    max-width: 40ch;
+  }
+  .site-footer__links {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .site-footer__links a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    width: fit-content;
+  }
+  .site-footer__links a:hover {
+    color: var(--ink);
+  }
+  .site-footer__meta {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .site-footer__meta li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .site-footer__meta .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+  }
+  @media (max-width: 48rem) {
+    .site-footer__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
   }
   @media (max-width: 40rem) {
     .site-header__row {
       gap: var(--space-3);
     }
-    nav {
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: var(--space-1) var(--space-3);
+    .site-nav {
+      gap: 0;
+      font-size: var(--text-xs);
     }
-    nav a {
-      white-space: nowrap;
+    .site-nav a {
+      padding: 0.45em 0.55em;
+    }
+    .site-nav .external,
+    .nav-long {
+      display: none;
+    }
+    .nav-short {
+      display: inline;
+    }
+    .site-main {
+      padding-block: var(--space-6) var(--space-8);
     }
   }
 </style>

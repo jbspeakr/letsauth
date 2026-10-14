@@ -94,7 +94,9 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
   }
   .group h3 {
     font-size: var(--text-md);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--line);
   }
   .n {
     font-family: var(--font-mono);
@@ -112,8 +114,8 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
   li {
     display: grid;
     gap: var(--space-1);
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line-soft);
     font-size: var(--text-sm);
   }
   li:last-child {
@@ -126,9 +128,13 @@ const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
     gap: var(--space-2) var(--space-3);
   }
   .who a {
-    font-family: var(--font-display);
     font-weight: 600;
     color: var(--ink);
+    text-decoration: none;
+  }
+  .who a:hover {
+    color: var(--accent);
+    text-decoration: underline;
   }
   .why {
     color: var(--ink-muted);
