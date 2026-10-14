@@ -1,0 +1,72 @@
+# Contract: Report
+
+One shape for the command's output, the on-demand service's response and the per-server JSON on
+the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `latestScan()` in
+`src/lib/scanner.ts` (which fills `checks[]` and `grade` from observations and leaves
+`requests` and `discovered` empty, since the site never contacts a server).
+
+```jsonc
+{
+  "version": 1,
+  "scanner": "letsauth-scanner/0.1.0",
+  "generatedAt": "2026-10-15T03:17:04Z",
+  "recorded": false,                       // true when built from the repository's observations
+  "target": {
+    "url": "https://mcp.example.com/mcp",  // the URL scanned
+    "server": "example"                    // listed server id, or null
+  },
+  "revision": { "spec": "mcp-authorization", "revision": "2026-07-28" },
+  "method": "passive-scan",
+  "requests": [                            // every request the scanner made, in order
+    { "url": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
+      "status": 200, "ok": true, "contentType": "application/json" },
+    { "url": "https://auth.example.com/.well-known/oauth-authorization-server",
+      "status": null, "ok": false, "error": "timeout" }
+  ],
+  "discovered": {
+    "protectedResource": {                 // or null
+      "url": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
+      "resource": "https://mcp.example.com/mcp",
+      "authorizationServers": ["https://auth.example.com"],
+      "scopesSupported": ["read", "write"]
+    },
+    "authorizationServer": {               // or null
+      "issuer": "https://auth.example.com",
+      "url": "https://auth.example.com/.well-known/oauth-authorization-server",
+      "endpoints": { "authorization_endpoint": "https://…", "token_endpoint": "https://…" },
+      "codeChallengeMethodsSupported": ["S256"],
+      "clientIdMetadataDocumentSupported": true,
+      "registrationEndpoint": null,
+      "authorizationResponseIssParameterSupported": true
+    },
+    "othersNotChecked": ["https://auth2.example.com"]   // further issuers in the PRM
+  },
+  "checks": [                              // one per passive feature, server party first
+    { "feature": "mcp.prm.well-known", "name": "PRM reachable at a well-known URI",
+      "party": "mcp-server", "level": "MUST", "levelNote": "One of two discovery mechanisms…",
+      "section": "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements",
+      "citation": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+      "status": "supported",
+      "evidence": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp — HTTP 200; found at the path-aware location",
+      "observedAt": "2026-10-15T03:17:04Z" }
+  ],
+  "grade": {
+    "letter": "C",                         // "A" | "B" | "C" | "F" | null
+    "label": "C",                          // or "Withheld" / "Not scanned"
+    "reasons": ["SHOULD-level check unsupported: Client ID Metadata Documents supported"]
+  },
+  "observations": [                        // the same checks as data-model observations;
+    { "server": "example", "feature": "mcp.prm.well-known", "revision": { … },
+      "status": "supported", "method": "passive-scan", "observedAt": "…",
+      "observedBy": "scanner@0.1.0", "evidence": "…" }
+  ]                                        // empty when `target.server` is null
+}
+```
+
+- `checks[]` is ordered by `CATEGORY_ORDER` then feature id, MCP server party before
+  authorization server party, the same order as the report page.
+- `observations[]` validates against `observationSchema`; `evidence` is deterministic
+  (`data-model.md`).
+- For a recorded report `observedAt` on a check is the date of the newest scanner observation
+  for that cell; a check without one has `status: "unknown"` and no `observedAt`.
+- `version` bumps on a breaking change of the shape. Adding fields is not breaking.
