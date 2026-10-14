@@ -1,9 +1,9 @@
 # Deployment
 
 letsauth.eu is a static site served by a Bunny CDN pull zone whose origin is a Bunny Storage
-Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` builds on every push to
-`main`, uploads `dist/` with the Bunny Storage API (one HTTP `PUT` per file) and purges the pull
-zone. No third-party deploy action is involved.
+Zone in an EU region (constitution VII). `.github/workflows/deploy.yml` runs after the CI workflow
+has passed on `main` (a red commit is never deployed), builds that commit, uploads `dist/` with
+the Bunny Storage API (one HTTP `PUT` per file) and purges the pull zone. No third-party deploy action is involved.
 
 ## One-time setup in Bunny
 
