@@ -8,3 +8,83 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: notion
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Notion MCP server supports dynamic client registration (RFC 7591)." (Guide tells clients to persist client_id and client_secret 'because re-registering orphans prior grants'.)
+- server: notion
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Alternatively, use a Client ID Metadata Document (CIMD), which Notion MCP supports."
+- server: notion
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: unsupported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Server does not advertise S256 PKCE support, but we will use it anyway." (Only the advertisement in metadata is stated to be missing; the guide says 'PKCE is mandatory' and its sample uses code_challenge_method S256.)
+- server: notion
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Use RFC 9470 (protected resource) then RFC 8414 (authorization server)" (Sample fetches `{authServerUrl}/.well-known/oauth-authorization-server`.)
+- server: notion
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Fetch Protected Resource Metadata to find which authorization server(s) protect this resource" (Sample fetches https://mcp.notion.com/mcp/.well-known/oauth-protected-resource.)
+- server: notion
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Fetch Protected Resource Metadata to find which authorization server(s) protect this resource" (Path-aware location https://mcp.notion.com/mcp/.well-known/oauth-protected-resource is given in the guide's sample.)
+- server: notion
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.notion.com/guides/mcp/build-mcp-client — "Fetch Protected Resource Metadata to find which authorization server(s) protect this resource"
+- server: notion
+  feature: mcp.as.refresh-rotation
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://developers.notion.com/guides/mcp/build-mcp-client — "Every refresh rotates the refresh token: the token response returns a new `refresh_token`, and the one you sent is retired." (''A grant keeps at most two refresh tokens valid at once''; reusing a rotated-away refresh token can revoke the entire connection; absolute lifetime 180 days, 30 days inactivity.)'

@@ -8,3 +8,73 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: asana
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: unsupported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "Dynamic client registration is not supported with Asana’s V2 MCP Server."
+- server: asana
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "Although these documents can be used to dynamically discover endpoints, clients must still pre-register to get a client id and client secret as described above." (App is created in the Asana developer console with app type 'MCP app'; tokens issued for MCP apps only work with the MCP server.)
+- server: asana
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "https://mcp.asana.com/v2/.well-known/oauth-protected-resource" (Documented as the protected resource metadata document for the Asana MCP server; a second one is documented for the Command MCP endpoint.)
+- server: asana
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "Points to Asana's authorization server metadata at https://app.asana.com/.well-known/oauth-authorization-server"
+- server: asana
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "Points to Asana's authorization server metadata at https://app.asana.com/.well-known/oauth-authorization-server"
+- server: asana
+  feature: mcp.as.resource-indicator
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://developers.asana.com/docs/integrating-with-asanas-mcp-server — "When directing users to the authorization endpoint, you can include the resource parameter to specify the MCP server: [...] Tokens issued for MCP apps only work with the MCP server." (Docs describe the resource parameter as optional; values https://mcp.asana.com/v2 or https://mcp.asana.com/v2/command/mcp.)'
+- server: asana
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developers.asana.com/docs/oauth — "The code_challenge_method should be the string "S256" to tell Asana we hashed with SHA256." (From Asana's general OAuth documentation for the same authorization server; the MCP page's example authorization URL also carries code_challenge_method=S256.)

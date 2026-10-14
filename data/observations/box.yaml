@@ -8,3 +8,43 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: box
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.box.com/guides/box-mcp/remote/ — "Enter the Redirect URI provided by the external MCP client. [...] Copy the generated Client ID and Client Secret." (Credentials are created under Admin Console > Integrations > Box MCP server > Configure > Add Integration Credentials; the README also allows creating your own OAuth app in the Developer Console.)
+- server: box
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://github.com/box/mcp-server-box-remote/ — "Resource metadata: https://mcp.box.com/.well-known/oauth-protected-resource"'
+- server: box
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://github.com/box/mcp-server-box-remote/ — "Resource metadata: https://mcp.box.com/.well-known/oauth-protected-resource" (Root well-known location; the MCP server URL is the host root.)'
+- server: box
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://github.com/box/mcp-server-box-remote/ — "Authorization server metadata: https://api.box.com/.well-known/oauth-authorization-server"'
