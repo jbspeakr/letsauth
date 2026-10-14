@@ -1,0 +1,8 @@
+id: sentry
+name: "Sentry"
+url: https://mcp.sentry.dev/sse
+homepage: https://sentry.io
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

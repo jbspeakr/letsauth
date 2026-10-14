@@ -1,0 +1,97 @@
+---
+import Base from "@/layouts/Base.astro";
+import { currentRevision, matrixFor } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+
+const data = getDataset();
+const revision = currentRevision(data);
+const matrix = matrixFor(data, revision.id);
+const observed = data.observations.length;
+---
+
+<Base
+  title="letsauth"
+  description="letsauth is an independent lab for authentication and authorization in the agent era. Start with the MCP auth atlas: which public MCP servers support which features of the MCP Authorization specification."
+  path="/"
+>
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">An independent lab for agent auth</p>
+      <h1>Authentication for agents, measured instead of asserted.</h1>
+      <p class="lede">
+        letsauth keeps one open dataset of what the agent protocols require and what real
+        servers do. Every claim cites a specification revision, every status cites an
+        observation, and the data is yours to download.
+      </p>
+      <p class="cta">
+        <a class="button primary" href="/atlas/mcp">Open the MCP auth atlas</a>
+        <a class="button" href="/atlas/mcp/data.json">Get the data</a>
+      </p>
+    </section>
+
+    <section class="facts" aria-label="Atlas at a glance">
+      <div class="card">
+        <strong>{matrix.rows.length}</strong>
+        <span>public MCP servers listed</span>
+      </div>
+      <div class="card">
+        <strong>{matrix.columns.length}</strong>
+        <span>requirements from MCP Authorization {revision.id}</span>
+      </div>
+      <div class="card">
+        <strong>{observed}</strong>
+        <span>observations on record, each with evidence</span>
+      </div>
+    </section>
+
+    <section class="prose">
+      <h2>What the atlas is</h2>
+      <p>
+        The MCP Authorization specification tells servers how to advertise their authorization
+        server, which registration methods to accept, how to validate tokens and how to challenge
+        for scopes. The atlas is a matrix of public servers against those requirements. It is
+        neutral: rows are alphabetical, nothing is scored, and an empty cell is shown as
+        <em>unknown</em>, never as a failure.
+      </p>
+      <p>
+        Observations are append-only. When a server changes, a new observation is added and the
+        old one stays in the history, so the atlas is also a record of how the ecosystem moved.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    padding-block: var(--space-6) var(--space-7);
+    max-width: 52rem;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-7);
+  }
+  .facts .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .facts strong {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .facts span {
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+</style>

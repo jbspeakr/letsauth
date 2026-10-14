@@ -1,0 +1,18 @@
+id: mcp.as.dcr
+name: "Dynamic Client Registration offered"
+description: >
+  The authorization server exposes a registration_endpoint (RFC 7591) so clients can register
+  themselves at runtime.
+category: registration
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Dynamic Client Registration"
+    level: SHOULD
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Client Registration › Dynamic Client Registration"
+    level: MAY
+    levelNote: "Deprecated; retained for compatibility with clients that cannot use Client ID Metadata Documents."

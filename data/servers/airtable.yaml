@@ -1,0 +1,8 @@
+id: airtable
+name: "Airtable"
+url: https://mcp.airtable.com/mcp
+homepage: https://airtable.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

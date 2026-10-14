@@ -1,0 +1,8 @@
+id: netlify
+name: "Netlify"
+url: https://netlify-mcp.netlify.app/mcp
+homepage: https://netlify.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

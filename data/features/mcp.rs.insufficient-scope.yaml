@@ -1,0 +1,17 @@
+id: mcp.rs.insufficient-scope
+name: "403 insufficient_scope for step-up"
+description: >
+  When a valid token lacks a required scope the server answers 403 with error="insufficient_scope"
+  and the scopes needed, enabling step-up authorization.
+category: authorization
+party: mcp-server
+observable: active
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Flow › Scope Challenge Handling"
+    level: SHOULD
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Scope Challenge Handling"
+    level: SHOULD

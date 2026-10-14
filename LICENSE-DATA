@@ -1,0 +1,12 @@
+The data in this repository (everything under data/, and the JSON exports built from it) is
+licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).
+
+You are free to share and adapt the data for any purpose, including commercially, as long as you
+give appropriate credit to letsauth.eu, link to the licence and indicate if changes were made.
+
+Full licence text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Suggested attribution: "MCP auth atlas data by letsauth.eu, CC BY 4.0,
+https://letsauth.eu/atlas/mcp/data.json".
+
+The code of this repository is licensed separately under the MIT License (see LICENSE).

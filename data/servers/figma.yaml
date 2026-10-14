@@ -1,0 +1,8 @@
+id: figma
+name: "Figma"
+url: https://mcp.figma.com/mcp
+homepage: https://figma.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1-no-dcr

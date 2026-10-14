@@ -1,0 +1,9 @@
+/*
+ * Self-hosted variable fonts (constitution VII: no third-party font host). The @fontsource
+ * packages declare @font-face with font-display: swap and ship the woff2 files, which Vite
+ * copies into the build. Fallback stacks are in tokens.css.
+ */
+@import "@fontsource-variable/bricolage-grotesque/wght.css";
+@import "@fontsource-variable/source-serif-4/wght.css";
+@import "@fontsource-variable/source-serif-4/wght-italic.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";

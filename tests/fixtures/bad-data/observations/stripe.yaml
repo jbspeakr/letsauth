@@ -1,0 +1,30 @@
+- server: stripe
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: supported
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: test
+  evidence: https://example.org/ok
+- server: stripe
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: supported
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: test
+  evidence: ""
+- server: stripe
+  feature: mcp.as.nope
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: supported
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: test
+  evidence: https://example.org/ok

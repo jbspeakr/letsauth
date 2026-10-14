@@ -1,0 +1,17 @@
+id: mcp.as.metadata
+name: "Authorization server metadata discoverable"
+description: >
+  The authorization server publishes metadata via OAuth 2.0 Authorization Server Metadata (RFC
+  8414) or OpenID Connect Discovery.
+category: discovery
+party: authorization-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Authorization Server Metadata Discovery"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Authorization Server Metadata Discovery"
+    level: MUST

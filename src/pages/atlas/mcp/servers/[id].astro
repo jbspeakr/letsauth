@@ -1,0 +1,362 @@
+---
+import Citation from "@/components/Citation.astro";
+import StatusCell from "@/components/StatusCell.astro";
+import Base from "@/layouts/Base.astro";
+import {
+  cellHistory,
+  currentCell,
+  currentRevision,
+  featureInRevision,
+  matrixColumns,
+  revisionsNewestFirst,
+} from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+import { CATEGORY_LABEL, METHOD_LABEL, PARTY_LABEL } from "@/lib/labels";
+import type { Server } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().servers.map((server) => ({ params: { id: server.id }, props: { server } }));
+}
+
+const { server } = Astro.props as { server: Server };
+const data = getDataset();
+const revision = currentRevision(data);
+const revisions = revisionsNewestFirst(data);
+const columns = matrixColumns(data, revision.id);
+const parties = ["mcp-server", "authorization-server"] as const;
+
+const LISTED_LABEL: Record<Server["listed"], string> = {
+  "opt-in": "The maintainer asked for this server to be listed.",
+  "public-directory": "Listed because it appears in a public directory of MCP servers.",
+  "maintainer-added": "Added by the atlas maintainer from the vendor's own documentation.",
+};
+const TRANSPORT_LABEL: Record<Server["transport"], string> = {
+  "streamable-http": "Streamable HTTP",
+  sse: "HTTP with SSE",
+  "stdio-only": "stdio only (no HTTP transport)",
+};
+const evidenceUrl = (s: string) => s.match(/^(https:\/\/\S+)/)?.[1];
+const issueBase = "https://github.com/jbspeakr/letsauth/issues/new?template=observation.yml";
+const counts = { supported: 0, partial: 0, unsupported: 0, unknown: 0, "not-applicable": 0 };
+for (const f of columns) counts[currentCell(data, server, f, revision.id).status] += 1;
+---
+
+<Base
+  title={server.name}
+  description={`${server.name}'s support for the MCP Authorization specification, revision ${revision.id}: current status per feature with the observations behind it.`}
+  path={`/atlas/mcp/servers/${server.id}`}
+  noindex={Boolean(server.withdrawn)}
+>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/atlas/mcp">MCP auth atlas</a> <span aria-hidden="true">/</span> Servers
+    </nav>
+    <header class="head">
+      <p class="eyebrow">Server</p>
+      <h1>{server.name}</h1>
+      {server.vendor && server.vendor !== server.name && <p class="lede">by {server.vendor}</p>}
+    </header>
+
+    {
+      server.withdrawn ? (
+        <section class="card notice" aria-labelledby="withdrawn">
+          <h2 id="withdrawn">Withdrawn from the atlas</h2>
+          <p>
+            This server was withdrawn on{" "}
+            <time datetime={server.withdrawn.at}>{server.withdrawn.at}</time> and no longer
+            appears in the matrix. Reason given: {server.withdrawn.reason}.
+          </p>
+          <p>
+            Its observations stay in the repository history, but no status is shown here. The
+            maintainer can ask to be relisted through the <a href="/atlas/mcp/contribute">contribution page</a>.
+          </p>
+        </section>
+      ) : (
+        <>
+          <section class="profile card" aria-label="Profile">
+            <dl>
+              <dt>Endpoint</dt>
+              <dd>
+                <code>{server.url}</code>
+              </dd>
+              <dt>Transport</dt>
+              <dd>{TRANSPORT_LABEL[server.transport]}</dd>
+              {server.authClaimed && (
+                <>
+                  <dt>Authentication as listed</dt>
+                  <dd>
+                    <code>{server.authClaimed}</code>
+                    <span class="muted"> (the source's own label, not an observation)</span>
+                  </dd>
+                </>
+              )}
+              <dt>Why it is listed</dt>
+              <dd>
+                {LISTED_LABEL[server.listed]}{" "}
+                {server.source && (
+                  <a href={server.source} rel="noopener">
+                    Source
+                  </a>
+                )}
+              </dd>
+              {server.homepage && (
+                <>
+                  <dt>Homepage</dt>
+                  <dd>
+                    <a href={server.homepage} rel="noopener">
+                      {server.homepage}
+                    </a>
+                  </dd>
+                </>
+              )}
+              {server.notes && (
+                <>
+                  <dt>Notes</dt>
+                  <dd>{server.notes}</dd>
+                </>
+              )}
+            </dl>
+            <ul class="summary" aria-label="Status summary">
+              {(["supported", "partial", "unsupported", "unknown", "not-applicable"] as const)
+                .filter((s) => counts[s] > 0)
+                .map((s) => (
+                  <li>
+                    <StatusCell status={s} variant="label" /> <span class="n">{counts[s]}</span>
+                  </li>
+                ))}
+            </ul>
+            <p class="actions">
+              <a class="button" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
+                Contribute a correction
+              </a>
+              <a class="button" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
+                Withdraw this server
+              </a>
+              <a class="button" href={`/atlas/mcp/servers/${server.id}.json`}>JSON</a>
+            </p>
+          </section>
+
+          <p class="revision-note">
+            Status against <strong>MCP Authorization {revision.id}</strong> (current revision).
+            {revisions.length > 1 && (
+              <>
+                {" "}Older revisions:{" "}
+                {revisions
+                  .filter((r) => r.id !== revision.id)
+                  .map((r) => (
+                    <a href={`/atlas/mcp/${r.id}`}>{r.id}</a>
+                  ))}
+              </>
+            )}
+          </p>
+
+          {parties.map((party) => {
+            const features = columns.filter((f) => f.party === party);
+            return (
+              <section aria-labelledby={`party-${party}`}>
+                <h2 id={`party-${party}`}>{PARTY_LABEL[party]} features</h2>
+                <div class="table-wrap">
+                  <table class="features">
+                    <thead>
+                      <tr>
+                        <th scope="col">Feature</th>
+                        <th scope="col">Level</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Observed</th>
+                        <th scope="col">Evidence</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {features.map((feature) => {
+                        const cell = currentCell(data, server, feature, revision.id);
+                        const history = cellHistory(data, server.id, feature.id, revision.id);
+                        const entry = featureInRevision(feature, revision.id);
+                        const obs = cell.observation;
+                        return (
+                          <tr data-feature={feature.id} data-status={cell.status}>
+                            <th scope="row">
+                              <a href={`/atlas/mcp/features/${feature.id}`}>{feature.name}</a>
+                              <span class="meta">
+                                <code>{feature.id}</code> · {CATEGORY_LABEL[feature.category]}
+                                {entry && (
+                                  <>
+                                    {" · "}
+                                    <Citation entry={entry} />
+                                  </>
+                                )}
+                              </span>
+                            </th>
+                            <td>
+                              {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
+                            </td>
+                            <td>
+                              <StatusCell status={cell.status} derived={cell.derived} variant="label" />
+                            </td>
+                            <td>
+                              {obs ? (
+                                <>
+                                  <time datetime={obs.observedAt}>{obs.observedAt.slice(0, 10)}</time>
+                                  <span class="meta">
+                                    {METHOD_LABEL[obs.method]} · {obs.observedBy}
+                                  </span>
+                                </>
+                              ) : (
+                                <span class="muted">no observation yet</span>
+                              )}
+                            </td>
+                            <td class="evidence">
+                              {obs &&
+                                (evidenceUrl(obs.evidence) ? (
+                                  <>
+                                    <a href={evidenceUrl(obs.evidence)} rel="noopener">
+                                      source
+                                    </a>
+                                    <span class="meta">{obs.evidence.replace(/^https:\/\/\S+\s*/, "")}</span>
+                                  </>
+                                ) : (
+                                  obs.evidence
+                                ))}
+                              {history.length > 0 && (
+                                <details class="history">
+                                  <summary>
+                                    {history.length} earlier observation{history.length > 1 ? "s" : ""}
+                                  </summary>
+                                  <ol>
+                                    {history.map((h) => (
+                                      <li>
+                                        <StatusCell status={h.status} variant="label" />{" "}
+                                        <time datetime={h.observedAt}>{h.observedAt.slice(0, 10)}</time>
+                                        {" · "}
+                                        {METHOD_LABEL[h.method]} · {h.observedBy} ·{" "}
+                                        {evidenceUrl(h.evidence) ? (
+                                          <a href={evidenceUrl(h.evidence)} rel="noopener">
+                                            evidence
+                                          </a>
+                                        ) : (
+                                          h.evidence
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ol>
+                                </details>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            );
+          })}
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .crumbs {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    margin-bottom: var(--space-4);
+  }
+  .head {
+    margin-bottom: var(--space-5);
+  }
+  .notice {
+    border-color: var(--accent-2);
+    background: var(--accent-2-soft);
+  }
+  .profile {
+    margin-bottom: var(--space-5);
+  }
+  .profile dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-2) var(--space-5);
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-sm);
+  }
+  .profile dt {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    padding-top: 0.25em;
+  }
+  .profile dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .muted {
+    color: var(--ink-muted);
+  }
+  .summary {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+  }
+  .summary .n {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .revision-note {
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+  .revision-note a {
+    margin-right: var(--space-2);
+  }
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: var(--space-6);
+  }
+  .features th[scope="row"] {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    min-width: 18rem;
+  }
+  .meta {
+    display: block;
+    font-weight: 400;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    margin-top: var(--space-1);
+  }
+  .evidence {
+    max-width: 24rem;
+    overflow-wrap: anywhere;
+  }
+  .history {
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+  }
+  .history summary {
+    cursor: pointer;
+    color: var(--accent);
+  }
+  .history ol {
+    padding-left: 1.2em;
+    margin: var(--space-2) 0 0;
+  }
+  @media (max-width: 40rem) {
+    .profile dl {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

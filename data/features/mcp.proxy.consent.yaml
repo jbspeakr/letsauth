@@ -1,0 +1,17 @@
+id: mcp.proxy.consent
+name: "Per-client consent on proxy servers"
+description: >
+  An MCP server that acts as a proxy with a static upstream client id obtains the user's consent
+  for each dynamically registered client before forwarding.
+category: consent
+party: mcp-server
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Confused Deputy Problem"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Confused Deputy Problem"
+    level: MUST

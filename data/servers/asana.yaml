@@ -1,0 +1,8 @@
+id: asana
+name: "Asana"
+url: https://mcp.asana.com/sse
+homepage: https://asana.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

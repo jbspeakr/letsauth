@@ -5,7 +5,7 @@ features and the review point after each. Each feature gets its own spec under `
 
 | # | Feature | Why this order | Status |
 |---|---|---|---|
-| 001 | **MCP Atlas** | Quickest unique win. A curated matrix of public MCP servers against the features of the current MCP authorization revision forces the data model to be right and is useful on day one. | Spec drafted |
+| 001 | **MCP Atlas** | Quickest unique win. A curated matrix of public MCP servers against the features of the current MCP authorization revision forces the data model to be right and is useful on day one. | Implemented (pull request open) |
 | 002 | **Agent Auth Atlas** | The standards graph. Mostly data entry on the same model, plus one graph view. | Planned |
 | 003 | **Delegation Chain Explorer** | The flagship. Step-through scenarios with the decoded token at each hop and attack toggles. Reuses features and revisions from 001 and 002. | Planned |
 | 004 | **Scanner** | Automates what 001 did by hand. Passive checks on public metadata, graded report, nightly PR with observations. First and only backend. | Planned |

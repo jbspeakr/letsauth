@@ -1,0 +1,17 @@
+id: mcp.client.pkce
+name: "PKCE on every authorization request"
+description: >
+  The client generates a PKCE verifier and S256 challenge for every authorization request and
+  refuses to proceed when the server does not advertise S256.
+category: authorization
+party: client
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Authorization Code Protection"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Authorization Code Protection"
+    level: MUST

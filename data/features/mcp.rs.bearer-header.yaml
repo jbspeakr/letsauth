@@ -1,0 +1,17 @@
+id: mcp.rs.bearer-header
+name: "Bearer token only in the Authorization header"
+description: >
+  The MCP server accepts access tokens only in the Authorization: Bearer header and rejects tokens
+  passed in the query string.
+category: token
+party: mcp-server
+observable: active
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Access Token Usage › Token Requirements"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Access Token Usage"
+    level: MUST

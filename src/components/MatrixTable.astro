@@ -1,0 +1,286 @@
+---
+import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/lib/atlas";
+import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
+import ObservationDetail from "./ObservationDetail.astro";
+import StatusCell from "./StatusCell.astro";
+
+interface Props {
+  matrix: Matrix;
+  /** Diff against the previous revision, used to badge columns whose level changed. */
+  diff?: RevisionDiff;
+}
+
+const { matrix, diff } = Astro.props;
+const { columns, rows, cells, revision } = matrix;
+
+// group columns by category for the top header row
+const groups: { category: string; count: number }[] = [];
+for (const f of columns) {
+  const last = groups[groups.length - 1];
+  if (last && last.category === f.category) last.count += 1;
+  else groups.push({ category: f.category, count: 1 });
+}
+
+const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
+const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
+const changesHref = diff ? `/atlas/mcp/changes/${diff.from.id}/${diff.to.id}` : undefined;
+const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
+---
+
+<div class="matrix-scroll" tabindex="0" role="region" aria-label="Support matrix, scrolls horizontally">
+  <table class="matrix" id="matrix" data-matrix-revision={revision.id}>
+    <caption class="visually-hidden">
+      Support for each feature of MCP Authorization {revision.id} by server. Rows are servers in
+      alphabetical order; columns are features grouped by category.
+    </caption>
+    <thead>
+      <tr class="groups">
+        <td></td>
+        {
+          groups.map((g) => (
+            <th scope="colgroup" colspan={g.count} data-category={g.category}>
+              {CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}
+            </th>
+          ))
+        }
+      </tr>
+      <tr>
+        <th scope="col" class="server-head">Server</th>
+        {
+          columns.map((f) => {
+            const entry = featureInRevision(f, revision.id);
+            const level = entry?.level ?? "MUST";
+            const changed = changedIds.get(f.id);
+            const added = addedIds.has(f.id);
+            return (
+              <th
+                scope="col"
+                data-feature={f.id}
+                data-level={level}
+                data-category={f.category}
+                data-party={f.party}
+                title={`${f.name} — ${PARTY_LABEL[f.party]} — ${level}`}
+              >
+                <a class="feature-link" href={`/atlas/mcp/features/${f.id}`}>
+                  <span class="feature-short">{shortLabel(f.id)}</span>
+                  <span class="visually-hidden">{f.name}</span>
+                </a>
+                <span class:list={["level", `level-${level}`]} aria-label={`Level ${level}`}>
+                  {level}
+                </span>
+                <span class="party" aria-hidden="true">
+                  {PARTY_SHORT[f.party]}
+                </span>
+                {changed && changesHref && (
+                  <a class="changed" href={changesHref} title={`Level changed from ${changed.from} to ${changed.to} in ${revision.id}`}>
+                    changed
+                  </a>
+                )}
+                {added && changesHref && (
+                  <a class="changed" href={changesHref} title={`New in ${revision.id}`}>
+                    new
+                  </a>
+                )}
+              </th>
+            );
+          })
+        }
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((server) => (
+          <tr data-server={server.id} data-name={server.name.toLowerCase()}>
+            <th scope="row" class="server-cell">
+              <a href={`/atlas/mcp/servers/${server.id}`}>{server.name}</a>
+              {server.authClaimed && (
+                <span class="claim" title={`Authentication as listed by the source: ${server.authClaimed}`}>
+                  {server.authClaimed}
+                </span>
+              )}
+            </th>
+            {columns.map((feature) => {
+              const cell = cells.get(cellKey(server.id, feature.id));
+              if (!cell) throw new Error(`missing cell ${server.id}/${feature.id}`);
+              return (
+                <td
+                  data-server={server.id}
+                  data-feature={feature.id}
+                  data-status={cell.status}
+                  data-derived={cell.derived ? "true" : "false"}
+                >
+                  <details class="cell">
+                    <summary aria-label={`${server.name}, ${feature.name}: ${cell.status}`}>
+                      <StatusCell status={cell.status} derived={cell.derived} />
+                    </summary>
+                    <ObservationDetail cell={cell} server={server} feature={feature} />
+                  </details>
+                </td>
+              );
+            })}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .matrix-scroll {
+    /* positioned so visually-hidden (absolute) labels inside the table stay inside the clip */
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow);
+  }
+  .matrix {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    width: max-content;
+    min-width: 100%;
+  }
+  .matrix th,
+  .matrix td {
+    border-bottom: 1px solid var(--line);
+    padding: var(--space-2);
+    text-align: center;
+    vertical-align: middle;
+  }
+  .groups th {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+    border-left: 1px solid var(--line);
+    background: var(--bg-sunken);
+  }
+  .groups td {
+    background: var(--bg-sunken);
+    position: sticky;
+    left: 0;
+    z-index: 3;
+  }
+  thead th[data-feature] {
+    text-transform: none;
+    letter-spacing: 0;
+    vertical-align: bottom;
+    min-width: 6rem;
+    max-width: 7rem;
+    color: var(--ink);
+  }
+  .feature-link {
+    display: block;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .feature-link:hover .feature-short {
+    text-decoration: underline;
+  }
+  .feature-short {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+    hyphens: manual;
+    line-height: 1.25;
+    margin-bottom: var(--space-1);
+  }
+  .party {
+    display: inline-block;
+    margin-left: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+  }
+  .changed {
+    display: block;
+    margin-top: var(--space-1);
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    text-decoration: none;
+  }
+  .server-head,
+  .server-cell {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-elevated);
+    text-align: left;
+    border-right: 1px solid var(--line);
+    min-width: 11rem;
+  }
+  .server-head {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--text-sm);
+    color: var(--ink);
+  }
+  .server-cell {
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-sm);
+  }
+  .server-cell a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .server-cell a:hover {
+    text-decoration: underline;
+  }
+  .claim {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+  }
+  tbody tr:hover > * {
+    background: color-mix(in srgb, var(--accent-soft) 45%, var(--bg-elevated));
+  }
+  .cell {
+    position: relative;
+  }
+  .cell summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+  .cell summary::-webkit-details-marker {
+    display: none;
+  }
+  .cell summary:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .cell[open] > :global(.detail) {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: var(--space-3);
+    text-align: left;
+    width: 22rem;
+    max-width: 80vw;
+  }
+  .matrix [hidden] {
+    display: none;
+  }
+</style>

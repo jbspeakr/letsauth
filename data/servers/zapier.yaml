@@ -1,0 +1,8 @@
+id: zapier
+name: "Zapier"
+url: https://mcp.zapier.com/api/mcp/mcp
+homepage: https://zapier.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: api-key

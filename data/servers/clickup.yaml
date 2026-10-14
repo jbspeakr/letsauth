@@ -1,0 +1,8 @@
+id: clickup
+name: "ClickUp"
+url: https://mcp.clickup.com/mcp
+homepage: https://clickup.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1-no-dcr

@@ -1,0 +1,8 @@
+id: webflow
+name: "Webflow"
+url: https://mcp.webflow.com/sse
+homepage: https://webflow.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

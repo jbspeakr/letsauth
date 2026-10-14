@@ -1,0 +1,27 @@
+id: mcp-authorization
+name: MCP Authorization
+body: mcp
+family: profile
+summary: >
+  The OAuth 2.1 profile that MCP clients and servers follow so that a client can obtain and
+  present access tokens to an MCP server over HTTP transports.
+url: https://modelcontextprotocol.io/specification/
+revisions:
+  - id: "2025-11-25"
+    date: 2025-11-25
+    status: superseded
+    url: https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
+    changes: >
+      Makes OAuth Client ID Metadata Documents the recommended client registration method and
+      adds Enterprise-Managed Authorization (ID-JAG) as an extension.
+  - id: "2026-07-28"
+    date: 2026-07-28
+    status: current
+    supersedes: "2025-11-25"
+    url: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+    changes: >
+      Deprecates Dynamic Client Registration in favour of Client ID Metadata Documents, requires
+      RFC 9207 issuer validation on authorization responses, keys stored client credentials by
+      issuer, requires application_type on DCR requests, and removes session identifiers from
+      the transport. Splits the authorization text into separate pages for discovery, client
+      registration and security considerations.

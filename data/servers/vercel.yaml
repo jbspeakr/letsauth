@@ -1,0 +1,8 @@
+id: vercel
+name: "Vercel"
+url: https://mcp.vercel.com/
+homepage: https://vercel.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

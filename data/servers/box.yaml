@@ -1,0 +1,8 @@
+id: box
+name: "Box"
+url: https://mcp.box.com
+homepage: https://box.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1-no-dcr

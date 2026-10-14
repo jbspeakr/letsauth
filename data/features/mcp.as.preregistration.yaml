@@ -1,0 +1,19 @@
+id: mcp.as.preregistration
+name: "Documented pre-registration path"
+description: >
+  The provider documents how a client developer obtains pre-registered client credentials when
+  neither CIMD nor DCR is available.
+category: registration
+party: authorization-server
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Dynamic Client Registration"
+    level: SHOULD
+    levelNote: "Pre-registration was the fallback when DCR was unavailable."
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Client Registration › Pre-registration"
+    level: SHOULD
+    levelNote: "Required as a fallback for clients that cannot register dynamically."

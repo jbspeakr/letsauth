@@ -1,0 +1,17 @@
+id: mcp.rs.no-passthrough
+name: "No token passthrough to upstream APIs"
+description: >
+  The MCP server never forwards the client's access token to upstream APIs; it obtains its own
+  credentials for downstream calls.
+category: delegation
+party: mcp-server
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Access Token Privilege Restriction"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Access Token Privilege Restriction"
+    level: MUST

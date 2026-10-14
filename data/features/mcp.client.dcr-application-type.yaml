@@ -1,0 +1,13 @@
+id: mcp.client.dcr-application-type
+name: "application_type on DCR requests"
+description: >
+  A client that still uses Dynamic Client Registration sends application_type so the authorization
+  server can apply the right redirect URI rules.
+category: registration
+party: client
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Client Registration › Dynamic Client Registration"
+    level: MUST

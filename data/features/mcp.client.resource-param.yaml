@@ -1,0 +1,17 @@
+id: mcp.client.resource-param
+name: "resource parameter on token requests"
+description: >
+  The client sends the RFC 8707 resource parameter identifying the MCP server on authorization and
+  token requests.
+category: token
+party: client
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Token Audience Binding and Validation"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Token Audience Binding and Validation"
+    level: MUST

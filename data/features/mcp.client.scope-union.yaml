@@ -1,0 +1,17 @@
+id: mcp.client.scope-union
+name: "Scope union on step-up"
+description: >
+  When re-authorizing after an insufficient_scope challenge the client requests the union of the
+  scopes it already holds and the newly required ones.
+category: authorization
+party: client
+observable: manual
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Flow › Scope Challenge Handling"
+    level: SHOULD
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization › Scope Challenge Handling"
+    level: SHOULD

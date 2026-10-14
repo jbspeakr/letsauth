@@ -1,0 +1,17 @@
+id: mcp.rs.audience-validation
+name: "Audience validation"
+description: >
+  The MCP server rejects tokens that were not issued for it, so a token obtained for another
+  resource cannot be replayed against this server.
+category: token
+party: mcp-server
+observable: active
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Security Considerations › Access Token Privilege Restriction"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Security Considerations › Access Token Privilege Restriction"
+    level: MUST

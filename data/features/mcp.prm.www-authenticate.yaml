@@ -1,0 +1,19 @@
+id: mcp.prm.www-authenticate
+name: "resource_metadata in the 401 challenge"
+description: >
+  An unauthenticated request receives a 401 whose WWW-Authenticate header carries a
+  resource_metadata parameter pointing at the PRM document.
+category: discovery
+party: mcp-server
+observable: active
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements"
+    level: MUST
+    levelNote: "One of two discovery mechanisms the server must offer."
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Protected Resource Metadata Discovery Requirements"
+    level: MUST
+    levelNote: "One of two discovery mechanisms the server must offer."

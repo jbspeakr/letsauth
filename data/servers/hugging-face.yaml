@@ -1,0 +1,8 @@
+id: hugging-face
+name: "Hugging Face"
+url: https://hf.co/mcp
+homepage: https://huggingface.co
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: open

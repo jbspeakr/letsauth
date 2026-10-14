@@ -1,0 +1,230 @@
+- server: zapier
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.resource-indicator
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.as.refresh-rotation
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.bearer-header
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.audience-validation
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.401-on-invalid
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.scope-challenge
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.insufficient-scope
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.rs.no-passthrough
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."
+- server: zapier
+  feature: mcp.proxy.consent
+  revision:
+    spec: mcp-authorization
+    revision: "2026-07-28"
+  status: not-applicable
+  method: vendor-claim
+  observedAt: "2026-10-13T00:00:00Z"
+  observedBy: jbspeakr
+  evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as API Key; no OAuth authorization server is involved."

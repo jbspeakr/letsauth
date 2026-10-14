@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and upload to Bunny
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      PUBLIC_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Upload dist/ to the storage zone
+        env:
+          BUNNY_STORAGE_KEY: ${{ secrets.BUNNY_STORAGE_KEY }}
+          BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          BUNNY_STORAGE_HOST: ${{ secrets.BUNNY_STORAGE_HOST }}
+        run: |
+          set -euo pipefail
+          : "${BUNNY_STORAGE_KEY:?missing}" "${BUNNY_STORAGE_ZONE:?missing}" "${BUNNY_STORAGE_HOST:?missing}"
+          cd dist
+          find . -type f | sed 's|^\./||' | sort > ../files.txt
+          echo "uploading $(wc -l < ../files.txt) files to $BUNNY_STORAGE_HOST/$BUNNY_STORAGE_ZONE"
+          # Storage API: one PUT per file, AccessKey header; 8 uploads in parallel.
+          xargs -a ../files.txt -P 8 -I{} sh -c '
+            code=$(curl -sS -o /dev/null -w "%{http_code}" -X PUT \
+              -H "AccessKey: $BUNNY_STORAGE_KEY" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"{}" \
+              "https://$BUNNY_STORAGE_HOST/$BUNNY_STORAGE_ZONE/{}")
+            case "$code" in 200|201) ;; *) echo "upload failed ($code): {}"; exit 1;; esac'
+      - name: Purge the pull zone cache
+        env:
+          BUNNY_API_KEY: ${{ secrets.BUNNY_API_KEY }}
+          BUNNY_PULL_ZONE_ID: ${{ secrets.BUNNY_PULL_ZONE_ID }}
+        run: |
+          set -euo pipefail
+          : "${BUNNY_API_KEY:?missing}" "${BUNNY_PULL_ZONE_ID:?missing}"
+          code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST \
+            -H "AccessKey: $BUNNY_API_KEY" -H "Content-Length: 0" \
+            "https://api.bunny.net/pullzone/$BUNNY_PULL_ZONE_ID/purgeCache")
+          case "$code" in 200|204) echo "purged";; *) echo "purge failed ($code)"; exit 1;; esac

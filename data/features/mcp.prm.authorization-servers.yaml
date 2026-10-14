@@ -1,0 +1,17 @@
+id: mcp.prm.authorization-servers
+name: "PRM lists an authorization server"
+description: >
+  The authorization_servers field of the PRM document names at least one authorization server
+  issuer.
+category: discovery
+party: mcp-server
+observable: passive
+revisions:
+  - spec: mcp-authorization
+    revision: "2025-11-25"
+    section: "Authorization Server Discovery › Authorization Server Location"
+    level: MUST
+  - spec: mcp-authorization
+    revision: "2026-07-28"
+    section: "Authorization Server Discovery › Authorization Server Location"
+    level: MUST

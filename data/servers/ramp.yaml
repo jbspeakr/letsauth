@@ -1,0 +1,8 @@
+id: ramp
+name: "Ramp"
+url: https://ramp-mcp-remote.ramp.com/mcp
+homepage: https://ramp.com
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

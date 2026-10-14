@@ -1,0 +1,157 @@
+/*
+ * Design tokens. The one place colours, type, spacing and motion are defined (constitution V).
+ * Light values live on :root; dark values are applied for prefers-color-scheme: dark unless the
+ * user forced light, and whenever the user forced dark via data-theme.
+ */
+:root {
+  color-scheme: light;
+
+  /* surfaces and ink: warm paper, cool ink */
+  --bg: #f7f4ec;
+  --bg-elevated: #fffdf8;
+  --bg-sunken: #efeadf;
+  --ink: #1b1a1f;
+  --ink-muted: #5b5962;
+  --ink-faint: #6b6873;
+  --line: #ddd7c9;
+  --line-strong: #b9b2a2;
+
+  /* accents */
+  --accent: #0f6b62;
+  --accent-ink: #ffffff;
+  --accent-soft: #d9ece7;
+  --accent-2: #b4472d;
+  --accent-2-soft: #f3ded6;
+  --focus: #1f5bd6;
+
+  /* status colours, each with a soft fill and a strong ink */
+  --status-supported: #1f7a3f;
+  --status-supported-soft: #d8efdf;
+  --status-partial: #8a5300;
+  --status-partial-soft: #f8e8c6;
+  --status-unsupported: #b3261e;
+  --status-unsupported-soft: #f7d9d6;
+  --status-unknown: #6f6c78;
+  --status-unknown-soft: #e7e4ea;
+  --status-not-applicable: #6f6c78;
+  --status-not-applicable-soft: transparent;
+
+  /* requirement levels */
+  --level-must: var(--accent-2);
+  --level-should: #7a5a00;
+  --level-may: #3f5f8a;
+  --level-deprecated: #6f6c78;
+
+  /* type */
+  --font-display:
+    "Bricolage Grotesque Variable", "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui,
+    sans-serif;
+  --font-body:
+    "Source Serif 4 Variable", "Source Serif 4", Charter, Georgia, "Times New Roman", serif;
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs: 0.8rem;
+  --text-sm: 0.9rem;
+  --text-md: 1.05rem;
+  --text-lg: clamp(1.2rem, 1.05rem + 0.6vw, 1.45rem);
+  --text-xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.3rem);
+  --text-2xl: clamp(2.1rem, 1.6rem + 2.6vw, 3.6rem);
+  --leading-tight: 1.15;
+  --leading-body: 1.6;
+
+  /* spacing (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --measure: 68ch;
+  --page-max: 88rem;
+
+  /* shape and shadow */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 1px 2px rgb(27 26 31 / 6%), 0 8px 24px -12px rgb(27 26 31 / 18%);
+
+  /* motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 220ms;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111318;
+  --bg-elevated: #181b22;
+  --bg-sunken: #0b0d11;
+  --ink: #ebe8e1;
+  --ink-muted: #a7a4ad;
+  --ink-faint: #8e8b99;
+  --line: #2a2e38;
+  --line-strong: #434856;
+  --accent: #5fd3bd;
+  --accent-ink: #06211d;
+  --accent-soft: #14312d;
+  --accent-2: #ff9a78;
+  --accent-2-soft: #3a211a;
+  --focus: #8cb4ff;
+  --status-supported: #6fd08c;
+  --status-supported-soft: #16301f;
+  --status-partial: #f0b84a;
+  --status-partial-soft: #3a2b0d;
+  --status-unsupported: #f08a82;
+  --status-unsupported-soft: #3f1a18;
+  --status-unknown: #9d9aa8;
+  --status-unknown-soft: #23232b;
+  --status-not-applicable: #9d9aa8;
+  --level-should: #e0b85a;
+  --level-may: #8fb3e6;
+  --level-deprecated: #9d9aa8;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 10px 30px -12px rgb(0 0 0 / 60%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111318;
+    --bg-elevated: #181b22;
+    --bg-sunken: #0b0d11;
+    --ink: #ebe8e1;
+    --ink-muted: #a7a4ad;
+    --ink-faint: #8e8b99;
+    --line: #2a2e38;
+    --line-strong: #434856;
+    --accent: #5fd3bd;
+    --accent-ink: #06211d;
+    --accent-soft: #14312d;
+    --accent-2: #ff9a78;
+    --accent-2-soft: #3a211a;
+    --focus: #8cb4ff;
+    --status-supported: #6fd08c;
+    --status-supported-soft: #16301f;
+    --status-partial: #f0b84a;
+    --status-partial-soft: #3a2b0d;
+    --status-unsupported: #f08a82;
+    --status-unsupported-soft: #3f1a18;
+    --status-unknown: #9d9aa8;
+    --status-unknown-soft: #23232b;
+    --status-not-applicable: #9d9aa8;
+    --level-should: #e0b85a;
+    --level-may: #8fb3e6;
+    --level-deprecated: #9d9aa8;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 10px 30px -12px rgb(0 0 0 / 60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}

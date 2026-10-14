@@ -1,0 +1,8 @@
+id: paypal
+name: "PayPal"
+url: https://mcp.paypal.com/sse
+homepage: https://paypal.com
+transport: sse
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: oauth2.1

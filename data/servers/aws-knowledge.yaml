@@ -1,0 +1,9 @@
+id: aws-knowledge
+name: "AWS Knowledge"
+vendor: "AWS"
+url: https://knowledge-mcp.global.api.aws
+homepage: https://aws.github.io/
+transport: streamable-http
+listed: public-directory
+source: https://github.com/jaw9c/awesome-remote-mcp-servers
+authClaimed: open
