@@ -1,0 +1,50 @@
+---
+import Document from "@/layouts/Document.astro";
+import { OPERATOR, REPO } from "@/lib/site";
+---
+
+<Document
+  title="Accessibility"
+  heading="Accessibility statement"
+  description="letsauth.eu aims to meet WCAG 2.2 level AA on every page. How that is checked, what is known to fall short, and how to report a barrier."
+  path="/accessibility/"
+  eyebrow="Accessibility"
+  lede="Every page on letsauth.eu should work for everyone: with a keyboard, a screen reader, zoom, either colour scheme, reduced motion and no JavaScript."
+  updated="2026-10-14"
+>
+  <h2>The target</h2>
+  <p>
+    The site aims to meet the <a href="https://www.w3.org/TR/WCAG22/" rel="noopener">Web
+    Content Accessibility Guidelines (WCAG) 2.2</a> at level AA. This is a rule in the project's
+    constitution, not an aspiration: a change that breaks it does not merge.
+  </p>
+
+  <h2>How it is checked</h2>
+  <ul>
+    <li>Every pull request runs automated accessibility checks (axe) on the main pages, in light and dark and at phone width, and fails on any serious violation.</li>
+    <li>Lighthouse must score at least 95 for accessibility on the atlas pages.</li>
+    <li>Pages are pre-rendered HTML that read fully without JavaScript; interactive parts add to that, they do not replace it.</li>
+    <li>Status in the atlas is never shown by colour alone: each status has its own shape and text.</li>
+    <li>Animations are switched off when your system asks for reduced motion.</li>
+  </ul>
+
+  <h2>Known limits</h2>
+  <ul>
+    <li>
+      The atlas matrix is a wide data table. On a small screen it scrolls sideways inside its
+      frame; each server and each requirement also has its own page that reads as plain text.
+    </li>
+    <li>
+      The standards map draws a graph. The same specifications and relations are listed as text
+      on each specification's page.
+    </li>
+    <li>Automated checks find only part of the barriers. Manual testing with assistive technology is not yet systematic.</li>
+  </ul>
+
+  <h2>Report a barrier</h2>
+  <p>
+    If something does not work for you, tell us what page, what you tried and what happened.
+    Write to <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a> or open an issue in the{" "}
+    <a href={REPO} rel="noopener">repository</a>. Barriers are treated as bugs.
+  </p>
+</Document>

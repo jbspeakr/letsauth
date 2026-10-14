@@ -1,0 +1,79 @@
+import { readFileSync } from "node:fs";
+import { expect, test } from "@playwright/test";
+import { LEGAL_LINKS, OPERATOR } from "../../src/lib/site";
+import { expectNoSeriousA11yViolations } from "./helpers";
+
+const pages = [
+  { path: "/about/", heading: "Let's Auth Labs" },
+  { path: "/imprint/", heading: "Imprint (Impressum)" },
+  { path: "/privacy/", heading: "Privacy note" },
+  { path: "/disclaimer/", heading: "Disclaimer" },
+  { path: "/accessibility/", heading: "Accessibility statement" },
+  { path: "/made-in-europe/", heading: "Made in Europe" },
+];
+
+test.describe("foundation pages", () => {
+  for (const { path, heading } of pages) {
+    test(`${path} renders and is accessible`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator("h1")).toContainText(heading);
+      await expect(page.locator(".doc__updated time")).toHaveAttribute(
+        "datetime",
+        /^\d{4}-\d{2}-\d{2}$/,
+      );
+      await expectNoSeriousA11yViolations(page);
+    });
+  }
+
+  test("every page links the legal pages from the footer", async ({ page }) => {
+    await page.goto("/atlas/mcp/");
+    const legal = page.getByRole("navigation", { name: "Legal" });
+    for (const link of LEGAL_LINKS) {
+      await expect(legal.getByRole("link", { name: link.label })).toHaveAttribute(
+        "href",
+        link.href,
+      );
+    }
+    const footer = page.locator(".site-footer");
+    await expect(footer.getByRole("link", { name: "About" })).toHaveAttribute("href", "/about/");
+    await expect(footer.getByRole("link", { name: /Made in Europe/ })).toHaveAttribute(
+      "href",
+      "/made-in-europe/",
+    );
+  });
+
+  test("imprint and privacy name the same operator and contact", async ({ page }) => {
+    for (const path of ["/imprint/", "/privacy/"]) {
+      await page.goto(path);
+      const address = page.locator("address");
+      await expect(address).toContainText(OPERATOR.name);
+      await expect(address).toContainText(OPERATOR.street);
+      await expect(page.locator(`a[href="mailto:${OPERATOR.email}"]`).first()).toBeVisible();
+    }
+  });
+
+  test("the not-found page is built, unindexed and accessible", async ({ page }) => {
+    await page.goto("/404.html");
+    await expect(page.locator("h1")).toHaveText("No page at this address");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex");
+    await expectNoSeriousA11yViolations(page);
+  });
+
+  test("security.txt names a contact and a future expiry (RFC 9116)", async ({ request }) => {
+    const res = await request.get("/.well-known/security.txt");
+    expect(res.ok()).toBe(true);
+    const body = await res.text();
+    expect(body).toContain(`Contact: mailto:${OPERATOR.email}`);
+    const expires = body.match(/^Expires: (.+)$/m)?.[1];
+    expect(expires && Date.parse(expires) > Date.now()).toBe(true);
+  });
+
+  test("the share image the pages point to exists", async ({ page, request }) => {
+    await page.goto("/");
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    const res = await request.get(new URL(og ?? "", "http://x").pathname);
+    expect(res.ok()).toBe(true);
+    expect(res.headers()["content-type"]).toContain("image/png");
+    expect(readFileSync("public/og.png").length).toBeGreaterThan(0);
+  });
+});
