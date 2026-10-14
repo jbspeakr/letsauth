@@ -33,3 +33,6 @@ Read first, in this order:
 - Status glyphs come from `StatusCell`: observed statuses are filled chips, a recorded `unknown`
   is a dashed ring, a derived one (no observation) a faint dot. Keep that distinction.
 - Islands only where interaction needs them. Pages must read fully without JavaScript.
+- The site is an early preview. `src/layouts/Base.astro` shows a work-in-progress banner (`.wip`)
+  above the header on every page; keep it until the owner says the site is out of preview, then
+  remove it in its own PR. Nothing else depends on it.
