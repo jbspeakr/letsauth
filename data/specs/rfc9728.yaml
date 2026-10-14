@@ -1,0 +1,15 @@
+id: rfc9728
+name: "OAuth 2.0 Protected Resource Metadata"
+body: ietf-oauth
+family: discovery
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  A well-known JSON document in which a protected resource names the authorization servers it
+  trusts and the scopes it understands, so a client can start from the resource alone.
+url: https://datatracker.ietf.org/doc/rfc9728/
+revisions:
+  - id: "rfc"
+    date: 2025-04-23
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9728

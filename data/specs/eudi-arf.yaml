@@ -1,0 +1,18 @@
+id: eudi-arf
+name: "EUDI Wallet Architecture and Reference Framework"
+body: eu
+family: guidance
+maturity: published
+maturityNote: "Technical reference by the Commission and the eIDAS expert group; not legislation"
+summary: >
+  The architecture, requirements and named standards for the EU Digital Identity Wallet
+  ecosystem: credential formats, issuance and presentation protocols, trust and conformance.
+url: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
+revisions:
+  - id: "3.0.0"
+    date: 2026-07-23
+    status: current
+    url: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework/releases/tag/v3.0.0
+    changes: >
+      Aligns with the 2026 amending implementing regulations and adds the functional conformance
+      assessment framework.

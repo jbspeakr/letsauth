@@ -1,0 +1,14 @@
+id: openid4vci
+name: "OpenID for Verifiable Credential Issuance 1.0"
+body: openid
+family: protocol
+maturity: published
+maturityNote: "Final specification approved 2025-09-16"
+summary: >
+  An OAuth-protected API through which an issuer hands verifiable credentials to a wallet.
+url: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html
+revisions:
+  - id: "final"
+    date: 2025-09-16
+    status: current
+    url: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-final.html

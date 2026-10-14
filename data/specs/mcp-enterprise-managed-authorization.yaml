@@ -1,0 +1,18 @@
+id: mcp-enterprise-managed-authorization
+name: "MCP Enterprise-Managed Authorization"
+body: mcp
+family: profile
+maturity: published
+maturityNote: "Extension io.modelcontextprotocol/enterprise-managed-authorization, listed as stable"
+summary: >
+  An MCP extension that lets an enterprise identity provider broker the token an MCP client
+  presents to an MCP server, by way of the Identity Assertion Authorization Grant.
+url: https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization
+revisions:
+  - id: "stable"
+    date: 2025-11-25
+    status: current
+    url: https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization
+    changes: >
+      Announced with specification revision 2025-11-25 and maintained in the ext-auth
+      repository.

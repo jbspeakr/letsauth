@@ -1,0 +1,28 @@
+id: ai-act
+name: "Artificial Intelligence Act"
+body: eu
+family: regulation
+maturity: in-force
+maturityNote: "Regulation (EU) 2024/1689, as amended by Regulation (EU) 2026/1744"
+summary: >
+  Risk-based rules for AI systems and general-purpose models, including human oversight,
+  transparency and logging duties that apply to agents acting on people's behalf.
+url: https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+revisions:
+  - id: "oj-2024-1689"
+    date: 2024-07-12
+    status: superseded
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689
+    changes: >
+      Published in the Official Journal on 2024-07-12; in force since 2024-08-01; general
+      application from 2026-08-02.
+  - id: "oj-2026-1744"
+    date: 2026-07-24
+    status: current
+    supersedes: "oj-2024-1689"
+    url: https://eur-lex.europa.eu/eli/reg/2026/1744/oj
+    changes: >
+      Amended by Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force since
+      2026-07-27: Annex III high-risk obligations deferred to 2027-12-02 and Annex I embedded
+      high-risk systems to 2028-08-02; the Article 50 transparency duties still apply from
+      2026-08-02.

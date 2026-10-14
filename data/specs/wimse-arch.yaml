@@ -1,0 +1,20 @@
+id: wimse-arch
+name: "Workload Identity in a Multi System Environment (WIMSE) Architecture"
+body: ietf-wimse
+family: guidance
+maturity: working-group-draft
+maturityNote: "Working group document, intended Informational"
+summary: >
+  Terminology and architecture for giving workloads an identity across heterogeneous systems:
+  trust domains, workload identifiers, credentials and the agents that issue them.
+url: https://datatracker.ietf.org/doc/draft-ietf-wimse-arch/
+revisions:
+  - id: "draft-00"
+    date: 2024-04-18
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-arch-00.html
+  - id: "draft-08"
+    date: 2026-07-06
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-arch-08.html

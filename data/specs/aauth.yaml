@@ -1,0 +1,25 @@
+id: aauth
+name: "AAuth Protocol"
+body: ietf-oauth
+family: protocol
+maturity: individual-draft
+maturityNote: "Individual Internet-Draft; not adopted by a working group"
+summary: >
+  An agent-first authorization and identity-claim protocol with several access modes, built on
+  HTTP message signatures and published keys rather than on the OAuth authorization code flow.
+url: https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/
+revisions:
+  - id: "draft-00"
+    date: 2026-04-29
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-hardt-oauth-aauth-protocol-00.html
+  - id: "draft-09"
+    date: 2026-07-04
+    status: superseded
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-hardt-oauth-aauth-protocol-09.html
+  - id: "draft-11"
+    date: 2026-09-25
+    status: current
+    supersedes: "draft-09"
+    url: https://www.ietf.org/archive/id/draft-hardt-oauth-aauth-protocol-11.html

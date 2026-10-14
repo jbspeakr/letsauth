@@ -1,0 +1,15 @@
+id: rfc7591
+name: "OAuth 2.0 Dynamic Client Registration Protocol"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Lets a client register itself with an authorization server at run time through an HTTP API and
+  receive a client identifier, instead of being registered by hand.
+url: https://datatracker.ietf.org/doc/rfc7591/
+revisions:
+  - id: "rfc"
+    date: 2015-07-09
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc7591

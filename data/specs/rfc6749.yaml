@@ -1,0 +1,15 @@
+id: rfc6749
+name: "The OAuth 2.0 Authorization Framework"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard; updated by RFC 8252, RFC 8996 and RFC 9700"
+summary: >
+  Lets a third-party application obtain limited, delegated access to an HTTP resource on behalf
+  of a resource owner, by way of an authorization server that issues access tokens.
+url: https://datatracker.ietf.org/doc/rfc6749/
+revisions:
+  - id: "rfc"
+    date: 2012-10-13
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc6749

@@ -1,0 +1,15 @@
+id: rfc9449
+name: "OAuth 2.0 Demonstrating Proof of Possession (DPoP)"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Sender-constrains access and refresh tokens at the application layer with a per-request proof,
+  so a stolen token cannot be replayed by another party.
+url: https://datatracker.ietf.org/doc/rfc9449/
+revisions:
+  - id: "rfc"
+    date: 2023-09-07
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9449

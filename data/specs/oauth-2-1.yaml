@@ -1,0 +1,27 @@
+id: oauth-2-1
+name: "The OAuth 2.1 Authorization Framework"
+body: ietf-oauth
+family: protocol
+maturity: working-group-draft
+maturityNote: "Working group document, intended Standards Track; obsoletes RFC 6749 and RFC 6750 when published"
+summary: >
+  Consolidates OAuth 2.0 with the security best current practice into one document: PKCE is
+  required, the implicit and password grants are removed, and bearer token usage is folded in.
+url: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/
+revisions:
+  - id: "draft-00"
+    date: 2020-07-30
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-00.html
+  - id: "draft-13"
+    date: 2025-05-28
+    status: superseded
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-13.html
+    changes: >
+      The revision the MCP Authorization specification cites.
+  - id: "draft-16"
+    date: 2026-09-02
+    status: current
+    supersedes: "draft-13"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-v2-1-16.html

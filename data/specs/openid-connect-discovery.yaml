@@ -1,0 +1,22 @@
+id: openid-connect-discovery
+name: "OpenID Connect Discovery 1.0"
+body: openid
+family: discovery
+maturity: published
+maturityNote: "Final specification, incorporating errata set 2"
+summary: >
+  How a client finds an OpenID Provider and reads its configuration from the well-known openid-
+  configuration document.
+url: https://openid.net/specs/openid-connect-discovery-1_0.html
+revisions:
+  - id: "final"
+    date: 2014-11-08
+    status: superseded
+    url: https://openid.net/specs/openid-connect-discovery-1_0.html
+  - id: "errata-2"
+    date: 2023-12-15
+    status: current
+    supersedes: "final"
+    url: https://openid.net/specs/openid-connect-discovery-1_0.html
+    changes: >
+      Errata set 2: corrections without protocol changes.

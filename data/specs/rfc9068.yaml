@@ -1,0 +1,15 @@
+id: rfc9068
+name: "JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens"
+body: ietf-oauth
+family: credential-format
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  An interoperable JWT layout for access tokens, including the audience and scope claims a
+  resource server validates.
+url: https://datatracker.ietf.org/doc/rfc9068/
+revisions:
+  - id: "rfc"
+    date: 2021-10-21
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9068

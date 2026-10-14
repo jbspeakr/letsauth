@@ -1,0 +1,22 @@
+id: sd-jwt
+name: "Selective Disclosure for JSON Web Tokens (SD-JWT)"
+body: ietf-oauth
+family: credential-format
+maturity: published
+maturityNote: "Proposed Standard (RFC 9901)"
+summary: >
+  A JWT whose individual claims can be withheld or disclosed by the holder at presentation time,
+  with optional key binding, so a credential can be shown without revealing everything in it.
+url: https://datatracker.ietf.org/doc/rfc9901/
+revisions:
+  - id: "draft-22"
+    date: 2025-05-29
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-selective-disclosure-jwt-22.html
+  - id: "rfc"
+    date: 2025-11-19
+    status: current
+    supersedes: "draft-22"
+    url: https://www.rfc-editor.org/rfc/rfc9901
+    changes: >
+      Published as RFC 9901.

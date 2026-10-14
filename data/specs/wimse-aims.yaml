@@ -1,0 +1,27 @@
+id: wimse-aims
+name: "AI Identity Management System (AIMS)"
+body: ietf-wimse
+family: guidance
+maturity: working-group-draft
+maturityNote: "Working group document, intended Informational; adopted 2026-09-09 from draft-klrc-aiagent-auth"
+summary: >
+  Best practices for authenticating and authorizing AI agents with WIMSE and OAuth 2.0, and the
+  gaps those building blocks leave when an agent acts for a user or for itself.
+url: https://datatracker.ietf.org/doc/draft-ietf-wimse-aims/
+revisions:
+  - id: "draft-klrc-00"
+    date: 2026-03-02
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-klrc-aiagent-auth-00.html
+  - id: "draft-klrc-03"
+    date: 2026-07-06
+    status: superseded
+    supersedes: "draft-klrc-00"
+    url: https://www.ietf.org/archive/id/draft-klrc-aiagent-auth-03.html
+  - id: "draft-00"
+    date: 2026-09-15
+    status: current
+    supersedes: "draft-klrc-03"
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-aims-00.html
+    changes: >
+      Adopted by the WIMSE working group; replaces draft-klrc-aiagent-auth.

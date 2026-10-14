@@ -1,0 +1,15 @@
+id: rfc9700
+name: "Best Current Practice for OAuth 2.0 Security"
+body: ietf-oauth
+family: guidance
+maturity: published
+maturityNote: "Best Current Practice (BCP 240); updates RFC 6749, RFC 6750 and RFC 6819"
+summary: >
+  The updated threat model and security advice for OAuth 2.0 deployments: audience restriction,
+  PKCE everywhere, no token passthrough, deprecated flows.
+url: https://datatracker.ietf.org/doc/rfc9700/
+revisions:
+  - id: "rfc"
+    date: 2025-01-30
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9700
