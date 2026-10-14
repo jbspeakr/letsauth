@@ -41,8 +41,12 @@ jobs:
         run: |
           set -euo pipefail
           : "${BUNNY_STORAGE_KEY:?missing}" "${BUNNY_STORAGE_ZONE:?missing}" "${BUNNY_STORAGE_HOST:?missing}"
-          # the host is a bare hostname such as storage.bunnycdn.com; tolerate a pasted scheme or slash
-          host="${BUNNY_STORAGE_HOST#https://}"; host="${host#http://}"; host="${host%/}"
+          # the host is a bare hostname such as storage.bunnycdn.com; keep only that part when a
+          # scheme or a path (such as the zone name) was pasted along with it
+          host="${BUNNY_STORAGE_HOST#https://}"; host="${host#http://}"; host="${host%%/*}"
+          case "$host" in
+            *"$BUNNY_STORAGE_ZONE"*) echo "::warning::BUNNY_STORAGE_HOST contained the zone name; using host '$host'" ;;
+          esac
           base="https://$host/$BUNNY_STORAGE_ZONE"
 
           # Probe once before uploading: listing the zone root needs the same key as a PUT.
