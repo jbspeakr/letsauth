@@ -1,5 +1,10 @@
 ---
 import "@/styles/global.css";
+// The three fonts every page paints with, preloaded so text does not reflow when they swap in
+// (the fontsource CSS declares them with font-display: swap; Vite gives both the same hashed URL).
+import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
+import fontMono from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
+import fontBody from "@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url";
 
 interface Props {
   title: string;
@@ -37,6 +42,11 @@ const fullTitle =
     <meta name="theme-color" content="#f7f4ec" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {
+      [fontBody, fontDisplay, fontMono].map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+      ))
+    }
     <link rel="sitemap" href="/sitemap-index.xml" />
     <script is:inline>
       // Apply a stored theme before first paint. Stored value is a per-viewer convenience only.
@@ -62,6 +72,7 @@ const fullTitle =
         </a>
         <nav aria-label="Primary">
           <a href="/atlas/mcp/">MCP auth atlas</a>
+          <a href="/atlas/standards/">Agent auth atlas</a>
           <a href="/atlas/mcp/contribute/">Contribute</a>
           <a href="https://github.com/jbspeakr/letsauth" rel="noopener">Source</a>
         </nav>
@@ -97,7 +108,8 @@ const fullTitle =
           The atlas contacts no server; every cell cites its source.
         </p>
         <p>
-          <a href="/atlas/mcp/data.json">Download the data</a> ·
+          <a href="/atlas/mcp/data.json">MCP atlas data</a> ·
+          <a href="/atlas/standards/data.json">Standards data</a> ·
           <a href="https://github.com/jbspeakr/letsauth" rel="noopener">GitHub</a> ·
           Hosted in the EU.
         </p>
@@ -212,7 +224,12 @@ const fullTitle =
       gap: var(--space-3);
     }
     nav {
-      gap: var(--space-3);
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--space-1) var(--space-3);
+    }
+    nav a {
+      white-space: nowrap;
     }
   }
 </style>

@@ -2,6 +2,8 @@ id: mcp-authorization
 name: MCP Authorization
 body: mcp
 family: profile
+maturity: published
+maturityNote: Specification revision 2026-07-28
 summary: >
   The OAuth 2.1 profile that MCP clients and servers follow so that a client can obtain and
   present access tokens to an MCP server over HTTP transports.

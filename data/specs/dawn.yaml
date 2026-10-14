@@ -1,0 +1,17 @@
+id: dawn
+name: "Discovery of Agents With Names (DAWN)"
+body: ietf-other
+family: discovery
+maturity: individual-draft
+maturityNote: "Proposed working group: BoF at IETF 126, charter in external review for the IESG telechat of 2026-10-22; every draft is individual"
+summary: >
+  DNS-based discovery of the public properties of an AI agent or resource (type, reachability,
+  protocol) beneath protocols such as MCP and A2A; it defines no agent identity.
+url: https://datatracker.ietf.org/doc/charter-ietf-dawn/
+revisions:
+  - id: "draft-farrel-terminology-03"
+    date: 2026-07-05
+    status: current
+    url: https://www.ietf.org/archive/id/draft-farrel-dawn-terminology-03.html
+    changes: >
+      Terminology draft presented at the DAWN BoF; the charter itself is not yet approved.

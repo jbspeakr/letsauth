@@ -1,0 +1,15 @@
+id: auth-md
+name: "auth.md"
+body: vendor
+family: discovery
+maturity: published
+maturityNote: "Open protocol published by WorkOS; not under a standards body"
+summary: >
+  A Markdown file at /auth.md, plus an agent_auth block in the service's OAuth metadata, that
+  tells an agent how to register with a service on a user's behalf and obtain scoped tokens.
+url: https://workos.com/auth-md
+revisions:
+  - id: "2026-05"
+    date: 2026-05-21
+    status: current
+    url: https://github.com/workos/auth.md

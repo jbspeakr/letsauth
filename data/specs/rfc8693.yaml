@@ -1,0 +1,15 @@
+id: rfc8693
+name: "OAuth 2.0 Token Exchange"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Lets a client swap one security token for another at the authorization server, with
+  impersonation and delegation semantics, so a downstream call can carry who is acting for whom.
+url: https://datatracker.ietf.org/doc/rfc8693/
+revisions:
+  - id: "rfc"
+    date: 2020-01-15
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc8693

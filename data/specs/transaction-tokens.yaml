@@ -1,0 +1,21 @@
+id: transaction-tokens
+name: "Transaction Tokens"
+body: ietf-oauth
+family: protocol
+maturity: candidate
+maturityNote: "Working group last call completed 2026-08-21; awaiting shepherd write-up for the IESG"
+summary: >
+  Short-lived tokens that carry the user, the workload and the authorization context of one
+  request through a chain of services inside a trust domain, so each hop can verify what it is
+  acting on.
+url: https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/
+revisions:
+  - id: "draft-00"
+    date: 2023-11-29
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-transaction-tokens-00.html
+  - id: "draft-11"
+    date: 2026-07-30
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-transaction-tokens-11.html

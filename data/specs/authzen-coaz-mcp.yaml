@@ -1,0 +1,15 @@
+id: authzen-coaz-mcp
+name: "AuthZEN COAZ Binding for the Model Context Protocol"
+body: openid
+family: profile
+maturity: working-group-draft
+maturityNote: "AuthZEN working group draft 1"
+summary: >
+  Binds the AuthZEN authorization API to MCP so a policy decision point can be asked whether an
+  agent may call a given tool, separate from the OAuth token that got it in the door.
+url: https://github.com/openid/authzen/blob/main/profiles/authzen-coaz-mcp-binding-1_0.md
+revisions:
+  - id: "draft-1"
+    date: 2026-07-31
+    status: current
+    url: https://github.com/openid/authzen/blob/main/profiles/authzen-coaz-mcp-binding-1_0.md

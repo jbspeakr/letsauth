@@ -1,0 +1,385 @@
+# Edges of the Agent Auth Atlas. One entry per relation; see docs/data-model.md (Relation, rule 7).
+# Directed types read from `from` to `to` ("cimd builds-on rfc6749"). competes-with and
+# solves-same-problem-as are symmetric, stored once per pair, and always carry a note.
+# `source` is where the relating document states the relation itself.
+
+# --- OAuth extensions on the core framework ---------------------------------------------------
+- from: rfc7636
+  to: rfc6749
+  type: builds-on
+  note: Extends the authorization code grant with a code verifier.
+  source: https://www.rfc-editor.org/rfc/rfc7636
+- from: rfc7591
+  to: rfc6749
+  type: builds-on
+  note: Registers OAuth clients; the client metadata it defines is reused by later documents.
+  source: https://www.rfc-editor.org/rfc/rfc7591
+- from: rfc7523
+  to: rfc6749
+  type: builds-on
+  note: Defines a JWT assertion grant and JWT client authentication for the token endpoint.
+  source: https://www.rfc-editor.org/rfc/rfc7523
+- from: rfc8414
+  to: rfc6749
+  type: builds-on
+  note: Publishes the authorization server's endpoints and capabilities.
+  source: https://www.rfc-editor.org/rfc/rfc8414
+- from: rfc8414
+  to: openid-connect-discovery
+  type: references
+  note: Generalises the OpenID Connect provider metadata to any OAuth authorization server and keeps its field names.
+  source: https://www.rfc-editor.org/rfc/rfc8414
+- from: rfc8693
+  to: rfc6749
+  type: builds-on
+  note: Adds the token exchange grant type to the token endpoint.
+  source: https://www.rfc-editor.org/rfc/rfc8693
+- from: rfc8707
+  to: rfc6749
+  type: builds-on
+  note: Adds the resource request parameter to the authorization and token endpoints.
+  source: https://www.rfc-editor.org/rfc/rfc8707
+- from: rfc9068
+  to: rfc6749
+  type: builds-on
+  note: Profiles the access token the framework leaves opaque as a JWT.
+  source: https://www.rfc-editor.org/rfc/rfc9068
+- from: rfc9207
+  to: rfc6749
+  type: builds-on
+  note: Adds the iss parameter to the authorization response.
+  source: https://www.rfc-editor.org/rfc/rfc9207
+- from: rfc9396
+  to: rfc6749
+  type: builds-on
+  note: Adds authorization_details alongside scope.
+  source: https://www.rfc-editor.org/rfc/rfc9396
+- from: rfc9449
+  to: rfc6749
+  type: builds-on
+  note: Sender-constrains the framework's bearer tokens.
+  source: https://www.rfc-editor.org/rfc/rfc9449
+- from: rfc9700
+  to: rfc6749
+  type: builds-on
+  note: Updates the framework's security considerations and deprecates the implicit grant and password grant.
+  source: https://www.rfc-editor.org/rfc/rfc9700
+- from: rfc9728
+  to: rfc6749
+  type: builds-on
+  note: Publishes metadata for the framework's protected resources.
+  source: https://www.rfc-editor.org/rfc/rfc9728
+- from: rfc9728
+  to: rfc8414
+  type: references
+  note: Mirrors the authorization server metadata conventions for the resource side and names the servers whose metadata a client fetches next.
+  source: https://www.rfc-editor.org/rfc/rfc9728
+
+# --- OAuth 2.1 ---------------------------------------------------------------------------------
+- from: oauth-2-1
+  to: rfc6749
+  type: replaces
+  note: Obsoletes RFC 6749 and RFC 6750 when published.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/
+- from: oauth-2-1
+  to: rfc7636
+  type: builds-on
+  note: Makes PKCE a requirement of the authorization code grant.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/
+- from: oauth-2-1
+  to: rfc9700
+  type: builds-on
+  note: Folds the security best current practice into the base specification.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/
+
+# --- Client identity and registration ----------------------------------------------------------
+- from: cimd
+  to: rfc6749
+  type: builds-on
+  note: Defines a client_id syntax and the authorization server behaviour for it.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
+- from: cimd
+  to: rfc7591
+  type: references
+  note: The metadata document reuses the client metadata fields of dynamic registration.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
+- from: cimd
+  to: rfc7591
+  type: solves-same-problem-as
+  note: >
+    Both let a client the authorization server has never seen become usable: dynamic registration
+    by an API call that creates a record, the metadata document by a URL the server fetches on
+    demand. The MCP Authorization specification moved its default from the first to the second in
+    revision 2026-07-28.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: auth-md
+  to: rfc9728
+  type: builds-on
+  note: Places the agent_auth block in the protected resource and authorization server metadata.
+  source: https://github.com/workos/auth.md
+- from: auth-md
+  to: rfc8414
+  type: references
+  note: The agent_auth block is also carried in the authorization server metadata.
+  source: https://github.com/workos/auth.md
+- from: auth-md
+  to: id-jag
+  type: references
+  note: Its "agent verified" registration path uses the identity assertion grant.
+  source: https://github.com/workos/auth.md
+- from: auth-md
+  to: rfc7591
+  type: solves-same-problem-as
+  note: >
+    Both answer how a client nobody registered gets credentials. Dynamic registration is a generic
+    API; auth.md is a human- and agent-readable file plus metadata aimed at agents signing up
+    for a service on a user's behalf.
+
+# --- Delegation and token exchange ------------------------------------------------------------
+- from: id-jag
+  to: rfc8693
+  type: builds-on
+  note: The identity assertion is exchanged at the enterprise identity provider using the token exchange grant.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/
+- from: id-jag
+  to: rfc7523
+  type: builds-on
+  note: The resulting JWT authorization grant is presented to the resource's authorization server as a JWT bearer assertion.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/
+- from: id-jag
+  to: openid-connect-core
+  type: references
+  note: An ID Token is one of the identity assertions the client can present.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/
+- from: cross-app-access
+  to: id-jag
+  type: profiles
+  note: Okta's product implements the draft's flow and names its deployment constraints.
+  source: https://developer.okta.com/docs/concepts/xaa
+- from: mcp-enterprise-managed-authorization
+  to: mcp-authorization
+  type: builds-on
+  note: An extension of the base authorization flow for enterprise-managed MCP clients.
+  source: https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization
+- from: mcp-enterprise-managed-authorization
+  to: id-jag
+  type: builds-on
+  note: The token the MCP client presents is obtained through the identity assertion grant.
+  source: https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization
+- from: transaction-tokens
+  to: rfc8693
+  type: builds-on
+  note: A transaction token is minted by a token exchange style request to a transaction token service.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/
+- from: transaction-tokens
+  to: rfc9068
+  type: references
+  note: Transaction tokens are JWTs and reuse the access token profile's claim conventions.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/
+
+# --- MCP ---------------------------------------------------------------------------------------
+- from: mcp-authorization
+  to: oauth-2-1
+  type: profiles
+  note: MCP authorization is a profile of OAuth 2.1 for MCP clients and servers.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc9728
+  type: builds-on
+  note: An MCP server announces its authorization servers through protected resource metadata.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc8414
+  type: builds-on
+  note: Clients discover the authorization server's endpoints from its metadata.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc7636
+  type: builds-on
+  note: PKCE with S256 is required for every authorization request.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc8707
+  type: builds-on
+  note: Clients name the MCP server with the resource parameter so tokens are audience-bound.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc9207
+  type: builds-on
+  note: Revision 2026-07-28 requires clients to validate the iss parameter when present.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: cimd
+  type: references
+  note: Client ID Metadata Documents are the recommended registration method.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: rfc7591
+  type: references
+  note: Dynamic Client Registration remains an option, deprecated in revision 2026-07-28.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: mcp-authorization
+  to: openid-connect-discovery
+  type: references
+  note: An authorization server may publish its metadata as an OpenID Provider configuration instead.
+  source: https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
+- from: authzen-coaz-mcp
+  to: mcp-authorization
+  type: references
+  note: Adds a policy decision step for tool calls on top of the token-based authorization MCP defines.
+  source: https://github.com/openid/authzen/blob/main/profiles/authzen-coaz-mcp-binding-1_0.md
+
+# --- Agent protocols and discovery ------------------------------------------------------------
+- from: a2a-protocol
+  to: rfc6749
+  type: references
+  note: Agent Cards can declare an OAuth 2.0 security scheme, including its flows and scopes.
+  source: https://a2a-protocol.org/latest/specification/
+- from: a2a-protocol
+  to: openid-connect-core
+  type: references
+  note: Agent Cards can declare an OpenID Connect security scheme.
+  source: https://a2a-protocol.org/latest/specification/
+- from: dawn
+  to: a2a-protocol
+  type: solves-same-problem-as
+  note: >
+    Both are about finding an agent and its public properties. A2A does it with an Agent Card the
+    agent serves itself; DAWN proposes DNS-based discovery beneath any agent protocol and leaves
+    identity to others.
+  source: https://datatracker.ietf.org/doc/bofreq-vyncke-dawn/
+- from: aauth
+  to: oauth-2-1
+  type: competes-with
+  note: >
+    AAuth proposes a new agent-first protocol built on HTTP message signatures instead of
+    profiling the OAuth authorization code flow; both aim at an agent obtaining authorized
+    access to a resource on a person's behalf.
+  source: https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/
+
+# --- Workload identity and agents ------------------------------------------------------------
+- from: wimse-s2s
+  to: wimse-arch
+  type: builds-on
+  note: Applied the architecture's workload identity to service-to-service calls.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-s2s-protocol/
+- from: wimse-workload-creds
+  to: wimse-arch
+  type: builds-on
+  note: Defines the credentials the architecture's workloads carry.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-workload-creds/
+- from: wimse-workload-creds
+  to: wimse-s2s
+  type: replaces
+  note: Continues the credential part of the dead workload-to-workload draft.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-workload-creds/
+- from: wimse-aims
+  to: wimse-arch
+  type: builds-on
+  note: Applies WIMSE workload identity to AI agents.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-aims/
+- from: wimse-aims
+  to: rfc6749
+  type: references
+  note: Reviews how OAuth 2.0 grants apply when an agent acts for a user.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-aims/
+- from: wimse-aims
+  to: rfc8693
+  type: references
+  note: Token exchange is one of the building blocks it evaluates for agent delegation.
+  source: https://datatracker.ietf.org/doc/draft-ietf-wimse-aims/
+- from: wimse-ai-agent-identity
+  to: wimse-arch
+  type: builds-on
+  note: Proposes WIMSE identifiers and credentials for AI agents.
+  source: https://datatracker.ietf.org/doc/draft-ni-wimse-ai-agent-identity/
+- from: wimse-ai-agent-identity
+  to: wimse-aims
+  type: solves-same-problem-as
+  note: >
+    Both describe how WIMSE applies to AI agents. AIMS is the working group's adopted document
+    with a best-practices scope; the applicability draft is an individual proposal that also
+    binds the agent to an accountable user or organisation.
+
+# --- OpenID stack ------------------------------------------------------------------------------
+- from: openid-connect-core
+  to: rfc6749
+  type: builds-on
+  note: Adds the ID Token and authentication semantics to the OAuth 2.0 flows.
+  source: https://openid.net/specs/openid-connect-core-1_0.html
+- from: openid-connect-discovery
+  to: openid-connect-core
+  type: builds-on
+  note: Discovery of the provider's configuration for Core's flows.
+  source: https://openid.net/specs/openid-connect-discovery-1_0.html
+- from: openid-federation
+  to: openid-connect-core
+  type: builds-on
+  note: Version 1.0 establishes trust between OpenID Connect relying parties and providers.
+  source: https://openid.net/specs/openid-federation-1_0.html
+- from: openid4vp
+  to: rfc6749
+  type: builds-on
+  note: Credential presentation is requested with an OAuth 2.0 authorization request.
+  source: https://openid.net/specs/openid-4-verifiable-presentations-1_0.html
+- from: openid4vp
+  to: sd-jwt-vc
+  type: references
+  note: SD-JWT VC is one of the credential formats it defines presentation rules for.
+  source: https://openid.net/specs/openid-4-verifiable-presentations-1_0.html
+- from: openid4vp
+  to: w3c-vc-data-model-2
+  type: references
+  note: W3C Verifiable Credentials are another credential format it defines presentation rules for.
+  source: https://openid.net/specs/openid-4-verifiable-presentations-1_0.html
+- from: openid4vci
+  to: rfc6749
+  type: builds-on
+  note: The credential endpoint is an OAuth 2.0 protected resource.
+  source: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html
+- from: openid4vci
+  to: rfc9396
+  type: references
+  note: Uses authorization_details to request the issuance of specific credentials.
+  source: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html
+
+# --- Credential formats ------------------------------------------------------------------------
+- from: sd-jwt-vc
+  to: sd-jwt
+  type: builds-on
+  note: A credential format on top of the selective disclosure mechanism.
+  source: https://datatracker.ietf.org/doc/draft-ietf-oauth-sd-jwt-vc/
+- from: sd-jwt-vc
+  to: w3c-vc-data-model-2
+  type: solves-same-problem-as
+  note: >
+    Both are formats for a credential an issuer signs, a holder keeps and a verifier checks. The
+    EU wallet framework names both; SD-JWT VC is JSON-and-JWT based, the W3C model is a data
+    model with several securing mechanisms.
+
+# --- EU rules and the wallet -------------------------------------------------------------------
+- from: eudi-arf
+  to: eidas-2
+  type: builds-on
+  note: The technical framework that implements the regulation's wallet mandate.
+  source: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
+- from: eudi-arf
+  to: openid4vp
+  type: references
+  note: Named as a presentation protocol for wallet credentials.
+  source: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
+- from: eudi-arf
+  to: openid4vci
+  type: references
+  note: Named as the issuance protocol for wallet credentials.
+  source: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
+- from: eudi-arf
+  to: sd-jwt-vc
+  type: references
+  note: Named as a credential format for wallet attestations.
+  source: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework
+- from: eudi-arf
+  to: w3c-vc-data-model-2
+  type: references
+  note: Named as a credential data model for wallet attestations.
+  source: https://github.com/eu-digital-identity-wallet/eudi-doc-architecture-and-reference-framework

@@ -1,0 +1,24 @@
+id: a2a-protocol
+name: "Agent2Agent (A2A) Protocol"
+body: a2a
+family: protocol
+maturity: published
+maturityNote: "Version 1.0, a Linux Foundation project"
+summary: >
+  How agents discover each other through Agent Cards, declare the security schemes they accept,
+  and delegate tasks over JSON-RPC, HTTP or gRPC.
+url: https://a2a-protocol.org/latest/specification/
+revisions:
+  - id: "0.3.0"
+    date: 2025-07-30
+    status: superseded
+    url: https://github.com/a2aproject/A2A/releases/tag/v0.3.0
+    changes: >
+      Adds signatures to Agent Cards so a card can be verified.
+  - id: "1.0.0"
+    date: 2026-03-12
+    status: current
+    supersedes: "0.3.0"
+    url: https://github.com/a2aproject/A2A/releases/tag/v1.0.0
+    changes: >
+      First major release.

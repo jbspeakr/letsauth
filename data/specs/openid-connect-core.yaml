@@ -1,0 +1,22 @@
+id: openid-connect-core
+name: "OpenID Connect Core 1.0"
+body: openid
+family: protocol
+maturity: published
+maturityNote: "Final specification, incorporating errata set 2"
+summary: >
+  The identity layer on OAuth 2.0: an ID Token that states who authenticated, how and when, plus
+  the flows and claims around it.
+url: https://openid.net/specs/openid-connect-core-1_0.html
+revisions:
+  - id: "final"
+    date: 2014-11-08
+    status: superseded
+    url: https://openid.net/specs/openid-connect-core-1_0.html
+  - id: "errata-2"
+    date: 2023-12-15
+    status: current
+    supersedes: "final"
+    url: https://openid.net/specs/openid-connect-core-1_0.html
+    changes: >
+      Errata set 2: corrections without protocol changes.

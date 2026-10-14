@@ -1,0 +1,33 @@
+id: id-jag
+name: "Identity Assertion JWT Authorization Grant"
+body: ietf-oauth
+family: protocol
+maturity: working-group-draft
+maturityNote: "Working group document, intended Standards Track; known informally as Cross-App Access"
+summary: >
+  Lets an application present the identity assertion it got from the enterprise identity
+  provider to obtain, through that provider, an access token for a third-party API, so the
+  enterprise stays in control of which apps may talk to which.
+url: https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/
+revisions:
+  - id: "draft-parecki-00"
+    date: 2024-03-01
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-parecki-oauth-identity-assertion-authz-grant-00.html
+  - id: "draft-parecki-05"
+    date: 2025-07-02
+    status: superseded
+    supersedes: "draft-parecki-00"
+    url: https://www.ietf.org/archive/id/draft-parecki-oauth-identity-assertion-authz-grant-05.html
+  - id: "draft-00"
+    date: 2025-09-08
+    status: superseded
+    supersedes: "draft-parecki-05"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-00.html
+    changes: >
+      Adopted by the OAuth working group; replaces the individual draft.
+  - id: "draft-04"
+    date: 2026-05-21
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-04.html

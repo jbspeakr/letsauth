@@ -1,0 +1,15 @@
+id: w3c-vc-data-model-2
+name: "Verifiable Credentials Data Model 2.0"
+body: other
+family: credential-format
+maturity: published
+maturityNote: "W3C Recommendation"
+summary: >
+  An extensible data model for tamper-evident credentials exchanged between issuers, holders and
+  verifiers, the other credential format the EU wallet framework names next to SD-JWT VC.
+url: https://www.w3.org/TR/vc-data-model-2.0/
+revisions:
+  - id: "rec"
+    date: 2025-05-15
+    status: current
+    url: https://www.w3.org/TR/2025/REC-vc-data-model-2.0-20250515/

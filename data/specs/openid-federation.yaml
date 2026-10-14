@@ -1,0 +1,20 @@
+id: openid-federation
+name: "OpenID Federation 1.0"
+body: openid
+family: protocol
+maturity: published
+maturityNote: "Final specification approved 2026-02-17"
+summary: >
+  Multilateral trust: entities publish signed statements about themselves and each other, and a
+  verifier walks the chain to a trust anchor instead of registering every pair by hand.
+url: https://openid.net/specs/openid-federation-1_0.html
+revisions:
+  - id: "implementers-draft-4"
+    date: 2024-07-24
+    status: superseded
+    url: https://openid.net/specs/openid-federation-1_0-ID4.html
+  - id: "final"
+    date: 2026-02-17
+    status: current
+    supersedes: "implementers-draft-4"
+    url: https://openid.net/specs/openid-federation-1_0-final.html

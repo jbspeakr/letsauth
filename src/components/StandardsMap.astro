@@ -1,0 +1,332 @@
+---
+import { LANE_LABEL_W, type Layout, PAD, wrapLabel } from "@/lib/graph";
+import { BODY_LABEL, BODY_SHORT, MATURITY_LABEL, MATURITY_TAG, RELATION_LABEL } from "@/lib/labels";
+import { RELATION_TYPES } from "@/lib/standards";
+import type { RelationType } from "@/schema";
+
+interface Props {
+  layout: Layout;
+}
+
+const { layout } = Astro.props;
+const { nodes, edges, lanes, width, height } = layout;
+const byId = new Map(nodes.map((n) => [n.spec.id, n.spec]));
+const directed: RelationType[] = RELATION_TYPES.filter(
+  (t) => t !== "competes-with" && t !== "solves-same-problem-as",
+);
+
+function edgeTitle(type: RelationType, fromId: string, toId: string, note?: string): string {
+  const from = byId.get(fromId)?.name ?? fromId;
+  const to = byId.get(toId)?.name ?? toId;
+  const phrase = `${from} ${RELATION_LABEL[type].forward} ${to}`;
+  return note ? `${phrase}. ${note}` : phrase;
+}
+---
+
+<figure class="map" aria-labelledby="map-caption">
+  <div
+    class="map-frame"
+    id="map-frame"
+    tabindex="0"
+    role="region"
+    aria-label="Standards map, scrolls horizontally"
+  >
+    <svg
+      id="map"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-labelledby="map-title"
+      data-nodes={nodes.length}
+      data-edges={edges.length}
+    >
+      <title id="map-title">
+        Specifications for agent authorization, one node each, grouped by publishing body in
+        rows and by what they build on in columns, with their relations drawn as lines.
+      </title>
+      <defs>
+        {
+          directed.map((t) => (
+            <marker
+              id={`arrow-${t}`}
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
+              <path d="M0,0 L10,5 L0,10 z" class:list={["arrow", `arrow-${t}`]} />
+            </marker>
+          ))
+        }
+      </defs>
+
+      <g class="lanes" aria-hidden="true">
+        {
+          lanes.map((lane) => (
+            <g class="lane" data-body={lane.body}>
+              <rect
+                x={PAD / 2}
+                y={lane.y - 8}
+                width={width - PAD}
+                height={lane.height + 16}
+                rx="10"
+              />
+              <text x={PAD + 4} y={lane.y + 14} class="lane-label">
+                {BODY_LABEL[lane.body]}
+              </text>
+            </g>
+          ))
+        }
+      </g>
+
+      <g class="edges" aria-hidden="true">
+        {
+          edges.map((e) => (
+            <path
+              class:list={["edge", `edge-${e.relation.type}`, { symmetric: e.symmetric }]}
+              d={e.d}
+              data-relation={`${e.relation.from}|${e.relation.type}|${e.relation.to}`}
+              data-type={e.relation.type}
+              data-from={e.relation.from}
+              data-to={e.relation.to}
+              marker-end={e.symmetric ? undefined : `url(#arrow-${e.relation.type})`}
+            >
+              <title>{edgeTitle(e.relation.type, e.relation.from, e.relation.to, e.relation.note)}</title>
+            </path>
+          ))
+        }
+      </g>
+
+      <g class="nodes">
+        {
+          nodes.map((n) => {
+            const lines = wrapLabel(n.spec.name, 24, 2);
+            const label = `${n.spec.name}, ${BODY_LABEL[n.spec.body]}, ${MATURITY_LABEL[n.spec.maturity]}`;
+            return (
+              <a
+                href={`/atlas/standards/${n.spec.id}/`}
+                class:list={["node", `maturity-${n.spec.maturity}`]}
+                data-spec={n.spec.id}
+                data-body={n.spec.body}
+                data-maturity={n.spec.maturity}
+                aria-label={label}
+              >
+                <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="8" class="node-box" />
+                <text x={n.x + 10} y={n.y + 15} class="node-meta">
+                  {BODY_SHORT[n.spec.body]}
+                </text>
+                <text
+                  x={n.x + n.w - 10}
+                  y={n.y + 15}
+                  class="node-meta node-maturity"
+                  text-anchor="end"
+                >
+                  {MATURITY_TAG[n.spec.maturity]}
+                </text>
+                <text x={n.x + 10} y={n.y + 33} class="node-name">
+                  {lines.map((line, i) => (
+                    <tspan x={n.x + 10} dy={i === 0 ? 0 : 14}>
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              </a>
+            );
+          })
+        }
+      </g>
+    </svg>
+  </div>
+  <figcaption id="map-caption">
+    Rows are publishing bodies; a specification sits one column right of what it builds on,
+    profiles or replaces. Hover a line for the relation; the
+    <a href="#spec-list">list below</a> carries the same information as text.
+  </figcaption>
+</figure>
+
+<style define:vars={{ "lane-label-w": `${LANE_LABEL_W}px` }}>
+  .map {
+    margin: 0 0 var(--space-5);
+  }
+  .map-frame {
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    max-height: 80vh;
+  }
+  .map-frame:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  svg {
+    display: block;
+    font-family: var(--font-display);
+  }
+  figcaption {
+    margin-top: var(--space-2);
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+    max-width: var(--measure);
+  }
+
+  .lane rect {
+    fill: var(--bg);
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .lane:nth-child(even) rect {
+    fill: var(--bg-sunken);
+  }
+  .lane-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--ink-muted);
+  }
+
+  /* Edge types are told apart by dash pattern and arrowhead, with colour as a second cue. */
+  .edge {
+    fill: none;
+    stroke: var(--ink-faint);
+    stroke-width: 1.6;
+    opacity: 0.85;
+    transition: opacity var(--dur-fast) var(--ease);
+  }
+  .edge-builds-on {
+    stroke: var(--accent);
+  }
+  .edge-profiles {
+    stroke: var(--accent);
+    stroke-dasharray: 7 4;
+  }
+  .edge-replaces {
+    stroke: var(--level-deprecated);
+    stroke-width: 2.2;
+  }
+  .edge-references {
+    stroke: var(--ink-faint);
+    stroke-dasharray: 2 4;
+    stroke-linecap: round;
+  }
+  .edge-competes-with {
+    stroke: var(--accent-2);
+    stroke-width: 2.2;
+    stroke-dasharray: 10 5;
+  }
+  .edge-solves-same-problem-as {
+    stroke: var(--level-may);
+    stroke-dasharray: 1 5;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+  .arrow {
+    fill: var(--ink-faint);
+  }
+  .arrow-builds-on,
+  .arrow-profiles {
+    fill: var(--accent);
+  }
+  .arrow-replaces {
+    fill: var(--level-deprecated);
+  }
+
+  .node {
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .node-box {
+    fill: var(--bg-elevated);
+    stroke: var(--line-strong);
+    stroke-width: 1.5;
+    transition: stroke var(--dur-fast) var(--ease);
+  }
+  .node:hover .node-box,
+  .node:focus-visible .node-box {
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+  .node:focus-visible {
+    outline: none;
+  }
+  .node:focus-visible .node-box {
+    stroke: var(--focus);
+  }
+  .node-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+  .node-meta {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    fill: var(--ink-muted);
+  }
+  /* Maturity: border style first, colour second (constitution V). */
+  .maturity-published .node-box {
+    stroke: var(--accent);
+  }
+  .maturity-published .node-maturity {
+    fill: var(--accent);
+  }
+  .maturity-in-force .node-box {
+    stroke: var(--accent-2);
+    stroke-width: 2.5;
+  }
+  .maturity-in-force .node-maturity {
+    fill: var(--accent-2);
+  }
+  .maturity-candidate .node-box {
+    stroke: var(--level-should);
+    stroke-dasharray: 2 3;
+    stroke-width: 2;
+  }
+  .maturity-candidate .node-maturity {
+    fill: var(--level-should);
+  }
+  .maturity-working-group-draft .node-box {
+    stroke-dasharray: 6 4;
+  }
+  .maturity-individual-draft .node-box {
+    stroke-dasharray: 3 4;
+    stroke-width: 1.2;
+  }
+  .maturity-expired .node-box,
+  .maturity-withdrawn .node-box {
+    stroke: var(--level-deprecated);
+    opacity: 0.6;
+  }
+  .maturity-expired .node-name,
+  .maturity-withdrawn .node-name {
+    text-decoration: line-through;
+    fill: var(--ink-muted);
+  }
+
+  /* Filtering and neighbourhood highlight, driven by the island. */
+  :global(#map .is-hidden) {
+    display: none;
+  }
+  :global(#map .is-far) {
+    opacity: 0.18;
+  }
+  :global(#map .edge.is-near) {
+    opacity: 1;
+    stroke-width: 2.6;
+  }
+  :global(#map .node.is-near .node-box) {
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .edge,
+    .node-box {
+      transition: none;
+    }
+  }
+</style>

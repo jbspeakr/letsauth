@@ -1,0 +1,20 @@
+id: wimse-ai-agent-identity
+name: "WIMSE Applicability for AI Agents"
+body: ietf-wimse
+family: guidance
+maturity: individual-draft
+maturityNote: "Individual Internet-Draft; not adopted by a working group"
+summary: >
+  How WIMSE could give an AI agent an identity of its own and bind it to the user or
+  organisation that is accountable for it.
+url: https://datatracker.ietf.org/doc/draft-ni-wimse-ai-agent-identity/
+revisions:
+  - id: "draft-00"
+    date: 2025-10-20
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ni-wimse-ai-agent-identity-00.html
+  - id: "draft-03"
+    date: 2026-09-30
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ni-wimse-ai-agent-identity-03.html

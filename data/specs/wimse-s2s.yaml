@@ -1,0 +1,20 @@
+id: wimse-s2s
+name: "WIMSE Workload-to-Workload Authentication"
+body: ietf-wimse
+family: protocol
+maturity: withdrawn
+maturityNote: "Dead working group document since 2025-11-06; its content continues as separate drafts (workload credentials, proof tokens, HTTP signatures, mutual TLS)"
+summary: >
+  Service-to-service authentication with workload identity tokens and per-request proof tokens,
+  since split into four documents.
+url: https://datatracker.ietf.org/doc/draft-ietf-wimse-s2s-protocol/
+revisions:
+  - id: "draft-00"
+    date: 2024-08-15
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-s2s-protocol-00.html
+  - id: "draft-07"
+    date: 2025-10-16
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-s2s-protocol-07.html

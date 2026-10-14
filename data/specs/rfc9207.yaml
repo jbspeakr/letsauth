@@ -1,0 +1,15 @@
+id: rfc9207
+name: "OAuth 2.0 Authorization Server Issuer Identification"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Adds an iss parameter to the authorization response so a client can tell which authorization
+  server answered and defend against mix-up attacks.
+url: https://datatracker.ietf.org/doc/rfc9207/
+revisions:
+  - id: "rfc"
+    date: 2022-03-18
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9207

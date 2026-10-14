@@ -1,0 +1,18 @@
+id: nis2
+name: "NIS 2 Directive"
+body: eu
+family: regulation
+maturity: in-force
+maturityNote: "Directive (EU) 2022/2555"
+summary: >
+  Cybersecurity risk-management and incident-reporting duties for essential and important
+  entities across the EU, including the identity and access controls they must operate.
+url: https://eur-lex.europa.eu/eli/dir/2022/2555/oj
+revisions:
+  - id: "oj-2022-2555"
+    date: 2022-12-27
+    status: current
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022L2555
+    changes: >
+      Published in the Official Journal on 2022-12-27; in force since 2023-01-16; transposition
+      deadline 2024-10-17.

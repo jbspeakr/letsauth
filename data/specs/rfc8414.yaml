@@ -1,0 +1,15 @@
+id: rfc8414
+name: "OAuth 2.0 Authorization Server Metadata"
+body: ietf-oauth
+family: discovery
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  A well-known JSON document in which an authorization server publishes its endpoints and
+  supported capabilities, so clients can configure themselves from the issuer alone.
+url: https://datatracker.ietf.org/doc/rfc8414/
+revisions:
+  - id: "rfc"
+    date: 2018-06-28
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc8414

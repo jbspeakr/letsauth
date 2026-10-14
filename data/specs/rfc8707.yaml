@@ -1,0 +1,15 @@
+id: rfc8707
+name: "Resource Indicators for OAuth 2.0"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Adds a resource parameter with which a client names the protected resource a token is for, so
+  the authorization server can restrict the token's audience.
+url: https://datatracker.ietf.org/doc/rfc8707/
+revisions:
+  - id: "rfc"
+    date: 2020-02-28
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc8707

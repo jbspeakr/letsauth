@@ -1,0 +1,20 @@
+id: eidas-2
+name: "European Digital Identity Framework (eIDAS 2.0)"
+body: eu
+family: regulation
+maturity: in-force
+maturityNote: "Regulation (EU) 2024/1183, amending Regulation (EU) No 910/2014"
+summary: >
+  Mandates that every Member State offer an EU Digital Identity Wallet and sets the rules for
+  electronic identification, attestations and trust services that an agent acting under a
+  citizen's mandate will depend on.
+url: https://eur-lex.europa.eu/eli/reg/2024/1183/oj
+revisions:
+  - id: "oj-2024-1183"
+    date: 2024-04-30
+    status: current
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1183
+    changes: >
+      Published in the Official Journal on 2024-04-30; in force since 2024-05-20. Member States
+      must provide at least one wallet within 24 months of the implementing acts, which the
+      Commission reads as the end of 2026.

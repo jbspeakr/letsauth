@@ -73,12 +73,14 @@ function obs(
 }
 
 const data: Dataset = {
+  relations: [],
   specs: [
     {
       id: SPEC,
       name: "MCP Authorization",
       body: "mcp",
       family: "profile",
+      maturity: "published",
       summary: "s",
       url: "https://modelcontextprotocol.io",
       revisions: [

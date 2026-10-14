@@ -2,11 +2,14 @@
 import Base from "@/layouts/Base.astro";
 import { currentRevision, matrixFor } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
+import { mapRelations, specNodes } from "@/lib/standards";
 
 const data = getDataset();
 const revision = currentRevision(data);
 const matrix = matrixFor(data, revision.id);
 const observed = data.observations.length;
+const specs = specNodes(data).length;
+const relations = mapRelations(data).length;
 ---
 
 <Base
@@ -25,6 +28,7 @@ const observed = data.observations.length;
       </p>
       <p class="cta">
         <a class="button primary" href="/atlas/mcp/">Open the MCP auth atlas</a>
+        <a class="button" href="/atlas/standards/">See the standards map</a>
         <a class="button" href="/atlas/mcp/data.json">Get the data</a>
       </p>
     </section>
@@ -42,6 +46,10 @@ const observed = data.observations.length;
         <strong>{observed}</strong>
         <span>observations on record, each with evidence</span>
       </div>
+      <div class="card">
+        <strong>{specs}</strong>
+        <span>specifications on the standards map, {relations} relations between them</span>
+      </div>
     </section>
 
     <section class="prose">
@@ -56,6 +64,13 @@ const observed = data.observations.length;
       <p>
         Observations are append-only. When a server changes, a new observation is added and the
         old one stays in the history, so the atlas is also a record of how the ecosystem moved.
+      </p>
+      <h2>What the standards map is</h2>
+      <p>
+        The <a href="/atlas/standards/">agent auth atlas</a> draws the specifications behind all
+        of this as one graph: OAuth and its extensions, workload identity, the agent protocols,
+        credential formats and the EU acts, with what builds on what, what competes with what,
+        and each document's maturity and dated revisions.
       </p>
     </section>
   </div>

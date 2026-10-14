@@ -1,0 +1,20 @@
+id: sd-jwt-vc
+name: "SD-JWT-based Verifiable Digital Credentials (SD-JWT VC)"
+body: ietf-oauth
+family: credential-format
+maturity: candidate
+maturityNote: "Submitted to the IESG; IETF Last Call ended 2026-09-15; intended Proposed Standard"
+summary: >
+  The data format and processing rules for verifiable credentials with JSON payloads built on
+  SD-JWT: issuer, type, status and key binding, as used by the EU Digital Identity Wallet.
+url: https://datatracker.ietf.org/doc/draft-ietf-oauth-sd-jwt-vc/
+revisions:
+  - id: "draft-00"
+    date: 2023-08-16
+    status: superseded
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-sd-jwt-vc-00.html
+  - id: "draft-19"
+    date: 2026-08-31
+    status: current
+    supersedes: "draft-00"
+    url: https://www.ietf.org/archive/id/draft-ietf-oauth-sd-jwt-vc-19.html

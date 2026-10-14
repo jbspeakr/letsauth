@@ -51,6 +51,8 @@ const hrefFor = (id: string) => (id === current.id ? "/atlas/mcp/" : `/atlas/mcp
           published <time datetime={matrix.revision.date}>{matrix.revision.date}</time>
           {" · "}
           <a href={matrix.revision.url} rel="noopener">{spec.name} {matrix.revision.id}</a>
+          {" · "}
+          <a href="/atlas/standards/mcp-authorization/">About this specification</a>
         </span>
       </div>
       <nav class="revision-switch" aria-label="Other revisions">

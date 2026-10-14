@@ -1,0 +1,15 @@
+id: rfc9396
+name: "OAuth 2.0 Rich Authorization Requests"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Adds an authorization_details parameter for fine-grained, structured authorization data in
+  place of flat scope strings.
+url: https://datatracker.ietf.org/doc/rfc9396/
+revisions:
+  - id: "rfc"
+    date: 2023-05-30
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc9396

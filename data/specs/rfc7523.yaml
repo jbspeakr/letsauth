@@ -1,0 +1,15 @@
+id: rfc7523
+name: "JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Lets a JWT serve as an authorization grant at the token endpoint, or as the client's
+  credential, so an assertion from a trusted issuer can be exchanged for an access token.
+url: https://datatracker.ietf.org/doc/rfc7523/
+revisions:
+  - id: "rfc"
+    date: 2015-05-19
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc7523

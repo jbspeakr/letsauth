@@ -1,0 +1,15 @@
+id: cross-app-access
+name: "Cross App Access (XAA)"
+body: vendor
+family: profile
+maturity: published
+maturityNote: "Okta's implementation of the Identity Assertion JWT Authorization Grant"
+summary: >
+  Identity-provider-brokered, policy-controlled access from one application or agent to
+  another's API inside an enterprise, without a per-user consent screen.
+url: https://developer.okta.com/docs/concepts/xaa
+revisions:
+  - id: "2025-06"
+    date: 2025-06-23
+    status: current
+    url: https://developer.okta.com/docs/concepts/xaa

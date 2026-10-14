@@ -1,0 +1,15 @@
+id: rfc7636
+name: "Proof Key for Code Exchange by OAuth Public Clients (PKCE)"
+body: ietf-oauth
+family: protocol
+maturity: published
+maturityNote: "Proposed Standard"
+summary: >
+  Binds an authorization code to the client that requested it with a one-time verifier, so an
+  intercepted code cannot be redeemed by someone else.
+url: https://datatracker.ietf.org/doc/rfc7636/
+revisions:
+  - id: "rfc"
+    date: 2015-09-16
+    status: current
+    url: https://www.rfc-editor.org/rfc/rfc7636

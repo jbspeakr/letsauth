@@ -1,0 +1,15 @@
+id: wimse-workload-creds
+name: "WIMSE Workload Credentials"
+body: ietf-wimse
+family: credential-format
+maturity: working-group-draft
+maturityNote: "Working group document; one of the drafts that continue the workload-to-workload work"
+summary: >
+  The credential formats a WIMSE workload presents: workload identity tokens and the
+  certificates that bind a workload identifier to a key.
+url: https://datatracker.ietf.org/doc/draft-ietf-wimse-workload-creds/
+revisions:
+  - id: "draft-02"
+    date: 2026-07-02
+    status: current
+    url: https://www.ietf.org/archive/id/draft-ietf-wimse-workload-creds-02.html
