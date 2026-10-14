@@ -10,7 +10,7 @@ export const OPERATOR = {
   postcode: "10247",
   city: "Berlin",
   country: "Germany",
-  email: "7f7d69fc85e6@brnnnsthl.eu",
+  email: "letsauth@janbrennenstuhl.eu",
   site: "https://www.janbrennenstuhl.eu/",
 } as const;
 

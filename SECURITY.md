@@ -6,7 +6,7 @@ Report a security problem in letsauth.eu or in this repository privately, by eit
 
 - a [private security advisory](https://github.com/jbspeakr/letsauth/security/advisories/new) on
   GitHub, or
-- email to `7f7d69fc85e6@brnnnsthl.eu`.
+- email to `letsauth@janbrennenstuhl.eu`.
 
 Please do not open a public issue for it. Include what you found, where, and how to reproduce it.
 This is a one-person project, so please allow a few days for a reply. Once a fix is out, you are
