@@ -217,7 +217,7 @@ append-only check passes.
   that carry credentials or a port, or that are malformed, whether the URL is a listed server's
   or an issuer found in metadata.
 - **FR-011**: The job's image MUST reach Scaleway only through a dedicated deployment workflow in
-  the repository, run on a push to `main` that touches the scanner or by hand, which builds the
+  the repository, run after CI has passed on `main` for a commit that touches the scanner, or by hand, which builds the
   image, pushes it to the project's registry and points the job definition at it. The job's
   schedule, resources and secret are configured once by the owner, outside the image and the
   repository.
