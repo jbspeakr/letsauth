@@ -52,3 +52,10 @@ jobs:
           retention-days: 7
       - name: Lighthouse budgets
         run: pnpm exec lhci autorun --config=lighthouserc.json
+      - name: Upload Lighthouse reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          retention-days: 7
