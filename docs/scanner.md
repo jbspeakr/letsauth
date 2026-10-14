@@ -80,9 +80,9 @@ measured, so the next run rewrites them all.
 
 ## Deploying to Scaleway
 
-The image reaches Scaleway only through `.github/workflows/scanner-deploy.yml`, which runs on a
-push to `main` that touches the scanner (`Dockerfile`, `src/scanner/`, the scan scripts, the
-lockfile) or by hand from the Actions tab. It builds the image, pushes it to the project's
+The image reaches Scaleway only through `.github/workflows/scanner-deploy.yml`, which runs after
+CI has passed on `main` for a commit that touches the scanner (`Dockerfile`, `src/scanner/`, the
+scan scripts, the lockfile), never on a red commit, or by hand from the Actions tab. It builds the image, pushes it to the project's
 Scaleway Container Registry as `letsauth-scanner:<commit>` and `:latest`, and points the job
 definition at the new tag. The scan itself never runs on GitHub.
 

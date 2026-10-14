@@ -45,7 +45,7 @@ followed by the scanner version, the revision judged and the start time.
 ## The deployment workflow
 
 `.github/workflows/scanner-deploy.yml` is the only path by which the image reaches Scaleway. It
-runs on a push to `main` that touches the scanner (`Dockerfile`, `src/scanner/`, the two scripts,
+runs after CI has passed on `main`, for a commit that touches the scanner (`Dockerfile`, `src/scanner/`, the two scripts,
 the lockfile) and on `workflow_dispatch`, in the `production` environment:
 
 1. Builds the image and pushes it to the Scaleway Container Registry as `<commit>` and `latest`.

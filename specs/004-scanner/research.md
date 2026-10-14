@@ -155,7 +155,7 @@ Committing to `main` directly (every change is a pull request, data changes incl
 ## R9. Deployment of the job
 
 **Decision**: A dedicated workflow, `.github/workflows/scanner-deploy.yml`, is the only path to
-Scaleway: on a push to `main` that touches the scanner, or by hand, it builds the image, pushes it
+Scaleway: after CI has passed on `main` for a commit that touches the scanner, or by hand, it builds the image, pushes it
 to the Scaleway Container Registry tagged with the commit, and updates the Serverless Job
 definition's image through the Scaleway CLI. The job definition itself (schedule, resources,
 `SCANNER_REPO`, the `SCANNER_TOKEN` secret) is created once by the owner and recorded as the
