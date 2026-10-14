@@ -1,0 +1,65 @@
+import { describe, expect, it } from "vitest";
+import { GRADE_RULE, grade } from "@/scanner/grade";
+import type { FeatureLevel, ObservationStatus } from "@/schema";
+
+const STATUSES: ObservationStatus[] = [
+  "supported",
+  "partial",
+  "unsupported",
+  "unknown",
+  "not-applicable",
+];
+
+function expected(must: ObservationStatus, should: ObservationStatus): string | null {
+  const fails = (s: ObservationStatus) => s === "unsupported" || s === "partial";
+  if (fails(must)) return "F";
+  if (must === "unknown") return null;
+  if (fails(should)) return "C";
+  if (should === "unknown") return "B";
+  return "A";
+}
+
+describe("grade rule (FR-008, SC-004)", () => {
+  for (const must of STATUSES) {
+    for (const should of STATUSES) {
+      for (const may of STATUSES) {
+        it(`MUST ${must}, SHOULD ${should}, MAY ${may} → ${expected(must, should) ?? "withheld"}`, () => {
+          const g = grade([
+            { name: "m", level: "MUST", status: must },
+            { name: "s", level: "SHOULD", status: should },
+            { name: "y", level: "MAY", status: may },
+            { name: "d", level: "DEPRECATED", status: may },
+          ]);
+          expect(g.letter).toBe(expected(must, should));
+          expect(g.reasons.length).toBeGreaterThan(0);
+        });
+      }
+    }
+  }
+
+  it("names the checks in its reasons", () => {
+    const g = grade([
+      { name: "PRM served", level: "MUST", status: "supported" },
+      { name: "CIMD", level: "SHOULD", status: "unsupported" },
+      { name: "iss", level: "SHOULD", status: "unknown" },
+    ]);
+    expect(g.letter).toBe("C");
+    expect(g.reasons).toEqual(["SHOULD-level check unsupported: CIMD"]);
+  });
+
+  it("withholds rather than lowers when a MUST is unknown", () => {
+    const g = grade([
+      { name: "a", level: "MUST", status: "unknown" },
+      { name: "b", level: "SHOULD", status: "unsupported" },
+    ]);
+    expect(g.letter).toBeNull();
+    expect(g.label).toBe("Withheld");
+    expect(g.reasons).toEqual(["MUST-level check unknown: a"]);
+  });
+
+  it("publishes six rule lines", () => {
+    expect(GRADE_RULE).toHaveLength(6);
+    const levels: FeatureLevel[] = ["MUST", "SHOULD", "MAY"];
+    for (const l of levels) expect(GRADE_RULE.join(" ")).toContain(l);
+  });
+});

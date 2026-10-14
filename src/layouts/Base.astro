@@ -36,6 +36,12 @@ const nav = [
     match: (p: string) => p.startsWith("/atlas/standards/"),
   },
   {
+    href: "/scanner/",
+    label: "Scanner",
+    short: "Scan",
+    match: (p: string) => p.startsWith("/scanner/"),
+  },
+  {
     href: "/atlas/mcp/contribute/",
     label: "Contribute",
     short: "Contribute",
@@ -166,13 +172,14 @@ const nav = [
         <div class="site-footer__about">
           <p class="site-footer__brand">letsauth</p>
           <p>
-            An independent lab for authentication in the agent era. The atlas contacts no server;
-            every cell cites its source.
+            An independent lab for authentication in the agent era. Every cell cites its source;
+            the only thing that contacts a server is the scanner, and it reads public metadata.
           </p>
         </div>
         <nav class="site-footer__links" aria-label="Footer">
           <a href="/atlas/mcp/">MCP auth atlas</a>
           <a href="/atlas/standards/">Agent auth atlas</a>
+          <a href="/scanner/">Scanner</a>
           <a href="/atlas/mcp/contribute/">Contribute</a>
           <a href="/atlas/mcp/data.json">MCP atlas data</a>
           <a href="/atlas/standards/data.json">Standards data</a>
@@ -490,6 +497,16 @@ const nav = [
     .site-nav {
       gap: 0;
       font-size: var(--text-xs);
+      /* four items no longer fit beside the brand and the toggle on the narrowest phones:
+         the nav scrolls in its own box instead of pushing the page wider */
+      min-width: 0;
+      flex: 0 1 auto;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .brand,
+    .theme-toggle {
+      flex: none;
     }
     .site-nav a {
       padding: 0.45em 0.55em;

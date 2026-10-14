@@ -1,0 +1,10 @@
+node_modules
+dist
+.astro
+.pagefind
+.lighthouseci
+playwright-report
+test-results
+tests/e2e/__screenshots__
+public
+.git

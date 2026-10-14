@@ -8,6 +8,7 @@
 - [ ] No existing observation entry was edited or removed; corrections are new entries with a newer `observedAt`.
 - [ ] `observedBy` is my handle (or `scanner@<version>` for automated runs).
 - [ ] `pnpm validate:data` passes locally.
+- [ ] Scanner observations (`observedBy: scanner@…`) come from `pnpm scan` and were not edited by hand.
 - [ ] A new server has `listed`, `source` and, where I maintain it, `listed: opt-in`.
 - [ ] A new spec's facts come from the publisher's page; a new relation of a judgement type (`competes-with`, `solves-same-problem-as`) carries a `note` and, where one exists, a `source`.
 

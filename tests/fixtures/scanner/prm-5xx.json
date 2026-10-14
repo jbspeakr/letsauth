@@ -1,0 +1,19 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/.well-known/oauth-protected-resource/mcp": {
+      "status": 503,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {}
+    },
+    "https://mcp.example.com/.well-known/oauth-protected-resource": {
+      "status": 503,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {}
+    }
+  }
+}

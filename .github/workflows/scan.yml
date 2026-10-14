@@ -1,0 +1,72 @@
+name: Scanner
+
+# The nightly passive scan (specs/004-scanner). Reads the public well-known metadata of every
+# listed server, appends observations that changed, and opens one pull request. Nothing is
+# merged without review. With SCANNER_TOKEN (a fine-grained token with contents and pull
+# requests write on this repository) the pull request starts CI like any other; with the
+# workflow token GitHub does not start CI on it, so a maintainer closes and reopens it or pushes
+# to its branch. See docs/scanner.md.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scan
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scan:
+    name: Scan listed servers and open a pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Scan every listed server
+        # a refused or failing server exits 1 but the others are still written; the summary says which
+        run: pnpm scan --all --write --summary scan-summary.md || echo "::warning::some servers could not be scanned; see the summary"
+      - name: Validate the appended data
+        run: pnpm validate:data && pnpm check:append-only HEAD
+      - name: Open a pull request when something was appended
+        env:
+          GH_TOKEN: ${{ secrets.SCANNER_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/observations; then
+            echo "nothing to append"
+            exit 0
+          fi
+          date="$(date -u +%Y-%m-%d)"
+          branch="scanner/${date}"
+          git config user.name "letsauth scanner"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add data/observations
+          git commit -F - <<MSG
+          Scanner: observations from the run of ${date}
+
+          $(cat scan-summary.md)
+          MSG
+          git push --force-with-lease origin "$branch"
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            gh pr edit "$branch" --body-file scan-summary.md
+            echo "updated the existing pull request for $branch"
+          else
+            gh pr create --base main --head "$branch" \
+              --title "Scanner: ${date}" \
+              --body-file scan-summary.md \
+              --label data || gh pr create --base main --head "$branch" \
+              --title "Scanner: ${date}" \
+              --body-file scan-summary.md
+          fi
