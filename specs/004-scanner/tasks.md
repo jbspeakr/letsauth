@@ -27,7 +27,7 @@ URLs, guard, fetcher, probe, checks, grade, report.
 ## Path Conventions
 
 Single Astro project at the repository root as laid out in plan.md: `src/scanner/` (library and
-service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`.
+job step), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`.
 
 ---
 
@@ -35,7 +35,7 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 
 **Purpose**: Scripts, version constant and the recorded responses every test uses
 
-- [x] T001 Add `scan` (`tsx scripts/scan.ts`) and `scan:serve` (`tsx src/scanner/server.ts`) to `package.json` scripts; add `src/scanner/version.ts` with `SCANNER_VERSION = "0.1.0"`, `SCANNER_NAME = "letsauth-scanner"`, `OBSERVER = "scanner@0.1.0"` and `USER_AGENT = "letsauth-scanner/0.1.0 (+https://letsauth.eu/scanner/)"`
+- [x] T001 Add `scan` (`tsx scripts/scan.ts`) and `scan:nightly` (`tsx scripts/scan-nightly.ts`, T017) to `package.json` scripts; add `src/scanner/version.ts` with `SCANNER_VERSION = "0.1.0"`, `SCANNER_NAME = "letsauth-scanner"`, `OBSERVER = "scanner@0.1.0"` and `USER_AGENT = "letsauth-scanner/0.1.0 (+https://letsauth.eu/scanner/)"`
 - [x] T002 [P] Create recorded responses under `tests/fixtures/scanner/`: `complete.json` (PRM at the path-aware location with two authorization servers and scopes, AS metadata at the first RFC 8414 location with S256, CIMD, iss parameter, no registration endpoint, all HTTPS endpoints), `root-prm.json` (PRM only at the root location, AS only at the OIDC path-appended location), `no-prm.json` (both PRM locations 404), `prm-5xx.json`, `prm-timeout.json`, `no-as.json` (PRM found, every AS location 404), `as-timeout.json`, `offline-access.json` (scopes include `offline_access`), `no-s256.json` (methods `plain` only), `no-methods.json` (field absent), `http-endpoint.json` (one `http:` endpoint), `issuer-mismatch.json`, `dcr.json` (registration endpoint present, CIMD absent), `redirect-cross-host.json` (PRM 302 to another host), `not-json.json` (200 with HTML); each file maps a URL to `{ status, headers, body }` or `{ error: "timeout" | "connection" | "tls" }` and includes a `target` URL
 
 **Checkpoint**: `pnpm scan` is a script that fails because `scripts/scan.ts` is missing; fixtures load
@@ -66,7 +66,7 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 
 ## Phase 3: User Story 1 - Wake up to a pull request of fresh observations (Priority: P1) 🎯 MVP
 
-**Goal**: `pnpm scan --all --write` appends exactly the observations the append rule says and prints a summary; the nightly workflow runs it and opens one pull request when something changed.
+**Goal**: `pnpm scan --all --write` appends exactly the observations the append rule says and prints a summary; the Scaleway job runs it every night and opens one pull request when something changed.
 
 **Independent Test**: Quickstart scenarios 2, 5 (write part) and 10.
 
@@ -75,10 +75,10 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 - [x] T014 [P] [US1] Unit test `tests/unit/scanner-append.test.ts` before T015: `toAppend(report, data)` returns every check when the dataset has no observation for the server; returns `[]` when the dataset's current cells are the same scanner version with equal status and evidence; returns the one changed cell when one evidence differs; returns every cell when the current cells are `scanner@0.0.9`; returns the cell when the current one is `vendor-claim` with the same status; respects method-strength ties; `appendObservations` on a scratch copy of `data/observations/<id>.yaml` keeps the existing text byte-identical as a prefix and the result parses with `observationFileSchema`; `appendObservations` creates the file when missing; `summarise(runs)` renders the Markdown the pull request uses with per-server appended and unknown counts
 - [x] T015 [US1] Implement `src/scanner/observations.ts`: `currentCellOf(data, serverId, featureId, revisionId)` reusing `currentCell` from `src/lib/atlas.ts`; `toAppend(report, data)`; `appendObservations(filePath, entries)` writing YAML entries with `yaml`'s `stringify` on a list and appending the text after the existing content (adding a trailing newline when missing); `summarise(results: { server, report, appended }[])` → Markdown (depends on T013)
 - [x] T016 [US1] Implement `scripts/scan.ts`: arguments `<url> | <server-id> | --all`, flags `--write`, `--summary <file>`, `--json`, `--timeout <ms>`; loads the dataset with `getDataset()`; resolves a server id to its URL; skips withdrawn and `stdio-only` servers under `--all`; runs scans sequentially with the AS metadata cached per issuer within the run; prints a terminal report (grade, reasons, one line per check with status glyph word, level, evidence) or JSON; with `--write` appends per server and prints the count; writes the summary file; exits 1 on a guard refusal or a thrown error, 0 otherwise (depends on T015)
-- [x] T017 [US1] Add `.github/workflows/scan.yml`: `schedule: "17 3 * * *"` and `workflow_dispatch`; `permissions: contents: write, pull-requests: write`; checkout, pnpm, install, `pnpm scan --all --write --summary scan-summary.md`; if `git status --porcelain data/observations` is empty log "nothing to append" and stop; else create branch `scanner/${date}`, commit "Scanner: observations from the run of ${date}" with the summary as body, push, `gh pr create --title "Scanner: <date>" --body-file scan-summary.md --label data` using `GH_TOKEN: ${{ secrets.SCANNER_TOKEN || secrets.GITHUB_TOKEN }}`; concurrency group `scan`; `timeout-minutes: 30` (depends on T016)
-- [x] T018 [US1] Write `docs/scanner.md`: what the scanner reads and never does, the decision table pointer, the append rule, running the command, the workflow and the `SCANNER_TOKEN` note (why CI needs it), reviewing a scanner pull request, the container image and Scaleway deployment steps, how a server owner opts out (withdraw via the issue form), and the scanner's `User-Agent` string
+- [x] T017 [US1] Implement the nightly job: `src/scanner/nightly.ts` (`upsertPullRequest` over GitHub's REST API with an injected `fetch`, `branchFor`, `commitMessage`) with `tests/unit/scanner-nightly.test.ts` first; `scripts/scan-nightly.ts` (`pnpm scan:nightly`): shallow-clone `SCANNER_BASE` of `SCANNER_REPO` with `SCANNER_TOKEN` as an `Authorization` header, install, `pnpm scan --all --write --summary scan-summary.md`, `pnpm validate:data`, `pnpm check:append-only HEAD`, exit 0 with "nothing to append" when `data/observations` is unchanged, else commit to `scanner/<date>`, push `--force-with-lease`, open or update the pull request `Scanner: <date>` with the summary and the label `data`; exit 1 on any failure. (Revised 2026-10-14: replaced the GitHub Actions schedule the first draft had.)
+- [x] T018 [US1] Write `docs/scanner.md`: what the scanner reads and never does, the decision table pointer, the append rule, running the command, the Scaleway job (creating it once, `SCANNER_TOKEN` as its secret), the deploy workflow and its secrets and variables, reviewing a scanner pull request, how a server owner opts out, and the scanner's `User-Agent` string
 
-**Checkpoint**: `pnpm scan notion --write` on a scratch copy appends validating entries; the workflow file lints; `docs/scanner.md` exists
+**Checkpoint**: `pnpm scan notion --write` on a scratch copy appends validating entries; `pnpm scan:nightly` without `SCANNER_TOKEN` exits 1 with the reason; `docs/scanner.md` exists
 
 ---
 
@@ -104,20 +104,18 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 
 ---
 
-## Phase 5: User Story 3 - Scan any MCP server URL on demand (Priority: P3)
+## Phase 5: The job image and its deployment (User Story 3 removed 2026-10-14)
 
-**Goal**: The service answers `/scan` with the report for a public HTTPS URL, refuses everything else, and the site's form shows the result with the same component.
+**Goal**: The image the Scaleway job runs is built from the repository and reaches Scaleway only through a dedicated workflow. The first draft of this phase built an on-demand HTTP service (`src/scanner/server.ts`), its island form (`ScanForm.svelte`) and their test; the owner removed on-demand scanning on 2026-10-14 and those files were deleted. The task ids are kept.
 
-**Independent Test**: Quickstart scenarios 4 and 6.
+**Independent Test**: Quickstart scenarios 6 and 10.
 
-### Tests for User Story 3
+- [x] T028 [P] Add `Dockerfile` (Node 22 alpine, `git`, corepack pnpm, copy the repository, `pnpm install --frozen-lockfile --prod=false`, `USER node`, `CMD ["pnpm", "scan:nightly"]`, no port) and `.dockerignore` (`node_modules`, `dist`, `.astro`, `tests/e2e/__screenshots__`, `playwright-report`, `test-results`, `.git`)
+- [x] T029 Add `.github/workflows/scanner-deploy.yml`: on `push` to `main` touching the scanner paths and on `workflow_dispatch`, environment `production`; check that `SCW_REGISTRY_NAMESPACE`, `SCW_JOB_DEFINITION_ID` and `SCW_SECRET_KEY` are set; `docker login rg.<region>.scw.cloud -u nologin`; build and push `letsauth-scanner:<sha>` and `:latest`; `scw jobs definition update <id> image-uri=<image>:<sha>` through `scaleway/action-scw`
+- [x] T030 Write `specs/004-scanner/contracts/job.md` (job steps, schedule, resources, environment, secret, the run summary, the deployment workflow and its configuration) and delete `contracts/service.md`; remove the on-demand routes from `contracts/routes.md`
+- [x] T031 Remove on-demand scanning: delete `src/scanner/server.ts`, `src/components/ScanForm.svelte`, `tests/unit/scanner-service.test.ts` and the `scan:serve` script; remove the form, the `PUBLIC_SCANNER_URL` switch and the no-JS note from `src/pages/scanner/index.astro`; drop the live-report branch from `ScanReport.svelte`; update `tests/e2e/scanner.spec.ts`
 
-- [x] T028 [P] [US3] Unit test `tests/unit/scanner-service.test.ts` before T029: `createServer({ fetcher: recordingFetcher(complete), resolve, data })` on an ephemeral port; `GET /healthz` is ok; `POST /scan` with the fixture target returns a report with `recorded: false`, `target.server null`, and the recorded request list equals the five well-known URLs and nothing else; `GET /scan?url=` works; `http://`, `https://127.0.0.1/`, `https://user:pw@h/`, `https://h:8443/`, `not a url` and a name resolving to a private address return `400` with the reason; a body over 4 KiB returns `400`; the seventh request within a minute from one address returns `429`; `OPTIONS /scan` returns `204` with the CORS headers; an unknown path returns `404`; responses carry `Cache-Control: no-store`
-- [x] T029 [US3] Implement `src/scanner/server.ts`: `createServer(options)` with `node:http`, routes per contracts/service.md, token bucket per client address, concurrency cap, body limit, JSON errors, CORS from `SCANNER_ALLOWED_ORIGIN`; `main()` when run directly reads `PORT` and the variables, loads the dataset once with `getDataset()` and listens; make T028 pass (depends on T013, T006)
-- [x] T030 [US3] Create `src/components/ScanForm.svelte` and mount it `client:idle` in `src/pages/scanner/index.astro` only when `import.meta.env.PUBLIC_SCANNER_URL` is set: a `<form>` with a URL field and a submit button, `POST`s `{ url }` to `${PUBLIC_SCANNER_URL}/scan`, shows a busy state, renders the `ScanReport` on success or the `error` message on 400/429/503, marks the result "not recorded"; the server-rendered form carries a `<noscript>` note; `prefers-reduced-motion` honoured (depends on T023, T026)
-- [x] T031 [P] [US3] Add `Dockerfile` (Node 22 alpine, corepack pnpm, copy the repository, `pnpm install --frozen-lockfile`, `EXPOSE 8080`, `CMD ["pnpm", "scan:serve"]`) and `.dockerignore` (`node_modules`, `dist`, `.astro`, `tests`, `playwright-report`, `test-results`); extend `docs/scanner.md` with the Scaleway steps (registry push, container create in an EU region, env variables, `PUBLIC_SCANNER_URL` for the site's production environment)
-
-**Checkpoint**: `pnpm scan:serve` answers a fixture scan locally; the form renders the result; T028 passes
+**Checkpoint**: `docker build .` succeeds; the deploy workflow lints; no page bundle contains scanner code
 
 ---
 
@@ -140,7 +138,7 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 **Purpose**: Docs, roadmap, budgets, the full quickstart run
 
 - [x] T035 [P] Update `docs/roadmap.md` (004 implemented, pull request open), `README.md` (scanner link and the command), `CLAUDE.md` (`pnpm scan` in Commands; the note that `src/scanner/` is the only code that may contact a server and the site build never imports it; "Seed data is vendor-claim or manual" becomes "Seed data is vendor-claim or manual; scanner cells arrive by pull request")
-- [x] T036 [P] Confirm Biome, typecheck and the build include `src/scanner/` and `scripts/scan.ts` without pulling the scanner into any page bundle (`pnpm build` output lists no `scanner` chunk beyond `ScanForm`)
+- [x] T036 [P] Confirm Biome, typecheck and the build include `src/scanner/` and `scripts/scan.ts` without pulling the scanner into any page bundle (`pnpm build` output lists no `scanner` or `ScanForm` chunk; the scanner pages ship no JavaScript)
 - [x] T037 Run every quickstart.md scenario (1 to 12) and record results in `specs/004-scanner/checklists/quickstart-run.md`; scenarios 10 and the live part of 6 are recorded as "run from GitHub / by the maintainer" when the environment has no network; refresh screenshot baselines through the `refresh-screenshots` label on the pull request
 
 ---
@@ -158,7 +156,7 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 
 - **US1 (P1)**: After Phase 2. No story dependencies
 - **US2 (P2)**: After Phase 2. Independent of US1 (renders from whatever observations exist)
-- **US3 (P3)**: After Phase 2 and T023 (the report component from US2)
+- **Phase 5**: After US1 (T017); no story of its own since 2026-10-14
 - **US4 (P4)**: After US1 (T016)
 
 ### Within Each User Story
@@ -191,7 +189,7 @@ service), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/`
 1. Setup + Foundational → every check and the grade tested over fixtures
 2. US1 → the command, the append rule, the nightly pull request (MVP)
 3. US2 → the report pages and the index, the grade published
-4. US3 → the on-demand service and the form, the container image
+4. Phase 5 → the job image, the deploy workflow and the job contract (on-demand scanning removed)
 5. US4 → the contributor path
 6. Polish → docs, roadmap, budgets, quickstart run
 

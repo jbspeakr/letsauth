@@ -3,8 +3,10 @@
 The scanner (roadmap 004, `specs/004-scanner/`) automates what the MCP auth atlas did by hand:
 it reads the public authorization metadata of every listed server, judges the passively
 observable requirements of the current MCP Authorization revision, and writes the result as
-observations, each with the metadata URL it read as evidence. It is the one piece of the site
-that contacts other servers, and it is passive by default (constitution III).
+observations, each with the metadata URL it read as evidence. It is the one piece of the project
+that contacts other servers, and it runs in exactly one place: a scheduled job on the project's
+own backend (Scaleway, EU region). Nothing on the site triggers a scan, and the only output of a
+run is a pull request against this repository.
 
 ## What it reads, and never does
 
@@ -17,7 +19,9 @@ For a server URL `https://h/p` it fetches, with `GET` over HTTPS and no credenti
    `<path>/.well-known/openid-configuration` (the three locations the MCP specification names).
 
 That is all: at most five requests, never to the MCP endpoint itself, never with a token, never
-an authorization flow. Redirects are followed only to the same host over HTTPS. The
+an authorization flow. Redirects are followed only to the same host over HTTPS. URLs that are not
+HTTPS, carry credentials or a port, name an IP address or a local name, or resolve to a private
+address are refused, whether they are a listed server's URL or an issuer found in metadata. The
 `User-Agent` is `letsauth-scanner/<version> (+https://letsauth.eu/scanner/)`.
 
 Every status is decided by the table in `specs/004-scanner/data-model.md`. A document that could
@@ -32,28 +36,37 @@ use HTTPS.
 pnpm scan https://mcp.example.com/mcp     # a report in the terminal, nothing written
 pnpm scan notion                          # a listed server by id
 pnpm scan notion --write                  # append the observations the nightly rule would
-pnpm scan --all --write --summary out.md  # what the nightly workflow runs
+pnpm scan --all --write --summary out.md  # what the nightly job runs
 pnpm scan notion --json                   # the report as JSON (contracts/report.md)
-pnpm scan:serve                           # the on-demand service on http://localhost:8080
 ```
 
 `--write` appends only what the append rule says: a cell with no observation, a cell whose
 current observation was not written by this scanner version, or a cell whose status or evidence
-changed. Nothing is edited; `pnpm check:append-only` passes by construction.
+changed. Nothing is edited; `pnpm check:append-only` passes by construction. A contributor who
+runs `--write` opens a pull request with the result like any other data change.
 
-## The nightly run
+## The nightly job
 
-`.github/workflows/scan.yml` runs `pnpm scan --all --write --summary scan-summary.md` every
-night (03:17 UTC) and on `workflow_dispatch`. When the data changed it commits to
-`scanner/<date>`, pushes, and opens one pull request whose description is the run summary: per
-server the grade, the cells appended and the checks that could not be judged. When nothing
-changed it logs "nothing to append" and opens nothing.
+A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) every night at
+03:17 UTC from the image `Dockerfile` builds. One run:
 
-**CI on the scanner's pull requests.** A pull request opened with the workflow's own token does
-not start other workflows (a GitHub rule). Add a repository secret `SCANNER_TOKEN` holding a
-fine-grained personal access token for this repository with *Contents: write* and *Pull
-requests: write*; the workflow uses it when present and CI then runs as usual. Without it, close
-and reopen the pull request, or push an empty-change commit to its branch, to start CI.
+1. shallow-clones `main` with the job's GitHub token and installs dependencies;
+2. runs `pnpm scan --all --write --summary scan-summary.md` over every listed server that is not
+   withdrawn and has an HTTP transport (a server that fails is recorded as `unknown`);
+3. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
+   is pushed;
+4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
+5. otherwise commits to `scanner/<date>`, pushes, and opens one pull request `Scanner: <date>`
+   whose description is the run summary (per server the grade, the cells appended and the checks
+   that could not be judged), or updates the open pull request for that branch.
+
+The pull request is opened with a personal token, so CI runs on it like on any other. Nothing is
+merged without review. `specs/004-scanner/contracts/job.md` is the contract.
+
+**Environment of the job**: `SCANNER_REPO` (`jbspeakr/letsauth`), `SCANNER_BASE` (`main`), and
+the secret `SCANNER_TOKEN`: a fine-grained GitHub personal access token for this repository with
+*Contents: write* and *Pull requests: write*, nothing else. It lives in the job definition on
+Scaleway, never in the image or the repository.
 
 **Reviewing a scanner pull request.** Open each evidence URL in the diff; it is the metadata
 document that decided the status. `unknown` means the scanner could not tell (the evidence names
@@ -64,6 +77,42 @@ re-observes every cell.
 **When to bump `SCANNER_VERSION`** (`src/scanner/version.ts`): whenever a check's logic or its
 evidence text changes. The append rule treats cells written by an older version as not yet
 measured, so the next run rewrites them all.
+
+## Deploying to Scaleway
+
+The image reaches Scaleway only through `.github/workflows/scanner-deploy.yml`, which runs on a
+push to `main` that touches the scanner (`Dockerfile`, `src/scanner/`, the scan scripts, the
+lockfile) or by hand from the Actions tab. It builds the image, pushes it to the project's
+Scaleway Container Registry as `letsauth-scanner:<commit>` and `:latest`, and points the job
+definition at the new tag. The scan itself never runs on GitHub.
+
+Set up once, by the owner:
+
+1. Create a Scaleway project in an EU region (`fr-par` or `nl-ams`) and a Container Registry
+   namespace in it. Create an API key for the project with permissions to push to the registry
+   and to manage Serverless Jobs.
+2. Create the Serverless Job definition (console: Serverless → Jobs → Create job definition, or
+   `scw jobs definition create`; check `scw jobs definition create --help` for the exact option
+   names of your CLI version):
+   - image: `rg.<region>.scw.cloud/<namespace>/letsauth-scanner:latest` (the first deploy run
+     pushes it; the definition can be created before or after that),
+   - command: `pnpm scan:nightly`,
+   - cron schedule: `17 3 * * *` (UTC),
+   - resources: 1 vCPU, 1 GB memory, timeout 30 minutes, no private network,
+   - environment variables: `SCANNER_REPO=jbspeakr/letsauth`, `SCANNER_BASE=main`,
+   - secret: `SCANNER_TOKEN` as a secret reference (Secret Manager) or, where the definition
+     offers no secret field, as an environment variable; the value is the fine-grained GitHub
+     token described above.
+3. In the repository's `production` environment, set the secrets `SCW_ACCESS_KEY`,
+   `SCW_SECRET_KEY`, `SCW_DEFAULT_PROJECT_ID`, `SCW_DEFAULT_ORGANIZATION_ID` and the variables
+   `SCW_REGION` (if not `fr-par`), `SCW_REGISTRY_NAMESPACE` and `SCW_JOB_DEFINITION_ID` (the id
+   of the definition from step 2).
+4. Run the "Scanner deploy" workflow once by hand. From then on every merge that touches the
+   scanner redeploys, and the job's next run uses the new image. Start the job once from the
+   console to get the first scanner pull request without waiting for the night.
+
+The workflow never creates or changes the job's schedule, resources or secret; it only moves
+the image forward, so those settings stay where the owner put them.
 
 ## The grade
 
@@ -78,40 +127,12 @@ Shown on report pages and the scanner index, never used to sort or rank:
 
 MAY-level and deprecated requirements are listed and never change the grade.
 
-## The on-demand service
+## What there is not
 
-`src/scanner/server.ts` is a small HTTP service: `GET /healthz`, `POST /scan` with
-`{ "url": "https://…" }` (or `GET /scan?url=…`) returning the report JSON. It refuses URLs that
-are not HTTPS, that carry credentials or a port, that are IP addresses or local names, or whose
-host resolves to a private, loopback, link-local or otherwise non-public address. It stores
-nothing, keeps a per-address rate limit in memory (six scans a minute), caps concurrent scans,
-and answers with `Cache-Control: no-store`. Configuration: `PORT` (8080),
-`SCANNER_ALLOWED_ORIGIN` (`https://letsauth.eu`), `SCANNER_RATE_PER_MINUTE` (6),
-`SCANNER_MAX_CONCURRENT` (4).
-
-### Deploying to Scaleway Serverless Containers
-
-The constitution puts the backend on Scaleway in an EU region. Once:
-
-1. Create a Scaleway project and a Container Registry namespace in an EU region (for example
-   `fr-par` or `nl-ams`).
-2. Build and push the image from the repository root:
-   ```sh
-   docker build -t rg.fr-par.scw.cloud/<namespace>/letsauth-scanner:<version> .
-   docker push rg.fr-par.scw.cloud/<namespace>/letsauth-scanner:<version>
-   ```
-3. Create a Serverless Container from that image in the same region: port `8080`, minimum scale
-   `0`, maximum scale `2`, memory `512 MB`, timeout `30 s`, no private network attached. Set
-   `SCANNER_ALLOWED_ORIGIN=https://letsauth.eu`.
-4. Attach a custom domain (for example `scanner.letsauth.eu`) or use the container's own URL.
-5. In the repository's `production` environment, set the variable `PUBLIC_SCANNER_URL` to that
-   base URL (no trailing slash). The next deploy mounts the form on `/scanner/`.
-
-To move the nightly run onto Scaleway as well, create a Serverless Job from the same image with
-the command `pnpm scan --all --write --summary scan-summary.md` and a wrapper that commits and
-opens the pull request with a repository token; the GitHub workflow is the reference for those
-steps. Until then the GitHub schedule is the nightly run (see `specs/004-scanner/plan.md`,
-Complexity Tracking).
+There is no on-demand scanning. The site has no endpoint that accepts a URL, the scanner pages
+ship no JavaScript, and no visitor can cause a request to any server. A server owner who wants
+to see their server's report asks for it to be listed; a contributor who wants fresh cells runs
+`pnpm scan <id> --write` and opens a pull request.
 
 ## Opting out
 

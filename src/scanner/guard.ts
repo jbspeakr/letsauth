@@ -4,8 +4,9 @@ import { isIP } from "node:net";
 /**
  * Decides whether a URL may be scanned at all (research R3): HTTPS, no credentials, the default
  * port, a host name (not an address) that is not local, and only public addresses behind it.
- * The on-demand service takes URLs from strangers; the well-known paths derived from them must
- * not become a way to read an internal network's metadata.
+ * A listed server's URL is data anyone can propose, and the issuer URL comes from that server's
+ * metadata; the well-known paths derived from them must not become a way to read the job's own
+ * network.
  */
 
 export type Resolver = (hostname: string) => Promise<string[]>;

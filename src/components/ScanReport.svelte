@@ -1,8 +1,7 @@
 <script lang="ts">
 /**
- * One report, two renderers (research R10): the static report page renders this at build time
- * with no client directive (plain HTML, no JavaScript shipped); the on-demand island renders it
- * in the browser for a fresh result. No browser API is used here.
+ * The scan report (research R10): the report page renders this at build time with no client
+ * directive, so plain HTML and no JavaScript is shipped. No browser API is used here.
  */
 import type { Report } from "../scanner/report";
 
@@ -27,7 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const parties = ["mcp-server", "authorization-server"] as const;
-const notScanned = $derived(report.recorded && !report.checks.some((c) => c.observedAt));
+const notScanned = $derived(!report.checks.some((c) => c.observedAt));
 const gradeWord = $derived(
   report.grade.letter ? `Grade ${report.grade.letter}` : report.grade.label,
 );
@@ -126,35 +125,11 @@ function splitEvidence(text: string): { url?: string; note: string } {
     {/if}
   {/each}
 
-  {#if !report.recorded}
-    <details class="requests">
-      <summary>{report.requests.length} request{report.requests.length === 1 ? "" : "s"} made</summary>
-      <ol>
-        {#each report.requests as r}
-          <li>
-            <code>{r.status ?? "–"}</code> <span class="url">{r.url}</span>
-            {#if r.error}<span class="muted"> ({r.error}{r.detail ? `: ${r.detail}` : ""})</span>{/if}
-          </li>
-        {/each}
-      </ol>
-      {#if report.discovered?.othersNotChecked.length}
-        <p class="muted">
-          Further authorization servers named but not checked by this scanner version:
-          {report.discovered.othersNotChecked.join(", ")}
-        </p>
-      {/if}
-    </details>
-  {/if}
 
   <p class="foot muted">
-    {#if report.recorded}
-      Judged against MCP Authorization {report.revision.revision}
-      {#if scannedAt}· newest scanner observation <time datetime={scannedAt}>{scannedAt.slice(0, 10)}</time>{/if}
-      · method passive scan · {report.scanner}
-    {:else}
-      Live result, not recorded in the atlas · judged against MCP Authorization {report.revision.revision}
-      · {report.scanner} · {report.generatedAt}
-    {/if}
+    Judged against MCP Authorization {report.revision.revision}
+    {#if scannedAt}· newest scanner observation <time datetime={scannedAt}>{scannedAt.slice(0, 10)}</time>{/if}
+    · method passive scan · {report.scanner}
   </p>
 </section>
 
@@ -344,20 +319,6 @@ function splitEvidence(text: string): { url?: string; note: string } {
     border-radius: 50%;
     background: var(--ink-faint);
     opacity: 0.6;
-  }
-  .requests {
-    font-size: var(--text-sm);
-  }
-  .requests summary {
-    cursor: pointer;
-    color: var(--accent);
-  }
-  .requests ol {
-    padding-left: 1.4em;
-    margin: var(--space-2) 0;
-  }
-  .requests .url {
-    overflow-wrap: anywhere;
   }
   .foot {
     font-size: var(--text-xs);

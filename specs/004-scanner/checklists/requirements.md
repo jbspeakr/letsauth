@@ -33,9 +33,11 @@
 
 - Validated 2026-10-14. Three decisions were taken as assumptions rather than clarification
   markers because the constitution and the roadmap settle them: passive means well-known metadata
-  only (constitution III), the backend is the on-demand service and nothing else needs a server
+  only (constitution III), the backend is one scheduled job and nothing else needs a server
   (constitution IV), and the grade is derived from model data by a published rule and never used
-  to rank (constitution III, 001 FR-014). The nightly run's execution place (GitHub Actions at
-  launch, Scaleway job later) is recorded as an assumption and justified in the plan.
+  to rank (constitution III, 001 FR-014).
+- Revised 2026-10-14 on the owner's decisions: on-demand scanning removed (US3 struck, FR-010
+  rewritten), the nightly run is a Scaleway Serverless Job (assumptions), its deployment is a
+  dedicated workflow (FR-011). The checklist items above were re-read against the revised text.
 - SC-005 is measured in the quickstart run against a fixture, not as a CI gate, because CI cannot
   reach third-party hosts and should not.

@@ -1,6 +1,6 @@
 # Contract: Report
 
-One shape for the command's output, the on-demand service's response and the per-server JSON on
+One shape for the command's output and the per-server JSON on
 the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `latestScan()` in
 `src/lib/scanner.ts` (which fills `checks[]` and `grade` from observations and leaves
 `requests` and `discovered` empty, since the site never contacts a server).

@@ -44,8 +44,7 @@ test.describe("scanner index (US2)", () => {
     await page.goto("/scanner/");
     await expect(page.locator("#scanner-index tbody tr[data-server]")).toHaveCount(views.length);
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
-    const note = page.locator("[data-noscript-note], [data-not-configured]");
-    await expect(note.first()).toBeVisible();
+    await expect(page.locator("#grade-rule li")).toHaveCount(GRADE_RULE.length);
     await context.close();
   });
 

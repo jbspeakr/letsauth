@@ -45,7 +45,7 @@ the feature, so a new passive feature cannot be silently skipped (research R5).
 
 | Field | Value |
 |---|---|
-| `server` | the server id (nightly and `--write`); absent on an on-demand report, which is not recorded |
+| `server` | the server id (nightly and `--write`); absent when `pnpm scan <url>` prints a report for a URL that is not a listed server (such a report is never written) |
 | `feature` | the feature id |
 | `revision` | `{ spec: mcp-authorization, revision: <current> }` |
 | `status` | from the table; `partial` only for `mcp.as.https` |
@@ -87,8 +87,8 @@ never edits or removes an entry. The file is written by appending YAML entries t
 | `latestScan(data, server)` | dataset, server | `ScanView` | per check the newest `passive-scan` observation by `scanner@*` under the current revision, or none; `scannedAt` is the newest such date; `grade` from the statuses (unknown for a check without observation) |
 | `scannerIndex(data)` | dataset | `{ server, view }[]` | every non-withdrawn server by name with its `ScanView` |
 
-`ScanView` and the on-demand `Report` share `checks[]` and `grade` so one component renders both
-(research R10).
+`ScanView` is turned into the same `Report` shape the command prints (`reportFromView`), so the
+page, the JSON route and the command share one contract (research R10).
 
 ## Grade
 

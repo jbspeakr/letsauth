@@ -1,0 +1,63 @@
+name: Scanner deploy
+
+# Builds the scanner image and deploys it to Scaleway (constitution VII): the image goes to the
+# Scaleway Container Registry and the Serverless Job definition that runs the nightly scan is
+# pointed at it. Runs when a commit on main touches the scanner, or by hand. The scan itself
+# never runs on GitHub; see docs/scanner.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - package.json
+      - pnpm-lock.yaml
+      - src/scanner/**
+      - scripts/scan.ts
+      - scripts/scan-nightly.ts
+      - .github/workflows/scanner-deploy.yml
+  workflow_dispatch:
+
+concurrency:
+  group: scanner-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build the image and update the Scaleway job
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      SCW_REGION: ${{ vars.SCW_REGION || 'fr-par' }}
+      IMAGE: rg.${{ vars.SCW_REGION || 'fr-par' }}.scw.cloud/${{ vars.SCW_REGISTRY_NAMESPACE }}/letsauth-scanner
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the configuration
+        env:
+          NAMESPACE: ${{ vars.SCW_REGISTRY_NAMESPACE }}
+          JOB: ${{ vars.SCW_JOB_DEFINITION_ID }}
+          SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        run: |
+          : "${NAMESPACE:?set the repository variable SCW_REGISTRY_NAMESPACE}"
+          : "${JOB:?set the repository variable SCW_JOB_DEFINITION_ID}"
+          : "${SECRET_KEY:?set the repository secret SCW_SECRET_KEY}"
+      - name: Log in to the Scaleway Container Registry
+        run: echo "${{ secrets.SCW_SECRET_KEY }}" | docker login "rg.${SCW_REGION}.scw.cloud" -u nologin --password-stdin
+      - name: Build and push the image
+        run: |
+          set -euo pipefail
+          docker build -t "$IMAGE:${GITHUB_SHA}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${GITHUB_SHA}"
+          docker push "$IMAGE:latest"
+      - name: Point the Serverless Job at the new image
+        uses: scaleway/action-scw@v0
+        with:
+          access-key: ${{ secrets.SCW_ACCESS_KEY }}
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          default-project-id: ${{ secrets.SCW_DEFAULT_PROJECT_ID }}
+          default-organization-id: ${{ secrets.SCW_DEFAULT_ORGANIZATION_ID }}
+          args: jobs definition update ${{ vars.SCW_JOB_DEFINITION_ID }} image-uri=${{ env.IMAGE }}:${{ github.sha }} region=${{ env.SCW_REGION }}

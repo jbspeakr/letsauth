@@ -5,7 +5,7 @@ Phase 0 of the plan. Each entry records a decision, why, and what was rejected.
 ## R1. Where the code lives
 
 **Decision**: The scanner is a library under `src/scanner/` (probing, checks, grading,
-observation writing, the on-demand HTTP service), driven by one command, `scripts/scan.ts`
+observation writing, the nightly job's pull request step), driven by one command, `scripts/scan.ts`
 (`pnpm scan`). Site-side derivations (the report view built from observations) live in
 `src/lib/scanner.ts` next to `atlas.ts` and `standards.ts`. The library imports the schema from
 `src/schema/` and reads the dataset through `src/lib/data.ts`, as every product does.
@@ -28,7 +28,7 @@ performs network requests, FR-015; a separate directory makes the boundary visib
 `letsauth-scanner/<version> (+https://letsauth.eu/scanner/)`. Redirects are followed by the
 scanner itself, at most three, only to HTTPS URLs on the same host; anything else is a failed
 fetch. The fetch function is injected (`Fetcher` type) so unit tests run the whole pipeline over
-recorded responses and the service test records every request made.
+recorded responses and the checks test records every request made.
 
 **Rationale**: FR-002 and FR-014. No dependency is needed; the injection point is what makes
 SC-002, SC-003 and SC-006 testable without a network, which CI must not have (CLAUDE.md:
@@ -48,16 +48,20 @@ private). The same guard runs on the issuer URL found in the metadata before the
 server is fetched. A failed guard refuses the scan with the reason (on demand) or records
 `unknown` (nightly, for a listed server whose issuer fails the guard).
 
-**Rationale**: FR-010 and SC-006: the on-demand service takes URLs from strangers; the well-known
-paths it derives must not become a way to read an internal network's metadata.
+**Rationale**: SC-006: the issuer URL comes from a third party's metadata document, and a listed
+server's URL is data anyone can propose in a pull request; the well-known paths derived from
+either must not become a way to read the job's own network. Nothing a visitor enters ever reaches
+the scanner (FR-010), so the guard is a second line of defence, not the first.
 
 **Known limit**: Node's fetch resolves the name again when it connects, so a name that changes
 its answer between the check and the connection (DNS rebinding) could reach a private address
-once. The service runs with no private network attached (Scaleway Serverless Containers by
-default), which bounds the damage; a resolver hook can close the window in a later revision.
+once. The job runs with no private network attached (Scaleway Serverless Jobs by default) and
+only ever against URLs that are in the repository or in a listed server's own metadata, which
+bounds the damage; a resolver hook can close the window in a later revision.
 
-**Rejected**: Resolving and connecting to the IP (breaks TLS name validation and SNI). An allow
-list of hosts (defeats the on-demand use case).
+**Rejected**: Resolving and connecting to the IP (breaks TLS name validation and SNI). Skipping
+the guard because targets come from the repository (the issuer URL does not; it is read from the
+server's metadata at run time).
 
 ## R4. Well-known locations
 
@@ -128,56 +132,59 @@ neutral by design; the report is where the letter belongs).
 
 ## R8. The nightly run
 
-**Decision**: A scheduled GitHub Actions workflow (`.github/workflows/scan.yml`) runs
-`pnpm scan --all --write` and, when the data changed, commits to a branch named
-`scanner/<date>` and opens one pull request with the run summary as its description. It uses a
-fine-grained token from the `SCANNER_TOKEN` secret when present (so the pull request triggers CI
-like any other) and falls back to the workflow token (CI then starts when a maintainer pushes to
-or reopens the pull request, a documented GitHub limitation). `workflow_dispatch` runs it by hand.
+**Decision**: The scan runs in one place only: a Scaleway Serverless Job in an EU region on the
+cron schedule `17 3 * * *`, from the image `Dockerfile` builds, with the command
+`pnpm scan:nightly` (`scripts/scan-nightly.ts`). The job shallow-clones `main`, runs
+`pnpm scan --all --write --summary`, validates the data and the append-only rule, and when
+anything was appended commits to `scanner/<date>`, pushes and opens one pull request with the run
+summary as its description (or updates the open one for that branch). It authenticates to GitHub
+with a fine-grained token (`SCANNER_TOKEN`, the job's secret) sent as an `Authorization` header,
+so the pull request triggers CI like any other. `contracts/job.md` is the contract.
 
-**Rationale**: FR-006 and the honesty test "maintainable by one person": no account, no infra and
-no secret beyond what the repository already has. The constitution names Scaleway for the
-backend; the on-demand service ships as a container image for it (R9), and the same image can
-run the nightly command as a Scaleway scheduled job once an account exists. The plan's
-Complexity Tracking records this.
+**Rationale**: Constitution VII names Scaleway for the backend and its scheduled job; the owner
+confirmed on 2026-10-14 that all scanning happens in scheduled backend jobs that only feed data
+back into the repository, and that none of it runs on GitHub's runners. FR-006 (one pull request
+a night, nothing merged without review).
 
-**Rejected**: A third-party "create pull request" action (the deploy workflow's precedent is to
-use the platform's own API). Committing to `main` directly (constitution: every change is a
-pull request, data changes included).
+**Rejected**: A scheduled GitHub Actions workflow (the first draft of this plan): the scan is not
+part of building or testing the repository, so it does not belong on CI runners, and the
+constitution places it on Scaleway. A third-party "create pull request" action (the job calls
+GitHub's REST API directly, `src/scanner/nightly.ts`, tested with an injected `fetch`).
+Committing to `main` directly (every change is a pull request, data changes included).
 
-## R9. The on-demand service
+## R9. Deployment of the job
 
-**Decision**: A small HTTP service on `node:http` in `src/scanner/server.ts`: `GET /healthz`,
-`POST /scan` with `{ "url": … }` (and `GET /scan?url=…` for curl), returning the report JSON
-with `Cache-Control: no-store` and CORS headers for the site's origin. It keeps an in-memory
-token bucket per client address (six scans a minute), caps concurrent scans, refuses URLs that
-fail the guard with HTTP 400 and the reason, and stores nothing. A `Dockerfile` at the repository
-root builds the image for Scaleway Serverless Containers; the port comes from `PORT`. The site
-reads the service's base URL from `PUBLIC_SCANNER_URL` at build time; when it is unset, the page
-shows a note instead of the form.
+**Decision**: A dedicated workflow, `.github/workflows/scanner-deploy.yml`, is the only path to
+Scaleway: on a push to `main` that touches the scanner, or by hand, it builds the image, pushes it
+to the Scaleway Container Registry tagged with the commit, and updates the Serverless Job
+definition's image through the Scaleway CLI. The job definition itself (schedule, resources,
+`SCANNER_REPO`, the `SCANNER_TOKEN` secret) is created once by the owner and recorded as the
+repository variable `SCW_JOB_DEFINITION_ID`; Scaleway credentials are repository secrets in the
+`production` environment, like the Bunny credentials of the site deploy.
 
-**Rationale**: FR-010, FR-011, constitution IV (a backend only for what cannot be static) and VII
-(Scaleway in an EU region). No framework is needed for two routes.
+**Rationale**: The owner's requirement (2026-10-14) that Scaleway deployment happens through a
+dedicated workflow, and the site deploy's precedent (`deploy.yml`: the platform's own API from a
+workflow, credentials in secrets, nothing deployed by hand).
 
-**Rejected**: Storing results for shareable URLs (needs object storage and an edge rule; deferred,
-recorded in the spec's assumptions). Running the scan in the visitor's browser (CORS forbids
-reading other origins' metadata, and a passive scan from the lab's own address is what the
-report should describe).
+**Rejected**: Building the image on Scaleway from the repository (one more place with repository
+access). Creating the job definition from the workflow on every run (the definition carries the
+secret and the schedule, which are set once; the workflow only moves the image forward).
 
-## R10. One report, two renderers
+## R10. One report, one renderer
 
 **Decision**: The report is one TypeScript shape (`contracts/report.md`), produced by the library
-for the command and the service, and by `src/lib/scanner.ts` from observations for the pages.
-One Svelte component, `ScanReport.svelte`, renders it: the static report page renders it at
-build time without hydration (plain HTML, no JavaScript shipped), and the on-demand island
-renders the same component in the browser for a fresh result.
+for the command and by `src/lib/scanner.ts` from observations for the pages. One Svelte
+component, `ScanReport.svelte`, renders it on the report page at build time without hydration:
+plain HTML, no JavaScript shipped, no island anywhere on the scanner pages.
 
-**Rationale**: FR-007, FR-011 and FR-013: the visitor sees the same table for a listed server and
-for an on-demand scan, and only one markup has to meet the budgets and the token rules. Islands
-only where interaction needs them (constitution V): the island is the form, not the report.
+**Rationale**: FR-007 and FR-013: only one markup has to meet the budgets and the token rules.
+Islands only where interaction needs them (constitution V), and nothing on these pages needs
+interaction.
 
-**Rejected**: Two renderers (an Astro table for the pages and a Svelte one for the island) that
-would drift.
+**Rejected**: An on-demand scan form backed by an HTTP service (the first draft of this plan): the
+owner ruled out scanning triggered by visitors on 2026-10-14; all scanning is scheduled and feeds
+the repository only. Rendering the report in an Astro component instead of Svelte would also
+work; Svelte was kept because `StatusCell`'s chip markup and classes are reused as is.
 
 ## R11. Scanner version and observer
 

@@ -1,6 +1,5 @@
 ---
 import GradeBadge from "@/components/GradeBadge.astro";
-import ScanForm from "@/components/ScanForm.svelte";
 import Base from "@/layouts/Base.astro";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -14,7 +13,6 @@ const views = scannerIndex(data);
 const checks = passiveChecks(data);
 const unscanned = unscannedFeatures(data);
 const facts = scannerFacts(views);
-const endpoint = (import.meta.env.PUBLIC_SCANNER_URL as string | undefined)?.replace(/\/+$/, "");
 const repo = "https://github.com/jbspeakr/letsauth";
 const issue = `${repo}/issues/new?template=observation.yml`;
 ---
@@ -57,38 +55,6 @@ const issue = `${repo}/issues/new?template=observation.yml`;
         </div>
       </dl>
     </header>
-
-    <section class="try" aria-labelledby="try-title">
-      <h2 id="try-title">Scan a server now</h2>
-      {
-        endpoint ? (
-          <>
-            <form class="scan-form card" method="get" action={`${endpoint}/scan`} data-fallback>
-              <div class="row">
-                <div class="field grow">
-                  <label for="scan-url-static">MCP server URL</label>
-                  <input id="scan-url-static" name="url" type="url" placeholder="https://mcp.example.com/mcp" required />
-                </div>
-                <button class="button primary" type="submit">Scan</button>
-              </div>
-              <noscript>
-                <p class="note" data-noscript-note>
-                  The on-demand scan needs JavaScript to show the report here; without it the
-                  button returns the report as JSON. Everything else on this page is complete.
-                </p>
-              </noscript>
-            </form>
-            <ScanForm client:idle endpoint={endpoint} />
-          </>
-        ) : (
-          <p class="card note" data-not-configured>
-            The on-demand scanner is not configured for this deployment. Run it yourself with{" "}
-            <code>pnpm scan &lt;url&gt;</code> from the repository (see below); the nightly run
-            still scans every listed server.
-          </p>
-        )
-      }
-    </section>
 
     <section class="how" aria-labelledby="how-title">
       <h2 id="how-title">How it works</h2>
@@ -194,7 +160,7 @@ const issue = `${repo}/issues/new?template=observation.yml`;
       <section class="prose" aria-labelledby="self-title">
         <h2 id="self-title">Run it yourself</h2>
         <p>
-          The same command runs the nightly job, the on-demand service and your terminal:
+          The same command runs the nightly job and your terminal:
         </p>
         <pre tabindex="0"><code>pnpm scan https://mcp.example.com/mcp   # any server, nothing written
 pnpm scan notion                        # a listed server by id
@@ -268,41 +234,13 @@ pnpm scan notion --write                # append what the nightly rule would</co
     font-weight: 500;
     color: var(--ink-muted);
   }
-  .try,
   .how,
   .index {
     margin-bottom: var(--space-7);
   }
-  .try h2,
   .how h2,
   .index h2 {
     font-size: var(--text-xl);
-  }
-  .scan-form .row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: end;
-  }
-  .scan-form .grow {
-    flex: 1 1 18rem;
-  }
-  .scan-form input {
-    width: 100%;
-  }
-  /* the static form is the no-JS fallback; the island replaces it once mounted */
-  :global([data-enhanced]) ~ .scan-form,
-  .scan-form:has(+ :global([data-enhanced])) {
-    display: none;
-  }
-  .note {
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    margin: var(--space-3) 0 0;
-    max-width: none;
-  }
-  .card.note {
-    margin: 0;
   }
   .how__grid {
     display: grid;

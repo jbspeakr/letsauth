@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-14
 
-**Status**: Draft
+**Status**: Draft · revised 2026-10-14 on the owner's decisions: no on-demand scanning, the nightly run is a Scaleway job, its deployment is a dedicated workflow
 
 **Input**: User description: "Scanner: automates what the MCP Atlas (001) did by hand. Passive checks on public metadata, graded report, nightly PR with observations. First and only backend."
 
@@ -102,40 +102,14 @@ unknown, confirm no letter grade is shown and the reason is named.
 
 ---
 
-### User Story 3 - Scan any MCP server URL on demand (Priority: P3)
+### User Story 3 - removed: on-demand scanning (2026-10-14)
 
-An engineer who runs an MCP server that is not in the atlas, or who has just changed one, enters
-its URL and gets the same report within seconds: the metadata the scanner found, each
-requirement's status and evidence, and the grade with its reasons. The on-demand scan reads only
-public metadata, sends no credentials, starts no authorization flow, and stores nothing. The
-result is not added to the atlas; the page says how a listed server's data changes (by pull
-request) and how to list a server.
-
-**Why this priority**: This is the backend the constitution reserves for the scanner, and the
-reason the feature cannot be static. It makes the scanner useful to people whose server is not
-listed and gives listed servers' owners a way to check a fix before the nightly run.
-
-**Independent Test**: Request a scan for a URL served by a test fixture and confirm the response
-is a report with the same shape and the same statuses the nightly scanner produces for that
-fixture; request a scan for a non-HTTPS, private, loopback or malformed URL and confirm it is
-refused with a message; confirm no request is sent anywhere but the well-known metadata
-locations derived from the URL and from the discovered authorization server.
-
-**Acceptance Scenarios**:
-
-1. **Given** a reachable HTTPS MCP server URL, **When** the visitor submits it, **Then** the page
-   shows a report with the same checks, statuses, evidence and grade rule as a listed server's
-   report, labelled as not recorded.
-2. **Given** an HTTP URL, a URL with a private, loopback or link-local address, a URL with
-   credentials, or text that is not a URL, **When** it is submitted, **Then** the scan is refused
-   and the message says why.
-3. **Given** a URL whose metadata cannot be fetched, **When** the scan completes, **Then** the
-   affected checks are unknown with the failure named, and the grade is withheld.
-4. **Given** JavaScript is disabled, **When** the visitor opens the page, **Then** the form is
-   shown with a note that the on-demand scan needs JavaScript, and the rest of the page (rules,
-   index, how to run the scanner yourself) is complete.
-5. **Given** the on-demand service is not configured for the site, **When** the page renders,
-   **Then** the form is replaced by a note saying so and pointing at the command-line route.
+The first draft of this specification had a third story: a visitor enters any MCP server URL on
+`/scanner/` and an HTTP service scans it on demand. The owner removed it on 2026-10-14: scanning
+triggered by random visitors is a feature the project must not have. All scanning happens in
+scheduled backend jobs under the project's control, and the only thing a run produces is data
+that flows back into the repository by pull request (FR-010). The story number is kept so that
+task and scenario numbers stay stable; nothing of it is built.
 
 ---
 
@@ -162,8 +136,8 @@ append-only check passes.
 2. **Given** a listed server id and the write flag, **When** the command runs, **Then** the
    observations that the nightly rule would append are appended to that server's data file, and
    `pnpm validate:data` and the append-only check pass afterwards.
-3. **Given** a URL that is refused by the on-demand rules, **When** the command runs, **Then** it
-   prints the reason and exits non-zero.
+3. **Given** a URL that is refused by the public-host rules, **When** the command runs, **Then**
+   it prints the reason and exits non-zero.
 
 ---
 
@@ -235,18 +209,23 @@ append-only check passes.
 - **FR-009**: The scanner index MUST list every listed server alphabetically with its latest grade
   (or that it is not scanned or not graded) and the date of its newest scanner observation, MUST
   link each to its report, and MUST NOT order or rank servers by grade anywhere on the site.
-- **FR-010**: The on-demand service MUST accept an MCP server URL and return the same report
-  shape as the report page, MUST refuse URLs that are not HTTPS, that resolve to private,
-  loopback, link-local or otherwise non-public addresses, that carry credentials, or that are
-  malformed, MUST store nothing about the request beyond operational logs, and MUST rate-limit
-  callers.
-- **FR-011**: The on-demand page MUST read fully without JavaScript, MUST say that the on-demand
-  scan itself needs JavaScript, and MUST say when the service is not configured.
+- **FR-010**: All scanning MUST run in a scheduled job on the project's own backend (Scaleway, EU
+  region) under the maintainer's control. The site MUST NOT offer visitors any way to trigger a
+  scan, no HTTP endpoint MUST accept URLs from outside, and the only output of a run MUST be data
+  that flows back into the repository by pull request. The job MUST refuse to fetch URLs that are
+  not HTTPS, that resolve to private, loopback, link-local or otherwise non-public addresses,
+  that carry credentials or a port, or that are malformed, whether the URL is a listed server's
+  or an issuer found in metadata.
+- **FR-011**: The job's image MUST reach Scaleway only through a dedicated deployment workflow in
+  the repository, run on a push to `main` that touches the scanner or by hand, which builds the
+  image, pushes it to the project's registry and points the job definition at it. The job's
+  schedule, resources and secret are configured once by the owner, outside the image and the
+  repository.
 - **FR-012**: One command MUST run the scanner against a URL or a listed server id, print the
   report, and with a flag append the observations the nightly rule would append; the nightly run
   and the container image MUST use that same command.
-- **FR-013**: The report MUST be available as JSON at a stable address per listed server and from
-  the on-demand service, with one documented shape and a version field.
+- **FR-013**: The report MUST be available as JSON at a stable address per listed server, with
+  one documented shape and a version field, built from the repository's observations alone.
 - **FR-014**: The scanner MUST identify itself in a `User-Agent` header that names the project and
   links to a page explaining what it does and how to opt out.
 - **FR-015**: Nothing the scanner does MUST contact a server during the site build; the site reads
@@ -280,11 +259,12 @@ computed from them at render time.
   test).
 - **SC-004**: The grade on every report equals the published rule applied to the shown statuses
   (verified by a unit test over every combination of levels and statuses).
-- **SC-005**: An on-demand scan of a reachable server returns within 15 seconds; a refused URL is
-  answered within 1 second with the reason.
-- **SC-006**: The on-demand service sends requests only to HTTPS well-known metadata URLs on public
-  hosts (verified by a unit test that records every request the service makes for fixture
-  servers, private addresses and redirecting responses).
+- **SC-005**: One nightly run finishes within 30 minutes for every listed server and opens at most
+  one pull request; a second run on the same day updates that pull request instead of opening
+  another.
+- **SC-006**: The scanner sends requests only to HTTPS well-known metadata URLs on public hosts
+  (verified by unit tests that record every request made for fixture servers, private addresses
+  and redirecting responses).
 - **SC-007**: Report pages and the index meet the site's budgets: Lighthouse performance and
   accessibility at or above 95, no horizontal scroll at phone width, no serious accessibility
   violation.
@@ -299,15 +279,14 @@ computed from them at render time.
   derive from the issuer. It never sends a request to the MCP endpoint itself, so the
   `WWW-Authenticate` challenge and every token-handling requirement (`observable: active`) stay out
   of scope; they belong to a later feature with owner verification.
-- The nightly run executes as a scheduled GitHub Actions workflow at launch, because the project
-  already runs its checks there and no account or secret is needed beyond the repository token.
-  The constitution names Scaleway Serverless Containers and Object Storage for the backend; the
-  on-demand service ships as a container image built for that platform, and the nightly run can
-  move to a Scaleway scheduled job running the same image once the owner sets the account up.
-  The plan records this in Complexity Tracking.
-- The on-demand service stores nothing, so shareable report URLs (results in object storage,
-  edge redirects) are deferred to a later revision of the scanner; the report JSON can be saved
-  by the visitor.
+- The nightly run is a Scaleway Serverless Job in an EU region, as the constitution's technology
+  constraints say, built from the repository's `Dockerfile` and deployed by the dedicated
+  workflow (FR-011). It never runs on GitHub's runners: the scan is not part of building or
+  testing the repository. Until the owner has created the Scaleway project, the job and its
+  secret, no scan runs and every report page reads "not scanned".
+- The job stores nothing outside the repository; results exist only as observations in `data/`.
+  Shareable report URLs for arbitrary servers are out of scope, since nothing is scanned for
+  anyone but the atlas.
 - Active probes and owner verification (proving control of a server to run requests against its
   endpoint) are out of scope for this feature.
 - The grade is a property of one report at one time, computed from data in the model by a
@@ -319,5 +298,5 @@ computed from them at render time.
 - `partial` is written only for the HTTPS check when some but not all endpoints use HTTPS.
 - Evidence strings are deterministic: they contain the URL, the HTTP status, and the field and
   value that decided the status, and never a timestamp or a request id.
-- Visitors of the on-demand page are not identified; the service keeps only short-lived rate-limit
-  counters in memory and standard access logs.
+- No visitor data exists anywhere in this feature: the pages are static and nothing on them
+  sends a request on a visitor's behalf.
