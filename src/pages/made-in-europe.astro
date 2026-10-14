@@ -3,7 +3,7 @@ import Document from "@/layouts/Document.astro";
 import { LAB, REPO } from "@/lib/site";
 
 /** Every service the site depends on, where it sits, and whether that is in the EU. */
-const WHERE = { eu: "EU", planned: "EU, planned", outside: "Outside the EU" } as const;
+const WHERE = { eu: "EU", outside: "Outside the EU" } as const;
 const stack: { what: string; who: string; note: string; where: keyof typeof WHERE }[] = [
   {
     what: "Made",
@@ -36,15 +36,15 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
     where: "eu",
   },
   {
-    what: "Scanner backend",
-    who: "Scaleway, Paris, France (planned)",
-    note: "The scheduled scan job is planned to run in an EU region on Scaleway. Until then it runs as a GitHub Actions job.",
-    where: "planned",
+    what: "Scanner",
+    who: "Scaleway (Scaleway SAS), Paris, France",
+    note: "The nightly scan of public metadata runs as a scheduled job in a Scaleway EU region.",
+    where: "eu",
   },
   {
     what: "Source code, issues and CI",
     who: "GitHub (GitHub, Inc.), San Francisco, USA",
-    note: "The public repository, contributions, automated checks and, for now, the scan job live on GitHub. The published site loads nothing from it.",
+    note: "The public repository, contributions and automated checks live on GitHub. The published site loads nothing from it.",
     where: "outside",
   },
 ];
@@ -88,7 +88,7 @@ const stack: { what: string; who: string; note: string; where: keyof typeof WHER
 
   <h2>The exception</h2>
   <p>
-    The code, the data and the automated jobs live on GitHub, a US company, because that is where open-source
+    The code, the data and the automated checks live on GitHub, a US company, because that is where open-source
     contributors already are and where a pull request can be reviewed in public. Visitors to
     letsauth.eu never touch it: no script, font or image on the site is loaded from GitHub. If
     you contribute, GitHub's terms apply to what you do there; the{" "}

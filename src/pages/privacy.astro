@@ -87,7 +87,8 @@ import { LAB, OPERATOR, REPO } from "@/lib/site";
   <h2>Scanning of MCP servers</h2>
   <p>
     letsauth does not scan anything on a visitor's request, and there is no form that triggers a
-    scan. A scheduled backend job run by the maintainer reads the public metadata of the MCP
+    scan. A scheduled job on the project's own backend (Scaleway, EU region) reads, once a night, the
+    public metadata of the MCP
     servers listed in the atlas (the documents a server publishes for any client to read), with
     no credentials and without starting any authorization flow. Its findings are published as
     data in the <a href={REPO} rel="noopener">public repository</a>. This job processes
