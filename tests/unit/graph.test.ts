@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { COL_GAP, dependencyDepths, LANE_LABEL_W, layoutGraph, NODE_W, PAD } from "@/lib/graph";
+import {
+  COL_GAP,
+  dependencyDepths,
+  LANE_LABEL_W,
+  layoutGraph,
+  NODE_W,
+  PAD,
+  wrapLabel,
+} from "@/lib/graph";
 import type { Relation, Spec } from "@/schema";
 
 function spec(id: string, body: Spec["body"], date = "2020-01-01"): Spec {
@@ -127,5 +135,16 @@ describe("layoutGraph", () => {
     expect(JSON.stringify(again.nodes.map((n) => [n.spec.id, n.x, n.y]))).toBe(
       JSON.stringify(layout.nodes.map((n) => [n.spec.id, n.x, n.y])),
     );
+  });
+});
+
+describe("wrapLabel", () => {
+  it("wraps on word boundaries and truncates with an ellipsis", () => {
+    expect(wrapLabel("OAuth 2.0 Token Exchange", 14)).toEqual(["OAuth 2.0", "Token Exchange"]);
+    expect(wrapLabel("The OAuth 2.0 Authorization Framework", 14)).toEqual([
+      "The OAuth 2.0",
+      "Authorization…",
+    ]);
+    expect(wrapLabel("PKCE", 14)).toEqual(["PKCE"]);
   });
 });

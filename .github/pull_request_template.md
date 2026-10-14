@@ -9,6 +9,7 @@
 - [ ] `observedBy` is my handle (or `scanner@<version>` for automated runs).
 - [ ] `pnpm validate:data` passes locally.
 - [ ] A new server has `listed`, `source` and, where I maintain it, `listed: opt-in`.
+- [ ] A new spec's facts come from the publisher's page; a new relation of a judgement type (`competes-with`, `solves-same-problem-as`) carries a `note` and, where one exists, a `source`.
 
 ## Code checklist (delete if this PR touches no code)
 

@@ -43,6 +43,41 @@ pnpm build && pnpm test:e2e
 - A feature that replaces another sets `supersedes`. Never delete a feature file that has
   observations; mark it removed by leaving it out of the newer revision.
 
+## Add a specification or a relation (agent auth atlas)
+
+The standards map at `/atlas/standards/` is drawn from `data/specs/*.yaml` and
+`data/relations.yaml`. Nothing is laid out by hand: a spec is placed one column right of what it
+builds on, profiles or replaces, in the row of its publishing body.
+
+- One file per spec in `data/specs/<id>.yaml`. Ids are kebab-case and stable: `rfc8693`,
+  `oauth-2-1`, `cimd`, `eidas-2`. Facts (title, dates, URLs) come from the publisher's own page:
+  IETF Datatracker and the RFC Editor, openid.net, modelcontextprotocol.io, a2a-protocol.org,
+  EUR-Lex, or the vendor's page for a vendor document. A spec whose facts cannot be confirmed
+  there is not entered.
+- `body` is who publishes it (`other` for CNCF, W3C and anyone the list does not name);
+  `family` is what kind of document it is (`guidance` for best current practice and
+  architecture documents that define no protocol).
+- `maturity` is the publisher's status, not a grade: `individual-draft`, `working-group-draft`,
+  `candidate` (implementer's draft, last call, submitted to the IESG), `published` (RFC, final
+  specification, shipped revision), `in-force` (law), `expired`, `withdrawn`. Put the
+  publisher's own label in `maturityNote` ("Proposed Standard", "Implementer's Draft 2",
+  "Regulation (EU) 2024/1183").
+- `revisions` lists dated revisions, oldest first, each with the exact document URL. Exactly one
+  has `status: current` (the one the map dates the spec by); earlier ones are `superseded`; a
+  revision published but not yet the default is `draft`. Use `changes` for what changed and what
+  breaks, in the publisher's words where possible.
+- A withdrawn or expired document keeps its file; set `maturity` and say why in `maturityNote`.
+  A withdrawn spec leaves the map and the export but keeps its page and relations.
+- Relations go in `data/relations.yaml`, one entry per edge, `from` → `to`. Types: `builds-on`
+  (cannot be used without the other), `profiles` (narrows the other for one setting),
+  `references` (cites it for a mechanism), `replaces` (supersedes it), `competes-with` (a
+  different answer to the same question) and `solves-same-problem-as` (the same need by another
+  route). The last two are judgement calls and need a `note` saying what they are based on; add
+  `source` wherever the document itself states the relation. The symmetric types are stored once
+  per pair. `builds-on`, `profiles` and `replaces` must not form a cycle.
+- `pnpm validate:data` rejects an unknown spec, a self relation, a duplicate, a missing note and
+  a cycle, naming `data/relations.yaml[i].field`.
+
 ## Seed or list a server
 
 - One file per server in `data/servers/<id>.yaml`. `listed` says why it is in the atlas and

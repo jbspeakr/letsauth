@@ -1,0 +1,288 @@
+---
+import Citation from "@/components/Citation.astro";
+import MaturityTag from "@/components/MaturityTag.astro";
+import RelationList from "@/components/RelationList.astro";
+import Base from "@/layouts/Base.astro";
+import { ATLAS_SPEC } from "@/lib/atlas";
+import { getDataset } from "@/lib/data";
+import {
+  BODY_LABEL,
+  CATEGORY_LABEL,
+  FAMILY_LABEL,
+  MATURITY_LABEL,
+  PARTY_LABEL,
+} from "@/lib/labels";
+import {
+  adjacentRevisionPairs,
+  currentRevisionOf,
+  featuresDefinedBy,
+  relationsOf,
+  specRevisionsNewestFirst,
+} from "@/lib/standards";
+import type { Spec } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().specs.map((spec) => ({ params: { id: spec.id }, props: { spec } }));
+}
+
+const { spec } = Astro.props as { spec: Spec };
+const data = getDataset();
+const current = currentRevisionOf(spec);
+const revisions = specRevisionsNewestFirst(spec);
+const groups = relationsOf(data, spec.id);
+const defined = featuresDefinedBy(data, spec.id);
+// the MCP atlas renders revision diffs for its spec; this page links to them (FR-016)
+const diffHref = new Map<string, string>();
+if (spec.id === ATLAS_SPEC) {
+  for (const [older, newer] of adjacentRevisionPairs(spec)) {
+    diffHref.set(newer.id, `/atlas/mcp/changes/${older.id}/${newer.id}/`);
+  }
+}
+const gone = spec.maturity === "withdrawn" || spec.maturity === "expired";
+const repoFile = `https://github.com/jbspeakr/letsauth/blob/main/data/specs/${spec.id}.yaml`;
+---
+
+<Base
+  title={spec.name}
+  description={`${spec.name}: what it is, who publishes it, its revisions and how it relates to the other standards for agent authorization.`}
+  path={`/atlas/standards/${spec.id}/`}
+  noindex={spec.maturity === "withdrawn"}
+>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/atlas/standards/">Agent auth atlas</a> <span aria-hidden="true">/</span>
+      {BODY_LABEL[spec.body]}
+    </nav>
+    <header class="head">
+      <p class="eyebrow">{BODY_LABEL[spec.body]} · {FAMILY_LABEL[spec.family]}</p>
+      <h1>{spec.name}</h1>
+      <p class="lede">{spec.summary}</p>
+      <p class="idline">
+        <MaturityTag maturity={spec.maturity} variant="label" />
+        {spec.maturityNote && <span class="note">{spec.maturityNote}</span>}
+        <span aria-hidden="true"> · </span>
+        <a href={spec.url} rel="noopener">Canonical document</a>
+        <span aria-hidden="true"> · </span>
+        <code>{spec.id}</code>
+      </p>
+    </header>
+
+    {
+      gone && (
+        <section class="card notice" aria-labelledby="gone">
+          <h2 id="gone">{MATURITY_LABEL[spec.maturity]}</h2>
+          <p>
+            {spec.maturity === "withdrawn"
+              ? "This document was withdrawn. It no longer appears on the map, but its page, its revisions and its relations stay so that links and history keep working."
+              : "This document has expired. It stays on the map, marked as expired, because other documents still relate to it."}
+            {spec.maturityNote && <> {spec.maturityNote}.</>}
+          </p>
+        </section>
+      )
+    }
+
+    <section class="card revisions-card" aria-labelledby="revisions">
+      <h2 id="revisions">Revisions</h2>
+      <ol class="revisions" data-revisions>
+        {
+          revisions.map((r) => (
+            <li data-revision={r.id} data-status={r.status}>
+              <div class="rev-head">
+                <a href={r.url} rel="noopener" class="rev-id">
+                  {r.id}
+                </a>
+                <time datetime={r.date}>{r.date}</time>
+                <span class:list={["pill", { current: r.status === "current" }]}>{r.status}</span>
+                {diffHref.has(r.id) && (
+                  <a class="diff" href={diffHref.get(r.id)}>
+                    What changed since {r.supersedes}
+                  </a>
+                )}
+              </div>
+              {r.changes && <p class="changes">{r.changes}</p>}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="relations-section" aria-labelledby="relations">
+      <h2 id="relations">
+        Relations <span class="n">{groups.total}</span>
+      </h2>
+      <RelationList groups={groups} specName={spec.name} />
+    </section>
+
+    <section class="defines-section" aria-labelledby="defines">
+      <h2 id="defines">Defines in the shared model</h2>
+      {
+        defined.length === 0 ? (
+          <p class="note">
+            No features of this document are recorded yet. Features are what the atlases observe
+            and the explorer cites; they are added as the products need them.
+          </p>
+        ) : (
+          <>
+            <p class="note">
+              Features of revision <code>{current.id}</code> that the MCP auth atlas observes, with
+              the level the revision puts on them.
+            </p>
+            <ul class="features" data-defines>
+              {defined.map(({ feature, entry }) => (
+                <li data-feature={feature.id}>
+                  <a href={`/atlas/mcp/features/${feature.id}/`}>{feature.name}</a>
+                  <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>
+                  <span class="meta">
+                    {PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]} ·{" "}
+                    <Citation entry={entry} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+    </section>
+
+    <footer class="page-foot prose">
+      <p>
+        Maturity is the publisher's own status; dates are the document's own. To correct this
+        entry, edit <a href={repoFile} rel="noopener">its data file</a> and open a pull request;
+        see <a href="https://github.com/jbspeakr/letsauth/blob/main/docs/atlas-maintenance.md" rel="noopener">the maintenance guide</a>.
+      </p>
+      <p>
+        <a href="/atlas/standards/">Back to the map</a> ·
+        <a href="/atlas/standards/data.json">Download the data</a>
+      </p>
+    </footer>
+  </div>
+</Base>
+
+<style>
+  .crumbs {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    margin-bottom: var(--space-4);
+  }
+  .head {
+    margin-bottom: var(--space-5);
+  }
+  .idline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+    max-width: none;
+  }
+  .note {
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+  .notice {
+    margin-bottom: var(--space-5);
+    border-color: var(--level-deprecated);
+  }
+  .revisions-card {
+    margin-bottom: var(--space-6);
+  }
+  .card h2 {
+    font-size: var(--text-lg);
+  }
+  .relations-section,
+  .defines-section {
+    margin-bottom: var(--space-6);
+  }
+  .defines-section h2 {
+    font-size: var(--text-xl);
+  }
+  .revisions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .revisions li {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .revisions li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .rev-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .rev-id {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .rev-head time {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+  .pill.current {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .diff {
+    font-size: var(--text-xs);
+  }
+  .changes {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+  }
+  .features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    gap: var(--space-2) var(--space-5);
+    font-size: var(--text-sm);
+  }
+  .features li {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    gap: var(--space-1) var(--space-3);
+    align-items: baseline;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .features li:last-child {
+    border-bottom: 0;
+  }
+  .features a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .features .meta {
+    grid-column: 1 / -1;
+    color: var(--ink-muted);
+    font-size: var(--text-xs);
+  }
+  .relations-section h2 {
+    font-size: var(--text-xl);
+  }
+  .n {
+    font-family: var(--font-mono);
+    color: var(--ink-muted);
+    font-weight: 500;
+  }
+  .page-foot {
+    margin-top: var(--space-6);
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+</style>

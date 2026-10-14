@@ -1,0 +1,9 @@
+- from: mcp-authorization
+  to: nope
+  type: builds-on
+- from: mcp-authorization
+  to: mcp-authorization
+  type: references
+- from: mcp-authorization
+  to: mcp-authorization-2
+  type: competes-with

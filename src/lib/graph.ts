@@ -97,22 +97,30 @@ function bezier(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point {
 const round = (n: number) => Math.round(n * 10) / 10;
 
 /** Anchors on the node borders and a curve between them, chosen by relative position. */
+/** A point on a node's side edge, pulled towards the other node so parallel edges fan out. */
+function sideAnchor(node: PlacedNode, towardsY: number): number {
+  const inset = 10;
+  return Math.min(node.y + node.h - inset, Math.max(node.y + inset, towardsY));
+}
+
 function route(from: PlacedNode, to: PlacedNode): { d: string; mid: Point } {
   let p0: Point;
   let p3: Point;
   let p1: Point;
   let p2: Point;
+  const fromMid = from.y + from.h / 2;
+  const toMid = to.y + to.h / 2;
   if (to.x + to.w < from.x) {
     // target is to the left: leave from the left edge, arrive at the right edge
-    p0 = { x: from.x, y: from.y + from.h / 2 };
-    p3 = { x: to.x + to.w, y: to.y + to.h / 2 };
+    p0 = { x: from.x, y: sideAnchor(from, toMid) };
+    p3 = { x: to.x + to.w, y: sideAnchor(to, fromMid) };
     const dx = (p0.x - p3.x) / 2;
     p1 = { x: p0.x - dx, y: p0.y };
     p2 = { x: p3.x + dx, y: p3.y };
   } else if (from.x + from.w < to.x) {
     // target is to the right
-    p0 = { x: from.x + from.w, y: from.y + from.h / 2 };
-    p3 = { x: to.x, y: to.y + to.h / 2 };
+    p0 = { x: from.x + from.w, y: sideAnchor(from, toMid) };
+    p3 = { x: to.x, y: sideAnchor(to, fromMid) };
     const dx = (p3.x - p0.x) / 2;
     p1 = { x: p0.x + dx, y: p0.y };
     p2 = { x: p3.x - dx, y: p3.y };
@@ -180,4 +188,26 @@ export function layoutGraph(specs: Spec[], relations: Relation[]): Layout {
   }
   nodes.sort((a, b) => compareSpecs(a.spec, b.spec));
   return { nodes, edges, lanes, columns, width, height };
+}
+
+/** Greedy word wrap for node labels; the last line gets an ellipsis when the name does not fit. */
+export function wrapLabel(name: string, maxChars = 24, maxLines = 2): string[] {
+  const words = name.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length <= maxChars || !line) {
+      line = next;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  if (lines.length <= maxLines) return lines;
+  const kept = lines.slice(0, maxLines);
+  const last = kept[maxLines - 1] ?? "";
+  kept[maxLines - 1] = `${last.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+  return kept;
 }

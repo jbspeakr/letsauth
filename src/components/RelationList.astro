@@ -1,0 +1,141 @@
+---
+import { RELATION_LABEL } from "@/lib/labels";
+import { RELATION_TYPES, type RelationEntry, type RelationGroups } from "@/lib/standards";
+import type { RelationType } from "@/schema";
+import MaturityTag from "./MaturityTag.astro";
+
+interface Props {
+  groups: RelationGroups;
+  /** The spec the groups belong to, for phrasing. */
+  specName: string;
+}
+
+const { groups, specName } = Astro.props;
+
+interface Section {
+  id: string;
+  heading: string;
+  entries: RelationEntry[];
+}
+
+const sections: Section[] = [];
+for (const type of RELATION_TYPES) {
+  const out = groups.outgoing.get(type);
+  if (out?.length) {
+    sections.push({
+      id: `out-${type}`,
+      heading: `${specName} ${RELATION_LABEL[type].forward}`,
+      entries: out,
+    });
+  }
+}
+for (const type of RELATION_TYPES) {
+  const rel = groups.related.get(type);
+  if (rel?.length) {
+    sections.push({
+      id: `rel-${type}`,
+      heading: `${specName} ${RELATION_LABEL[type].forward}`,
+      entries: rel,
+    });
+  }
+}
+for (const type of RELATION_TYPES) {
+  const inc = groups.incoming.get(type);
+  if (inc?.length) {
+    sections.push({
+      id: `in-${type}`,
+      heading: `${specName} ${RELATION_LABEL[type].backward}`,
+      entries: inc,
+    });
+  }
+}
+const typeOf = (id: string) => id.replace(/^(out|rel|in)-/, "") as RelationType;
+---
+
+{
+  sections.length === 0 ? (
+    <p class="note">No relations recorded yet. Add one in <code>data/relations.yaml</code>.</p>
+  ) : (
+    <div class="relations">
+      {sections.map((s) => (
+        <section class="group" aria-labelledby={s.id} data-relation-group={s.id}>
+          <h3 id={s.id}>
+            {s.heading} <span class="n">{s.entries.length}</span>
+          </h3>
+          <ul>
+            {s.entries.map(({ relation, other }) => (
+              <li data-other={other.id} data-type={typeOf(s.id)}>
+                <span class="who">
+                  <a href={`/atlas/standards/${other.id}/`}>{other.name}</a>
+                  <MaturityTag maturity={other.maturity} note={other.maturityNote} />
+                </span>
+                {relation.note && <span class="why">{relation.note}</span>}
+                {relation.source && (
+                  <a class="src" href={relation.source} rel="noopener">
+                    Source
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .note {
+    color: var(--ink-muted);
+  }
+  .relations {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .group h3 {
+    font-size: var(--text-md);
+    margin-bottom: var(--space-2);
+  }
+  .n {
+    font-family: var(--font-mono);
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: var(--text-sm);
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  li {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  li:last-child {
+    border-bottom: 0;
+  }
+  .who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .who a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .why {
+    color: var(--ink-muted);
+    max-width: var(--measure);
+  }
+  .src {
+    font-size: var(--text-xs);
+    justify-self: start;
+  }
+</style>

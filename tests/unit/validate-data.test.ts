@@ -26,6 +26,12 @@ describe("scripts/validate-data.ts", () => {
     expect(result.stderr).toMatch(/observations\/stripe\.yaml\[2\]\.feature: .*mcp\.as\.nope/);
   });
 
+  it("names the field for a dangling, self or unexplained relation (FR-011)", () => {
+    expect(result.stderr).toMatch(/relations\.yaml\[0\]\.to: spec "nope" does not exist/);
+    expect(result.stderr).toMatch(/relations\.yaml\[1\]\.to: must differ from "from"/);
+    expect(result.stderr).toMatch(/relations\.yaml\[2\]\.note: required for a "competes-with"/);
+  });
+
   it("passes on the real data", () => {
     const ok = run("scripts/validate-data.ts", []);
     expect(ok.status, ok.stderr).toBe(0);
