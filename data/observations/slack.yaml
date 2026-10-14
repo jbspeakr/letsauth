@@ -8,3 +8,63 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: slack
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: unsupported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/ai/slack-mcp-server/ — "We do not support SSE-based connections or Dynamic Client Registration at this time."
+- server: slack
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/ai/slack-mcp-server/ — "MCP clients must be backed by a registered Slack app with a fixed app ID and hardcode that app ID. Slack supports confidential OAuth for MCP clients. You'll need to use your app's `client_id` and `client_secret` for Slack OAuth." (Only directory-published (Slack Marketplace) or internal apps may use MCP; unlisted apps are prohibited.)
+- server: slack
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/ai/slack-mcp-server/ — "If your MCP client supports OAuth 2.0 Authorization Server Metadata (RFC 8414) per MCP spec, you can rely on that." (Page lists the metadata URL https://mcp.slack.com/.well-known/oauth-authorization-server.)
+- server: slack
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/ai/slack-mcp-server/ — "https://mcp.slack.com/.well-known/oauth-protected-resource" (The page lists this URL as the protected resource metadata document for the server.)
+- server: slack
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/ai/slack-mcp-server/ — "https://mcp.slack.com/.well-known/oauth-protected-resource" (Documented at the root well-known location of the MCP host (server URL is https://mcp.slack.com/mcp).)
+- server: slack
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://docs.slack.dev/authentication/using-pkce — "code_challenge_method must be set to S256, as that is the only supported hashing algorithm for now." (The MCP server page states 'Looking to use desktop clients? PKCE support is now available!' and links to this PKCE guide; enabling PKCE marks the Slack app as a public client.)

@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: github
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://github.com/github/github-mcp-server — "Each MCP host application needs to configure a GitHub App or OAuth App to support remote access via OAuth. Any host application that supports remote MCP servers should support the remote GitHub server with PAT authentication." (Pre-registration is per host application via a GitHub App or OAuth App; PAT bearer auth is the fallback for unregistered hosts.)
+- server: github
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://github.blog/changelog/2025-09-04-remote-github-mcp-server-is-now-generally-available/ — "The GitHub MCP Server now supports OAuth 2.1 + PKCE with integration into all first-party Copilot IDEs as well as Cursor, providing a simpler and faster alternative to using personal access tokens (PATs)." (Docs name PKCE but not the S256 method.)

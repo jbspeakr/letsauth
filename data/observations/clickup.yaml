@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without Dynamic Client Registration (lock marker)."
+- server: clickup
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.clickup.com/docs/connect-an-ai-assistant-to-clickups-mcp-server — "Supports OAuth 2.1 with PKCE authentication." (Docs name PKCE but not the S256 method.)
+- server: clickup
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://developer.clickup.com/docs/connect-an-ai-assistant-to-clickups-mcp-server-1 — "For Authentication, select OAuth. Ensure the configuration is set to Dynamic Discovery (DCR)." (Only stated as a Microsoft Copilot Studio configuration instruction; no other page describes a registration endpoint. Contradicts the directory claim oauth2.1-no-dcr.)

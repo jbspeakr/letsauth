@@ -46,9 +46,10 @@ test.describe("matrix page (US1)", () => {
     const dialog = page.locator("dialog.cell-dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText("Unsupported");
-    await expect(dialog).toContainText("vendor-claim");
-    await expect(dialog).toContainText("2026-10-13");
-    await expect(dialog).toContainText("jbspeakr");
+    const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
+    await expect(dialog).toContainText(winning?.method ?? "vendor-claim");
+    await expect(dialog).toContainText(winning?.observedAt.slice(0, 10) ?? "");
+    await expect(dialog).toContainText(winning?.observedBy ?? "");
     await expect(dialog.locator("dd a[href^='https://']")).toHaveCount(1);
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();

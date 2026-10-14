@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: neon
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://github.com/neondatabase/mcp-server-neon — "`app/.well-known/`: OAuth discovery metadata endpoints" (Stated in the ''Remote Server Architecture'' section of the vendor README; the exact well-known path is not named.)'
+- server: neon
+  feature: mcp.proxy.consent
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://github.com/neondatabase/mcp-server-neon — "Connect with `https://mcp.neon.tech/mcp` and uncheck **Allow writes** on the authorization page." (README describes the remote server's own authorization page with editable consent ('For OAuth registration, `x-read-only` is an initial Allow-writes default on editable consent.') and a static upstream client (`CLIENT_ID`, `CLIENT_SECRET`, `UPSTREAM_OAUTH_HOST` env vars).)

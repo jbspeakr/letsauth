@@ -8,3 +8,23 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: vercel
+  feature: mcp.proxy.consent
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: supported
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: 'https://vercel.com/docs/mcp/vercel-mcp — "Vercel MCP protects against confused deputy attacks by requiring explicit user consent for each client connection" (Vercel acts as its own authorization server rather than a proxy; recorded because the per-client consent behaviour is explicitly stated. The blog post also states: ''We maintain an allowlist of approved clients and require an OAuth consent screen on every connection.'' (https://vercel.com/blog/introducing-vercel-mcp-connect-vercel-to-your-ai-tools))'
+- server: vercel
+  feature: mcp.as.preregistration
+  revision:
+    spec: mcp-authorization
+    revision: '2026-07-28'
+  status: partial
+  method: vendor-claim
+  observedAt: '2026-10-14T00:00:00Z'
+  observedBy: jbspeakr (documentation pass with Claude Code)
+  evidence: https://vercel.com/docs/mcp/vercel-mcp — "To ensure secure access, Vercel MCP only supports AI clients that have been reviewed and approved by Vercel. If you're building an MCP client and want it included in the supported clients list below, submit the client review form." (The documented path is a manual allowlist review, not self-service issuance of client credentials; docs do not say whether approved clients receive credentials or are allowlisted by redirect URI.)
