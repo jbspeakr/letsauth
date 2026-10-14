@@ -96,6 +96,21 @@ Append to `data/observations/<server-id>.yaml`; never edit or remove an entry. T
 `passive-scan` over `manual` over `vendor-claim`). Use `unknown` to record that you looked and
 could not tell, `not-applicable` when the feature cannot apply to that server.
 
+## Scanner observations
+
+The passive scanner (`docs/scanner.md`) writes observations with `observedBy: scanner@<version>`
+and `method: passive-scan`. They follow the same append-only rule as everything else.
+
+- Prefer `pnpm scan <server-id> --write` over a hand-written `passive-scan` entry: the evidence
+  string is then reproducible by anyone who runs the same command.
+- Reviewing a scanner pull request: open each evidence URL in the diff (every evidence starts
+  with the well-known URL it read) and check that the quoted field still says what the entry
+  claims. `unknown` means the scanner could not read a document (timeout, 5xx, a redirect to
+  another host, no JSON); it is not a verdict and never turns into `unsupported` on the pages.
+- Bump `SCANNER_VERSION` in `src/scanner/version.ts` whenever a check's logic or evidence format
+  changes. The next run then re-records every cell once, which is how the history shows which
+  scanner produced which observation.
+
 ## Withdraw a server
 
 Set `withdrawn: { at: <date>, reason: <text> }` on the server. It leaves the matrix, the feature

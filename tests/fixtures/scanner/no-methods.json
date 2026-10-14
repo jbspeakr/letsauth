@@ -1,0 +1,31 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/.well-known/oauth-protected-resource/mcp": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "resource": "https://mcp.example.com/mcp",
+        "authorization_servers": ["https://auth.example.com", "https://auth2.example.com"],
+        "scopes_supported": ["read", "write"]
+      }
+    },
+    "https://auth.example.com/.well-known/oauth-authorization-server": {
+      "status": 200,
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": {
+        "issuer": "https://auth.example.com",
+        "authorization_endpoint": "https://auth.example.com/authorize",
+        "token_endpoint": "https://auth.example.com/token",
+        "jwks_uri": "https://auth.example.com/jwks",
+        "response_types_supported": ["code"],
+        "client_id_metadata_document_supported": true,
+        "authorization_response_iss_parameter_supported": true
+      }
+    }
+  }
+}

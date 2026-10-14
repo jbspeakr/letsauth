@@ -67,6 +67,15 @@ const entry = `- server: stripe                     # must equal the file's serv
       (active-scan over passive-scan over manual over vendor-claim).
     </p>
 
+    <h3>Run the scanner</h3>
+    <p>
+      For the twelve requirements the <a href="/scanner/">passive scanner</a> can read from
+      public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
+      entry. It appends exactly the observations whose status or evidence changed, with evidence
+      anyone can reproduce by running the same command. The nightly run does the same for every
+      listed server and opens its own pull request.
+    </p>
+
     <h2>The append-only rule</h2>
     <p>
       Existing observation entries are never edited or removed. A correction is a new entry with

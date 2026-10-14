@@ -1,0 +1,83 @@
+---
+import type { Grade } from "@/scanner/grade";
+
+interface Props {
+  grade: Grade;
+  /** "small" for table cells; "label" adds the word "Grade". */
+  variant?: "small" | "label";
+}
+
+const { grade, variant = "small" } = Astro.props;
+const word = grade.letter ? `Grade ${grade.letter}` : grade.label;
+const title = grade.reasons.length > 0 ? grade.reasons.join(" ") : word;
+---
+
+<span
+  class:list={["badge", `badge-${grade.letter ?? "none"}`, variant]}
+  data-grade={grade.letter ?? grade.label}
+  title={title}
+>
+  <span class="letter" aria-hidden="true">{grade.letter ?? "–"}</span>
+  <span class="word">{variant === "label" ? word : grade.letter ?? grade.label}</span>
+</span>
+
+<style>
+  /* The letter never stands alone: the word beside it carries the meaning for every reader. */
+  .badge {
+    --c: var(--ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .letter {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-md);
+    line-height: 1;
+    color: var(--c);
+    border: 1.5px solid color-mix(in oklch, var(--c) 45%, transparent);
+    background: color-mix(in oklch, var(--c) 10%, transparent);
+  }
+  .badge-none .letter {
+    border-style: dashed;
+  }
+  .badge-none .word {
+    color: var(--ink-muted);
+  }
+  .badge.small .word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .badge.small.badge-none .word {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    font-size: var(--text-xs);
+  }
+  .badge-A {
+    --c: var(--status-supported);
+  }
+  .badge-B {
+    --c: var(--accent);
+  }
+  .badge-C {
+    --c: var(--status-partial);
+  }
+  .badge-F {
+    --c: var(--status-unsupported);
+  }
+</style>

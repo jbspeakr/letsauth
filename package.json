@@ -13,6 +13,8 @@
     "preview": "astro preview",
     "validate:data": "tsx scripts/validate-data.ts",
     "check:append-only": "tsx scripts/check-observations-append-only.ts",
+    "scan": "tsx scripts/scan.ts",
+    "scan:nightly": "tsx scripts/scan-nightly.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "astro sync && tsc --noEmit",

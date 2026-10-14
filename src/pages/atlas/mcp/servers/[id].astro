@@ -12,6 +12,7 @@ import {
 } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 import { CATEGORY_LABEL, METHOD_LABEL, PARTY_LABEL } from "@/lib/labels";
+import { latestScan } from "@/lib/scanner";
 import type { Server } from "@/schema";
 
 export function getStaticPaths() {
@@ -41,6 +42,7 @@ const counts = { supported: 0, partial: 0, unsupported: 0, unknown: 0, "not-appl
 for (const f of columns) counts[currentCell(data, server, f, revision.id).status] += 1;
 const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applicable"] as const;
 const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
+const scanView = latestScan(data, server);
 ---
 
 <Base
@@ -142,6 +144,24 @@ const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
                   </li>
                 ))}
               </ul>
+              <p class="scan" data-scan={scanView.scanned ? "scanned" : "not-scanned"}>
+                <span class="scan__label">Passive scan</span>
+                {scanView.scanned ? (
+                  <>
+                    <strong>{scanView.grade.letter ? `Grade ${scanView.grade.letter}` : scanView.grade.label}</strong>
+                    {" · "}
+                    <time datetime={scanView.scannedAt}>{scanView.scannedAt?.slice(0, 10)}</time>
+                    {" · "}
+                    <a href={`/scanner/${server.id}/`}>Report</a>
+                  </>
+                ) : (
+                  <>
+                    <span class="muted">not scanned yet</span>
+                    {" · "}
+                    <a href={`/scanner/${server.id}/`}>Report</a>
+                  </>
+                )}
+              </p>
               <p class="actions">
                 <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
                   Contribute a correction
@@ -346,6 +366,23 @@ const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
   }
   .summary .n {
     font-weight: 600;
+  }
+  .scan {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    margin: 0 0 var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-soft);
+  }
+  .scan__label {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--ink-muted);
   }
   .actions {
     display: flex;

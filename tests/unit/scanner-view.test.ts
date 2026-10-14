@@ -1,0 +1,134 @@
+import { describe, expect, it } from "vitest";
+import { currentRevision } from "@/lib/atlas";
+import { type Dataset, getDataset } from "@/lib/data";
+import {
+  latestScan,
+  passiveChecks,
+  reportFromView,
+  scannerFacts,
+  scannerIndex,
+  unscannedFeatures,
+} from "@/lib/scanner";
+import type { Observation } from "@/schema";
+
+const base = getDataset();
+const revision = currentRevision(base).id;
+const server = base.servers.find((s) => !s.withdrawn && s.transport !== "stdio-only");
+if (!server) throw new Error("no server");
+const checks = passiveChecks(base);
+
+function obs(
+  feature: string,
+  status: Observation["status"],
+  extra: Partial<Observation> = {},
+): Observation {
+  return {
+    server: server?.id ?? "",
+    feature,
+    revision: { spec: "mcp-authorization", revision },
+    status,
+    method: "passive-scan",
+    observedAt: "2026-10-15T03:17:04Z",
+    observedBy: "scanner@0.1.0",
+    evidence: `https://example.com/.well-known/x — HTTP 200; ${feature}`,
+    ...extra,
+  };
+}
+
+function withObservations(observations: Observation[]): Dataset {
+  return { ...base, observations, locations: undefined };
+}
+
+describe("passiveChecks", () => {
+  it("returns the twelve passive server-party features, MCP server party first", () => {
+    expect(checks).toHaveLength(12);
+    const parties = checks.map((c) => c.feature.party);
+    expect(parties.indexOf("authorization-server")).toBe(parties.lastIndexOf("mcp-server") + 1);
+    for (const c of checks) expect(c.entry.level).toBeDefined();
+  });
+
+  it("unscannedFeatures lists the active and manual server-party requirements", () => {
+    const ids = unscannedFeatures(base).map((f) => f.id);
+    expect(ids).toContain("mcp.rs.401-on-invalid");
+    expect(ids).toContain("mcp.proxy.consent");
+    expect(ids).not.toContain("mcp.prm");
+    expect(ids.every((id) => !id.startsWith("mcp.client."))).toBe(true);
+  });
+});
+
+describe("latestScan (FR-007)", () => {
+  it("reports a server without scanner observations as not scanned, with no grade", () => {
+    const v = latestScan(withObservations([]), server);
+    expect(v.scanned).toBe(false);
+    expect(v.scannedAt).toBeUndefined();
+    expect(v.grade).toEqual({ letter: null, label: "Not scanned", reasons: [] });
+    expect(v.checks.every((c) => c.status === "unknown" && c.observedAt === undefined)).toBe(true);
+  });
+
+  it("ignores manual and documentation observations", () => {
+    const data = withObservations([
+      obs("mcp.prm", "supported", { method: "vendor-claim", observedBy: "jbspeakr" }),
+      obs("mcp.as.cimd", "supported", { method: "manual", observedBy: "jbspeakr" }),
+    ]);
+    const v = latestScan(data, server);
+    expect(v.scanned).toBe(false);
+  });
+
+  it("takes the newest scanner observation per check and grades the statuses", () => {
+    const all = checks.map((c) =>
+      obs(c.feature.id, c.feature.id === "mcp.as.dcr" ? "unsupported" : "supported"),
+    );
+    const older = obs("mcp.as.cimd", "unsupported", { observedAt: "2026-10-01T00:00:00Z" });
+    const v = latestScan(withObservations([older, ...all]), server);
+    expect(v.scanned).toBe(true);
+    expect(v.scannedAt).toBe("2026-10-15T03:17:04Z");
+    expect(v.checks.find((c) => c.feature === "mcp.as.cimd")?.status).toBe("supported");
+    expect(v.grade.letter).toBe("A");
+    const newerFail = obs("mcp.as.cimd", "unsupported", { observedAt: "2026-10-20T00:00:00Z" });
+    const v2 = latestScan(withObservations([...all, newerFail]), server);
+    expect(v2.grade.letter).toBe("C");
+    expect(v2.scannedAt).toBe("2026-10-20T00:00:00Z");
+  });
+
+  it("withholds the grade when a MUST-level check has no scanner observation", () => {
+    const some = checks
+      .filter((c) => c.feature.id !== "mcp.prm")
+      .map((c) => obs(c.feature.id, "supported"));
+    const v = latestScan(withObservations(some), server);
+    expect(v.scanned).toBe(true);
+    expect(v.grade.letter).toBeNull();
+    expect(v.grade.label).toBe("Withheld");
+    expect(v.grade.reasons.join(" ")).toContain("Protected Resource Metadata served");
+  });
+});
+
+describe("scannerIndex (FR-009)", () => {
+  it("lists every non-withdrawn server by name, never by grade", () => {
+    const views = scannerIndex(withObservations([]));
+    const names = views.map((v) => v.server.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(views.some((v) => v.server.withdrawn)).toBe(false);
+    expect(views).toHaveLength(base.servers.filter((s) => !s.withdrawn).length);
+    expect(scannerFacts(views)).toEqual({ servers: views.length, scanned: 0, newest: undefined });
+  });
+});
+
+describe("reportFromView", () => {
+  it("has the report shape with recorded: true and no requests", () => {
+    const all = checks.map((c) => obs(c.feature.id, "supported"));
+    const r = reportFromView(latestScan(withObservations(all), server), "2026-10-16T00:00:00Z");
+    expect(r).toMatchObject({
+      version: 1,
+      scanner: "letsauth-scanner/0.1.0",
+      recorded: true,
+      target: { url: server?.url, server: server?.id },
+      revision: { spec: "mcp-authorization", revision },
+      method: "passive-scan",
+      requests: [],
+      discovered: null,
+      observations: [],
+    });
+    expect(r.checks).toHaveLength(12);
+    expect(r.grade.letter).toBe("A");
+  });
+});

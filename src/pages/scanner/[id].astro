@@ -1,0 +1,164 @@
+---
+import ScanReport from "@/components/ScanReport.svelte";
+import Base from "@/layouts/Base.astro";
+import { getDataset } from "@/lib/data";
+import { latestScan, reportFromView, unscannedFeatures } from "@/lib/scanner";
+import { GRADE_RULE } from "@/scanner/grade";
+import type { Server } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().servers.map((server) => ({ params: { id: server.id }, props: { server } }));
+}
+
+const { server } = Astro.props as { server: Server };
+const data = getDataset();
+const view = latestScan(data, server);
+const report = reportFromView(view, "1970-01-01T00:00:00Z");
+const unscanned = unscannedFeatures(data);
+const repo = "https://github.com/jbspeakr/letsauth";
+const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.label.toLowerCase();
+---
+
+<Base
+  title={`${server.name} · Scanner`}
+  description={`Passive scan report for ${server.name} against MCP Authorization ${view.revisionId}: ${view.scanned ? `${gradeWord}, newest observation ${view.scannedAt?.slice(0, 10)}` : "not scanned yet"}.`}
+  path={`/scanner/${server.id}/`}
+  noindex={Boolean(server.withdrawn)}
+>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/scanner/">Scanner</a> <span aria-hidden="true">/</span> Report
+    </nav>
+    <header class="head">
+      <p class="eyebrow">Scan report</p>
+      <h1>{server.name}</h1>
+      <p class="lede">
+        <code>{server.url}</code> against MCP Authorization {view.revisionId}
+        {view.scannedAt && (
+          <>
+            {" "}· newest scanner observation <time datetime={view.scannedAt}>{view.scannedAt.slice(0, 10)}</time>
+          </>
+        )}
+      </p>
+      <p class="links">
+        <a class="button small" href={`/atlas/mcp/servers/${server.id}/`}>Atlas page</a>
+        {!server.withdrawn && <a class="button small" href={`/scanner/${server.id}.json`}>JSON</a>}
+        <a class="button small" href={`${repo}/blob/main/data/observations/${server.id}.yaml`} rel="noopener">Data file</a>
+      </p>
+    </header>
+
+    {
+      server.withdrawn ? (
+        <section class="card notice" aria-labelledby="withdrawn">
+          <h2 id="withdrawn">Withdrawn from the atlas</h2>
+          <p>
+            This server was withdrawn on <time datetime={server.withdrawn.at}>{server.withdrawn.at}</time>{" "}
+            and is not scanned. Reason given: {server.withdrawn.reason}.
+          </p>
+        </section>
+      ) : (
+        <>
+          <ScanReport report={report} scannedAt={view.scannedAt} />
+
+          <div class="after">
+            <section class="card" aria-labelledby="rule-title">
+              <h2 id="rule-title">How the grade is derived</h2>
+              <ol class="rule">{GRADE_RULE.map((line) => <li>{line}</li>)}</ol>
+              <p class="muted">
+                Derived from the statuses above at build time; never used to sort or rank
+                servers. <a href="/scanner/#grade-rule">About the scanner</a>.
+              </p>
+            </section>
+            <section class="card" aria-labelledby="not-title">
+              <h2 id="not-title">Not checked by the scanner</h2>
+              <p class="muted">
+                These requirements need a request to the endpoint or a reading of the
+                implementation. Their cells on the <a href={`/atlas/mcp/servers/${server.id}/`}>atlas page</a>{" "}
+                come from documentation and manual checks.
+              </p>
+              <ul class="unscanned">
+                {unscanned.map((f) => (
+                  <li>
+                    <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
+                    <span class="pill">{f.observable}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+          <p class="self muted">
+            Reproduce this report: <code>pnpm scan {server.id}</code> in the{" "}
+            <a href={repo} rel="noopener">repository</a>. Corrections are new observations, never
+            edits; see <a href={`${repo}/blob/main/docs/scanner.md`} rel="noopener">docs/scanner.md</a>.
+          </p>
+        </>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .head {
+    margin-bottom: var(--space-5);
+  }
+  .head .lede {
+    font-size: var(--text-md);
+  }
+  .head code {
+    overflow-wrap: anywhere;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .notice {
+    border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
+    background: var(--accent-2-soft);
+  }
+  .after {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-4);
+    margin: var(--space-6) 0 var(--space-5);
+  }
+  .after h2 {
+    font-size: var(--text-md);
+    margin-bottom: var(--space-3);
+  }
+  .rule {
+    padding-left: 1.3em;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+  }
+  .rule li {
+    margin-bottom: var(--space-1);
+  }
+  .rule li::marker {
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  .muted {
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+  }
+  .unscanned {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .unscanned li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .self {
+    margin-bottom: var(--space-7);
+    max-width: none;
+  }
+</style>

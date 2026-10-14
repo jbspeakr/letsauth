@@ -13,6 +13,11 @@ Live:
   specifications, drafts and EU acts behind agent authorization as one map of what builds on,
   profiles, competes with and replaces what, with maturity and dated revisions per document.
   Data export: [`/atlas/standards/data.json`](https://letsauth.eu/atlas/standards/data.json).
+- [letsauth.eu/scanner](https://letsauth.eu/scanner/), the passive scanner: reads each listed
+  server's public OAuth metadata, grades it against the MCP Authorization specification and
+  opens a nightly pull request of observations. Report per server at `/scanner/<id>/` and
+  `/scanner/<id>.json`; the command behind it is `pnpm scan <url>` (see
+  [`docs/scanner.md`](docs/scanner.md)).
 
 Start here:
 
@@ -34,6 +39,7 @@ pnpm dev            # http://localhost:4321
 pnpm validate:data  # after editing data/
 pnpm check          # validate, lint, typecheck, unit tests, build
 pnpm test:e2e       # Playwright against the built site
+pnpm scan <url>     # passive scan of one MCP server (--write appends observations)
 ```
 
 See [`CLAUDE.md`](CLAUDE.md) for conventions, [`docs/atlas-maintenance.md`](docs/atlas-maintenance.md)

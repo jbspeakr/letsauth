@@ -18,13 +18,18 @@ Read first, in this order:
   `pnpm test:e2e --update-snapshots` with that build, or the `refresh-screenshots` label on the
   pull request (see `docs/atlas-maintenance.md`). Update them only for intended changes.
 - `pnpm check:append-only` — fails if an existing observation entry was edited or removed.
+- `pnpm scan <url>|<server-id>|--all [--write]` — the passive scanner (`docs/scanner.md`). The only
+  command in the repo that contacts a third-party server; `--write` appends observations.
 
 ## Conventions
 
 - Data is YAML under `data/`, one entity per file; observations are append-only lists per server.
 - Every feature cites a spec revision and section; the build fails on a dangling citation.
 - `unknown` is a real status. Never render missing data as `unsupported`.
-- Nothing in this repo contacts third-party servers. Seed data is `vendor-claim` or `manual`.
+- `src/scanner/` is the only code that may contact a server, and only through `pnpm scan` (run
+  by the scheduled job or a contributor); the site build never imports anything that fetches.
+  There is no on-demand scanning for visitors. Seed data is `vendor-claim` or `manual`; scanner
+  cells arrive by pull request.
 - One token system: `src/styles/tokens.css`. Components use tokens, never literal colours.
   Colours are OKLCH pairs resolved with `light-dark()`; `data-theme` only flips `color-scheme`.
   Type is Bricolage Grotesque for headlines, Geist for text and interface, Geist Mono for ids

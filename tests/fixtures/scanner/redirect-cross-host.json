@@ -1,0 +1,17 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/.well-known/oauth-protected-resource/mcp": {
+      "status": 302,
+      "headers": {
+        "location": "https://elsewhere.example.net/.well-known/oauth-protected-resource/mcp"
+      }
+    },
+    "https://mcp.example.com/.well-known/oauth-protected-resource": {
+      "status": 302,
+      "headers": {
+        "location": "https://elsewhere.example.net/.well-known/oauth-protected-resource"
+      }
+    }
+  }
+}
