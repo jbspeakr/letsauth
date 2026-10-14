@@ -79,6 +79,7 @@ const data: Dataset = {
       name: "MCP Authorization",
       body: "mcp",
       family: "profile",
+      maturity: "published",
       summary: "s",
       url: "https://modelcontextprotocol.io",
       revisions: [

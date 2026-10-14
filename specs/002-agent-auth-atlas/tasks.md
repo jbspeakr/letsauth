@@ -34,9 +34,9 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 
 **Purpose**: The one change to the shared model, self-contained so it can be split out
 
-- [ ] T001 Amend `docs/data-model.md`: add `maturity` (enum `individual-draft`, `working-group-draft`, `candidate`, `published`, `in-force`, `expired`, `withdrawn`, required) and `maturityNote` (string, optional) to the Spec table; add `other` to `body` and `guidance` to `family`; add a rule that a withdrawn spec stays in the data and is marked, never deleted; add the relation validation rules from `specs/002-agent-auth-atlas/data-model.md` (distinct ends, unique per pair with symmetric types counted once, note required on judgement types, dependency types acyclic)
-- [ ] T002 Amend `src/schema/spec.ts`: `specMaturity` enum and type, `maturity` required and `maturityNote` optional on `specSchema`, `other` in `specBody`, `guidance` in `specFamily`
-- [ ] T003 Add `maturity: published` and `maturityNote: "Specification revision 2026-07-28"` to `data/specs/mcp-authorization.yaml` and extend the spec fixture in `tests/fixtures/bad-data/specs/` so the existing validator test still exercises the same failures; `pnpm validate:data` and `pnpm test` pass
+- [x] T001 Amend `docs/data-model.md`: add `maturity` (enum `individual-draft`, `working-group-draft`, `candidate`, `published`, `in-force`, `expired`, `withdrawn`, required) and `maturityNote` (string, optional) to the Spec table; add `other` to `body` and `guidance` to `family`; add a rule that a withdrawn spec stays in the data and is marked, never deleted; add the relation validation rules from `specs/002-agent-auth-atlas/data-model.md` (distinct ends, unique per pair with symmetric types counted once, note required on judgement types, dependency types acyclic)
+- [x] T002 Amend `src/schema/spec.ts`: `specMaturity` enum and type, `maturity` required and `maturityNote` optional on `specSchema`, `other` in `specBody`, `guidance` in `specFamily`
+- [x] T003 Add `maturity: published` and `maturityNote: "Specification revision 2026-07-28"` to `data/specs/mcp-authorization.yaml` and extend the spec fixture in `tests/fixtures/bad-data/specs/` so the existing validator test still exercises the same failures; `pnpm validate:data` and `pnpm test` pass
 
 **Checkpoint**: One commit, every existing page unchanged
 

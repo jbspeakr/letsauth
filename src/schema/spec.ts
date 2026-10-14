@@ -27,14 +27,30 @@ export const specBody = z.enum([
   "a2a",
   "vendor",
   "eu",
+  "other",
 ]);
+export type SpecBody = z.infer<typeof specBody>;
 export const specFamily = z.enum([
   "protocol",
   "profile",
   "discovery",
   "credential-format",
   "regulation",
+  "guidance",
 ]);
+export type SpecFamily = z.infer<typeof specFamily>;
+
+/** The publisher's status for the spec as a whole; revision `status` says which revision is shown. */
+export const specMaturity = z.enum([
+  "individual-draft",
+  "working-group-draft",
+  "candidate",
+  "published",
+  "in-force",
+  "expired",
+  "withdrawn",
+]);
+export type SpecMaturity = z.infer<typeof specMaturity>;
 
 export const specSchema = z
   .object({
@@ -42,6 +58,8 @@ export const specSchema = z
     name: z.string().min(1),
     body: specBody,
     family: specFamily,
+    maturity: specMaturity,
+    maturityNote: z.string().min(1).optional(),
     summary: z.string().min(1),
     url: httpsUrl,
     revisions: z.array(revisionSchema).min(1),

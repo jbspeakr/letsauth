@@ -27,11 +27,13 @@ OAuth 2.0 Token Exchange, draft-hardt-oauth-aauth-protocol.
 |---|---|---|
 | `id` | string | Stable kebab-case id, e.g. `mcp-authorization`, `rfc8693`, `aauth` |
 | `name` | string | Display name |
-| `body` | enum | `ietf-oauth`, `ietf-wimse`, `ietf-other`, `openid`, `mcp`, `a2a`, `vendor`, `eu` |
-| `family` | enum | `protocol`, `profile`, `discovery`, `credential-format`, `regulation` |
+| `body` | enum | `ietf-oauth`, `ietf-wimse`, `ietf-other`, `openid`, `mcp`, `a2a`, `vendor`, `eu`, `other` (CNCF, W3C and any body the list does not name) |
+| `family` | enum | `protocol`, `profile`, `discovery`, `credential-format`, `regulation`, `guidance` (best current practice, architecture and threat-model documents that define no protocol) |
+| `maturity` | enum | The publisher's status for the spec as a whole: `individual-draft`, `working-group-draft`, `candidate` (implementer's draft, last call), `published` (RFC, final specification, shipped revision), `in-force` (regulation), `expired`, `withdrawn`. Revision `status` keeps meaning which revision is shown by default. |
+| `maturityNote` | string? | The publisher's own label, shown verbatim: "Proposed Standard", "Informational", "Implementer's Draft 2", "Regulation (EU) 2024/1183" |
 | `summary` | string | One or two sentences |
 | `url` | url | Canonical home |
-| `revisions` | Revision[] | At least one |
+| `revisions` | Revision[] | At least one; exactly one has `status: current` |
 
 ### Revision
 
@@ -71,8 +73,11 @@ An edge between two specs, for the standards atlas.
 |---|---|---|
 | `from`, `to` | spec id | |
 | `type` | enum | `builds-on`, `profiles`, `competes-with`, `solves-same-problem-as`, `references`, `replaces` |
-| `note` | string? | One line |
+| `note` | string? | One line; required for `competes-with` and `solves-same-problem-as`, which are judgement calls |
 | `source` | url? | Where the relation is stated |
+
+Relations live in one list, `data/relations.yaml`. `competes-with` and `solves-same-problem-as`
+are symmetric and are stored once per pair; the other types are directed from `from` to `to`.
 
 ### Server
 
@@ -146,6 +151,13 @@ the previous hop.
 5. A feature's `level` belongs to the revision that defines it. When a new revision changes the
    level (for example DCR moving to `DEPRECATED`), a new entry is appended to that feature's
    `revisions` list; the id stays the same, and the revision diff is derived from the list.
+6. A spec is never deleted. A withdrawn or expired document keeps its file with `maturity`
+   set to `withdrawn` or `expired`; a withdrawn spec leaves the map and the export's `specs`
+   list but keeps its page, its relations and its history.
+7. A relation names two existing, distinct specs. `(from, to, type)` is unique, and for the
+   symmetric types `(to, from, type)` counts as the same relation. `competes-with` and
+   `solves-same-problem-as` carry a `note`. The directed dependency types (`builds-on`,
+   `profiles`, `replaces`) form no cycle, because the standards map lays specs out along them.
 
 ## Examples
 
@@ -155,6 +167,8 @@ id: mcp-authorization
 name: MCP Authorization
 body: mcp
 family: profile
+maturity: published
+maturityNote: Specification revision 2026-07-28
 summary: OAuth 2.1 profile for MCP clients obtaining access to MCP servers.
 url: https://modelcontextprotocol.io/specification/
 revisions:
