@@ -86,6 +86,16 @@ const nav = [
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <div class="site-bg" aria-hidden="true"></div>
+    <aside class="wip" aria-label="Project status">
+      <div class="wrap wip__row">
+        <span class="wip__dot" aria-hidden="true"></span>
+        <p class="wip__text">
+          <strong>Work in progress.</strong> letsauth is an early preview: the data is partial,
+          pages change often, and nothing here is final yet.
+        </p>
+        <a class="wip__link" href="/atlas/mcp/contribute/">Help fill the gaps</a>
+      </div>
+    </aside>
     <header class="site-header">
       <div class="wrap site-header__row">
         <a class="brand" href="/" aria-label="letsauth home">
@@ -240,6 +250,65 @@ const nav = [
     z-index: 1;
   }
 
+  /* work-in-progress banner above the header */
+  .wip {
+    position: relative;
+    z-index: 1;
+    background: var(--accent-2-soft);
+    border-bottom: 1px solid color-mix(in oklch, var(--accent-2) 30%, transparent);
+    color: var(--ink);
+    font-size: var(--text-xs);
+  }
+  .wip__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 2.25rem;
+    padding-block: var(--space-1);
+  }
+  .wip__dot {
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-2) 25%, transparent);
+    animation: wip-pulse 2.4s var(--ease) infinite;
+  }
+  @keyframes wip-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent-2) 25%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 6px color-mix(in oklch, var(--accent-2) 8%, transparent);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wip__dot {
+      animation: none;
+    }
+  }
+  .wip__text {
+    margin: 0;
+    max-width: none;
+    line-height: 1.4;
+  }
+  .wip__text strong {
+    color: var(--accent-2);
+    font-weight: 600;
+  }
+  .wip__link {
+    margin-left: auto;
+    color: var(--ink);
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration-color: color-mix(in oklch, var(--accent-2) 60%, transparent);
+  }
+  .wip__link:hover {
+    color: var(--accent-2);
+  }
+
   .site-header {
     position: sticky;
     top: 0;
@@ -285,6 +354,7 @@ const nav = [
     gap: 0.35em;
     color: var(--ink-muted);
     text-decoration: none;
+    white-space: nowrap;
     padding: 0.45em 0.75em;
     border-radius: 999px;
     transition:
@@ -433,6 +503,9 @@ const nav = [
     }
     .site-main {
       padding-block: var(--space-6) var(--space-8);
+    }
+    .wip__link {
+      display: none;
     }
   }
 </style>
