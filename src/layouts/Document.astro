@@ -1,0 +1,92 @@
+---
+import Base from "@/layouts/Base.astro";
+
+/**
+ * A long-form text page (about, imprint, privacy and the like): breadcrumb, eyebrow, title,
+ * lede, prose body and a dated footer line. Pages put their sections in the default slot.
+ */
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  eyebrow: string;
+  /** The h1. Defaults to the title. */
+  heading?: string;
+  lede?: string;
+  /** ISO date (YYYY-MM-DD) the text was last changed. */
+  updated: string;
+}
+
+const { title, description, path, eyebrow, heading, lede, updated } = Astro.props;
+const updatedLabel = new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Base title={title} description={description} path={path}>
+  <article class="wrap doc">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a> <span aria-hidden="true">/</span> {title}
+    </nav>
+    <header class="doc__head">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{heading ?? title}</h1>
+      {lede && <p class="lede">{lede}</p>}
+    </header>
+    <div class="prose doc__body">
+      <slot />
+      <p class="doc__updated">
+        Last updated <time datetime={updated}>{updatedLabel}</time>
+      </p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .doc__head {
+    margin-bottom: var(--space-6);
+  }
+  .doc__head h1 {
+    max-width: 22ch;
+  }
+  .doc__updated {
+    max-width: none;
+    margin-top: var(--space-7);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+  }
+</style>
+
+<style is:global>
+  /* Body typography for document pages. Wrapped in :where() so a page's own classes win. */
+  :where(.doc__body) h2 {
+    margin-top: var(--space-7);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+  :where(.doc__body) h2:first-child {
+    margin-top: 0;
+  }
+  :where(.doc__body) :where(ul, ol) {
+    padding-left: 1.3em;
+  }
+  :where(.doc__body) :where(ul, ol) > li {
+    margin-bottom: var(--space-2);
+    padding-left: 0.2em;
+  }
+  :where(.doc__body) li::marker {
+    color: var(--accent);
+  }
+  :where(.doc__body) address {
+    font-style: normal;
+    max-width: 24rem;
+    line-height: 1.7;
+    margin-bottom: var(--space-4);
+  }
+</style>

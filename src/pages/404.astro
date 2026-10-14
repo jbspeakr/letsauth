@@ -1,0 +1,40 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base
+  title="Page not found"
+  description="There is no page at this address on letsauth.eu."
+  path="/404/"
+  noindex
+>
+  <div class="wrap prose notfound">
+    <p class="eyebrow">404</p>
+    <h1>No page at this address</h1>
+    <p class="lede">
+      The link may be old, or the address mistyped. An id in the atlas stays stable once
+      published, so a missing server or feature page usually means a typo.
+    </p>
+    <p class="cta">
+      <a class="button primary" href="/">Go to the home page</a>
+      <a class="button" href="/atlas/mcp/">MCP auth atlas</a>
+      <a class="button" href="/atlas/standards/">Agent auth atlas</a>
+    </p>
+    <p class="muted">
+      Followed a broken link on this site? Please{" "}
+      <a href="https://github.com/jbspeakr/letsauth/issues/new" rel="noopener">report it</a>.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .notfound {
+    padding-block: var(--space-6) var(--space-7);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 var(--space-6);
+  }
+</style>

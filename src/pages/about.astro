@@ -1,0 +1,141 @@
+---
+import Document from "@/layouts/Document.astro";
+import { LAB, OPERATOR, REPO } from "@/lib/site";
+
+const products = [
+  {
+    name: "MCP auth atlas",
+    href: "/atlas/mcp/",
+    status: "Live",
+    text: "Public MCP servers against every requirement of the MCP Authorization specification, one cited observation per cell.",
+  },
+  {
+    name: "Agent auth atlas",
+    href: "/atlas/standards/",
+    status: "Live",
+    text: "The specifications, drafts and EU acts behind agent authorization as one map of what builds on and competes with what.",
+  },
+  {
+    name: "Scanner",
+    status: "In progress",
+    text: "A scheduled job that reads servers' public metadata and proposes new observations as pull requests.",
+  },
+  {
+    name: "Delegation chain explorer",
+    status: "Planned",
+    text: "Step-through scenarios with the decoded token at each hop, and toggles for the attacks that break them.",
+  },
+  {
+    name: "Breach anatomy",
+    status: "Planned",
+    text: "Each agent-auth vulnerability replayed as a scenario, with a lab to reproduce it.",
+  },
+  {
+    name: "Agents under EU rules",
+    status: "Planned",
+    text: "What eIDAS 2.0 and the EUDI wallet, the AI Act and NIS2 ask of agent delegation, as scenarios and long reads.",
+  },
+];
+---
+
+<Document
+  title="About"
+  heading={LAB}
+  description={`${LAB} is an independent, vendor-neutral lab for authentication and authorization in the agent era. letsauth.eu is where its work is published.`}
+  path="/about/"
+  eyebrow="About"
+  lede="An independent, vendor-neutral lab for how AI agents are authenticated and authorized. We measure what the protocols require and what real systems do, and publish all of it as open data."
+  updated="2026-10-14"
+>
+  <h2>Why a lab</h2>
+  <p>
+    Agents now call APIs, use tools and act for people. The rules for how they get and pass on
+    authority sit where agent protocols (MCP, A2A) meet identity standards (OAuth, OpenID
+    Connect, token exchange, workload identity), and both sides move monthly. Most of what is
+    written about it is assertion. {LAB} replaces assertion with evidence: every claim cites a
+    specification revision, every status cites a dated observation, and the data is yours to
+    download and check.
+  </p>
+
+  <h2>What we build</h2>
+  <ul class="products" role="list">
+    {
+      products.map((p) => (
+        <li class="card product">
+          <p class="product__head">
+            {p.href ? <a href={p.href}>{p.name}</a> : <span>{p.name}</span>}
+            <span class:list={["pill", { accent: p.status === "Live" }]}>{p.status}</span>
+          </p>
+          <p class="product__text">{p.text}</p>
+        </li>
+      ))
+    }
+  </ul>
+  <p>
+    All of them are views on one shared data model. The order and status of each is in the{" "}
+    <a href={`${REPO}/blob/main/docs/roadmap.md`} rel="noopener">roadmap</a>.
+  </p>
+
+  <h2>How we work</h2>
+  <ul>
+    <li><strong>Cited, not asserted.</strong> A claim without a specification revision and section does not ship.</li>
+    <li><strong>Neutral.</strong> Nothing is ranked or scored. Rows are alphabetical, and no vendor pays for anything.</li>
+    <li><strong>Unknown is honest.</strong> A missing observation reads <em>unknown</em>, never failure.</li>
+    <li><strong>Passive by default.</strong> We read public metadata only, on a schedule, never on a visitor's request, and never with credentials.</li>
+    <li><strong>Open.</strong> Code under MIT, data under CC BY 4.0, history kept in a public repository where anyone can propose a correction.</li>
+    <li><strong>European by default.</strong> Built in Berlin, hosted and measured in the EU; see <a href="/made-in-europe/">made in Europe</a>.</li>
+  </ul>
+
+  <h2>Who is behind it</h2>
+  <p>
+    {LAB} is run by <a href={OPERATOR.site} rel="noopener">{OPERATOR.name}</a>, a security
+    engineer in Berlin who works on usable security and web authentication. It is a personal,
+    independent project; the <a href="/disclaimer/">disclaimer</a> says what that means for
+    affiliation.
+  </p>
+
+  <h2>Get involved</h2>
+  <p>
+    Know how a server behaves? <a href="/atlas/mcp/contribute/">Add an observation</a>. Found a
+    mistake, or want a specification on the map? Open an issue in the{" "}
+    <a href={REPO} rel="noopener">repository</a>. Anything else:{" "}
+    <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>.
+  </p>
+</Document>
+
+<style>
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-3);
+    padding: 0;
+    margin-bottom: var(--space-5);
+    list-style: none;
+  }
+  .products .product {
+    margin: 0;
+    padding: var(--space-4);
+  }
+  .product__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-md);
+  }
+  .product__head a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .product__head a:hover {
+    color: var(--accent);
+  }
+  .product__text {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+  }
+</style>

@@ -5,6 +5,7 @@ import "@/styles/global.css";
 import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import { LAB, LEGAL_LINKS } from "@/lib/site";
 
 interface Props {
   title: string;
@@ -69,6 +70,7 @@ const nav = [
     <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#14161d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {
       [fontBody, fontDisplay, fontMono].map((href) => (
         <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
@@ -172,8 +174,9 @@ const nav = [
         <div class="site-footer__about">
           <p class="site-footer__brand">letsauth</p>
           <p>
-            An independent lab for authentication in the agent era. Every cell cites its source;
-            the only thing that contacts a server is the scanner, and it reads public metadata.
+            An independent lab for authentication in the agent era, by {LAB}. Every cell cites its
+            source; the only thing that contacts a server is the scanner, and it reads public
+            metadata.
           </p>
         </div>
         <nav class="site-footer__links" aria-label="Footer">
@@ -183,13 +186,29 @@ const nav = [
           <a href="/atlas/mcp/contribute/">Contribute</a>
           <a href="/atlas/mcp/data.json">MCP atlas data</a>
           <a href="/atlas/standards/data.json">Standards data</a>
+          <a href="/about/">About</a>
           <a href="https://github.com/jbspeakr/letsauth" rel="noopener">GitHub</a>
         </nav>
         <ul class="site-footer__meta" aria-label="Licences and hosting">
           <li><span class="dot" aria-hidden="true"></span> Data CC BY 4.0</li>
           <li><span class="dot" aria-hidden="true"></span> Code MIT</li>
-          <li><span class="dot" aria-hidden="true"></span> Hosted in the EU</li>
+          <li>
+            <span class="dot" aria-hidden="true"></span>
+            <a href="/made-in-europe/">Made in Europe, hosted in the EU</a>
+          </li>
         </ul>
+      </div>
+      <div class="wrap site-footer__legal">
+        <p>© {new Date().getFullYear()} {LAB}</p>
+        <nav aria-label="Legal">
+          {
+            LEGAL_LINKS.map((l) => (
+              <a href={l.href} aria-current={here === l.href ? "page" : undefined}>
+                {l.label}
+              </a>
+            ))
+          }
+        </nav>
       </div>
     </footer>
     <script>
@@ -476,6 +495,41 @@ const nav = [
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+  .site-footer__meta a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .site-footer__meta a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .site-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+    font-size: var(--text-xs);
+  }
+  .site-footer__legal p {
+    margin: 0;
+  }
+  .site-footer__legal nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .site-footer__legal a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .site-footer__legal a:hover,
+  .site-footer__legal a[aria-current="page"] {
+    color: var(--ink);
   }
   .site-footer__meta .dot {
     width: 6px;

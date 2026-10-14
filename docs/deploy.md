@@ -17,6 +17,8 @@ the Bunny Storage API (one HTTP `PUT` per file) and purges the pull zone. No thi
    `<path>/index.html` and links with a trailing slash, which the storage zone serves as is.
    Optional: add an edge rule that redirects a request without an extension and without a
    trailing slash to `{{path}}/`, so hand-typed URLs like `/atlas/mcp` land on the page too.
+4. In the storage zone, set the **custom 404 file path** to `/404.html`, so a missing page shows
+   the site's own not-found page (built from `src/pages/404.astro`) with a 404 status.
 
 ## GitHub secrets and variables
 

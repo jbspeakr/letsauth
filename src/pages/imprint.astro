@@ -1,0 +1,57 @@
+---
+import Document from "@/layouts/Document.astro";
+import { LAB, OPERATOR, REPO } from "@/lib/site";
+---
+
+<Document
+  title="Imprint"
+  heading="Imprint (Impressum)"
+  description="Who runs letsauth.eu and how to reach them: provider and editorial responsibility under German law."
+  path="/imprint/"
+  eyebrow="Legal"
+  lede={`letsauth.eu is published by ${LAB}, an independent project run by one person in Berlin.`}
+  updated="2026-10-14"
+>
+  <h2>Provider</h2>
+  <p>Information under § 5 of the German Digital Services Act (DDG).</p>
+  <address class="card">
+    <strong>{OPERATOR.name}</strong><br />
+    {LAB}<br />
+    {OPERATOR.street}<br />
+    {`${OPERATOR.postcode} ${OPERATOR.city}`}<br />
+    {OPERATOR.country}
+  </address>
+
+  <h2>Contact</h2>
+  <p>
+    Email: <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>
+  </p>
+  <p>
+    For corrections to the atlas data, the quickest route is an issue or a pull request in the{" "}
+    <a href={REPO} rel="noopener">public repository</a>; see <a href="/atlas/mcp/contribute/">how
+    to contribute</a>. To report a security problem with this site, follow the{" "}
+    <a href="/.well-known/security.txt">security.txt</a> instructions.
+  </p>
+
+  <h2>Responsible for content</h2>
+  <p>
+    Responsible for editorial content under § 18 (2) of the German Interstate Media Treaty
+    (MStV): {OPERATOR.name}, address as above.
+  </p>
+
+  <h2>Licences</h2>
+  <p>
+    The site's code is published under the <a href={`${REPO}/blob/main/LICENSE`} rel="noopener"
+      >MIT licence</a
+    >. The atlas data and its JSON exports are published under{" "}
+    <a href={`${REPO}/blob/main/LICENSE-DATA`} rel="noopener">CC BY 4.0</a>. Names and marks of
+    the products and organisations shown belong to their owners.
+  </p>
+
+  <h2>More</h2>
+  <p>
+    How this site handles data is in the <a href="/privacy/">privacy note</a>. What the site is
+    and is not, and the limits of liability, are in the <a href="/disclaimer/">disclaimer</a>.
+  </p>
+</Document>
+

@@ -1,0 +1,74 @@
+---
+import Document from "@/layouts/Document.astro";
+import { LAB, OPERATOR } from "@/lib/site";
+---
+
+<Document
+  title="Disclaimer"
+  heading="Disclaimer: independent, unaffiliated, no advice"
+  description="letsauth.eu is an independent project. It does not speak for any employer or vendor, takes no money for listings, and its data is reference material, not security advice or certification."
+  path="/disclaimer/"
+  eyebrow="Legal"
+  lede={`${LAB} is an independent project. It speaks for no employer and no vendor, and what it publishes is reference material, not advice.`}
+  updated="2026-10-14"
+>
+  <h2>No employer affiliation</h2>
+  <p>
+    letsauth is a personal project. I, {OPERATOR.name}, build it in my own time to make agent
+    authentication easier to understand, and everything here reflects my own views and my
+    experience in usable security and web authentication. I do not speak for the company I work
+    for, or for any company I worked for in the past, and nothing on this site is an official
+    position of any of them.
+  </p>
+  <p>
+    Links and discussion are welcome. If you quote or refer to the site, please name{" "}
+    {LAB} or me without a company affiliation.
+  </p>
+
+  <h2>No vendor affiliation, no paid placement</h2>
+  <p>
+    letsauth carries no advertising, no affiliate links and no sponsored content. No vendor pays
+    to be listed, to be left out, or to see a cell change. Servers are listed in alphabetical
+    order and nothing is scored or ranked. Where a cell comes from a vendor's own documentation,
+    it is marked as a vendor claim.
+  </p>
+
+  <h2>Reference material, not advice</h2>
+  <p>
+    The atlases are compiled with care from specifications, vendor documentation, public
+    directories and passive reads of public metadata. Each cell shows its source, method and
+    date. Products change and observations age, so a cell can be out of date or wrong, and an{" "}
+    <em>unknown</em> cell says only that nothing has been observed. The site is not a security
+    audit, a certification or a compliance statement for any product, and it does not replace
+    your own assessment. Please <a href="/atlas/mcp/contribute/">send a correction</a> when you
+    find a mistake.
+  </p>
+
+  <h2>Liability</h2>
+  <p>
+    The content is provided as is, without warranty. Liability for its accuracy, completeness
+    or timeliness is excluded as far as the law permits; liability for intent and gross
+    negligence, and for injury to life, body or health, is unaffected.
+  </p>
+
+  <h2>External links</h2>
+  <p>
+    The site links to specifications, vendor pages and repositories run by others. Their
+    owners are responsible for them. When a link was added, the target showed no apparent
+    breach of law; we do not monitor linked pages continuously. If you notice a link to unlawful
+    content, tell us and we will remove it.
+  </p>
+
+  <h2>Names and marks</h2>
+  <p>
+    Product, company and specification names and logos are the property of their owners and are
+    used only to identify what is described. Their use does not imply endorsement in either
+    direction.
+  </p>
+
+  <h2>Questions</h2>
+  <p>
+    Write to <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a> or read who runs the site
+    on the <a href="/about/">about page</a>.
+  </p>
+</Document>
