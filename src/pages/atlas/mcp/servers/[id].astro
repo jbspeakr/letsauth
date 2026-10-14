@@ -39,6 +39,8 @@ const evidenceUrl = (s: string) => s.match(/^(https:\/\/\S+)/)?.[1];
 const issueBase = "https://github.com/jbspeakr/letsauth/issues/new?template=observation.yml";
 const counts = { supported: 0, partial: 0, unsupported: 0, unknown: 0, "not-applicable": 0 };
 for (const f of columns) counts[currentCell(data, server, f, revision.id).status] += 1;
+const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applicable"] as const;
+const pct = (n: number) => Math.round((n / columns.length) * 1000) / 10;
 ---
 
 <Base
@@ -73,88 +75,103 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
         </section>
       ) : (
         <>
-          <section class="profile card" aria-label="Profile">
-            <dl>
-              <dt>Endpoint</dt>
-              <dd>
-                <code>{server.url}</code>
-              </dd>
-              <dt>Transport</dt>
-              <dd>{TRANSPORT_LABEL[server.transport]}</dd>
-              {server.authClaimed && (
-                <>
-                  <dt>Authentication as listed</dt>
-                  <dd>
-                    <code>{server.authClaimed}</code>
-                    <span class="muted"> (the source's own label, not an observation)</span>
-                  </dd>
-                </>
-              )}
-              <dt>Why it is listed</dt>
-              <dd>
-                {LISTED_LABEL[server.listed]}{" "}
-                {server.source && (
-                  <a href={server.source} rel="noopener">
-                    Source
-                  </a>
+          <div class="profile">
+            <section class="card profile__facts" aria-label="Profile">
+              <dl class="kv">
+                <dt>Endpoint</dt>
+                <dd>
+                  <code>{server.url}</code>
+                </dd>
+                <dt>Transport</dt>
+                <dd>{TRANSPORT_LABEL[server.transport]}</dd>
+                {server.authClaimed && (
+                  <>
+                    <dt>Authentication as listed</dt>
+                    <dd>
+                      <code>{server.authClaimed}</code>
+                      <span class="muted"> (the source's own label, not an observation)</span>
+                    </dd>
+                  </>
                 )}
-              </dd>
-              {server.homepage && (
-                <>
-                  <dt>Homepage</dt>
-                  <dd>
-                    <a href={server.homepage} rel="noopener">
-                      {server.homepage}
+                <dt>Why it is listed</dt>
+                <dd>
+                  {LISTED_LABEL[server.listed]}{" "}
+                  {server.source && (
+                    <a href={server.source} rel="noopener">
+                      Source
                     </a>
-                  </dd>
-                </>
-              )}
-              {server.notes && (
-                <>
-                  <dt>Notes</dt>
-                  <dd>{server.notes}</dd>
-                </>
-              )}
-            </dl>
-            <ul class="summary" aria-label="Status summary">
-              {(["supported", "partial", "unsupported", "unknown", "not-applicable"] as const)
-                .filter((s) => counts[s] > 0)
-                .map((s) => (
+                  )}
+                </dd>
+                {server.homepage && (
+                  <>
+                    <dt>Homepage</dt>
+                    <dd>
+                      <a href={server.homepage} rel="noopener">
+                        {server.homepage}
+                      </a>
+                    </dd>
+                  </>
+                )}
+                {server.notes && (
+                  <>
+                    <dt>Notes</dt>
+                    <dd>{server.notes}</dd>
+                  </>
+                )}
+              </dl>
+            </section>
+
+            <section class="card profile__status" aria-label="Status summary">
+              <p class="profile__status-title">
+                Against <strong>MCP Authorization {revision.id}</strong>
+                <span class="pill accent">current</span>
+              </p>
+              <div
+                class="bar"
+                role="img"
+                aria-label={`Of ${columns.length} requirements: supported ${counts.supported}, partial ${counts.partial}, unsupported ${counts.unsupported}, unknown ${counts.unknown}, not applicable ${counts["not-applicable"]}`}
+              >
+                {STATUSES.filter((st) => counts[st] > 0).map((st) => (
+                  <span class={`seg seg-${st}`} style={`flex-basis:${pct(counts[st])}%`} />
+                ))}
+              </div>
+              <ul class="summary">
+                {STATUSES.filter((st) => counts[st] > 0).map((st) => (
                   <li>
-                    <StatusCell status={s} variant="label" /> <span class="n">{counts[s]}</span>
+                    <StatusCell status={st} variant="label" /> <span class="n num">{counts[st]}</span>
                   </li>
                 ))}
-            </ul>
-            <p class="actions">
-              <a class="button" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
-                Contribute a correction
-              </a>
-              <a class="button" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
-                Withdraw this server
-              </a>
-              <a class="button" href={`/atlas/mcp/servers/${server.id}.json`}>JSON</a>
-            </p>
-          </section>
+              </ul>
+              <p class="actions">
+                <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Correction: ${server.name}`)}&server=${server.id}`} rel="noopener">
+                  Contribute a correction
+                </a>
+                <a class="button small" href={`${issueBase}&title=${encodeURIComponent(`Withdraw ${server.name}`)}&server=${server.id}&kind=withdraw`} rel="noopener">
+                  Withdraw this server
+                </a>
+                <a class="button small" href={`/atlas/mcp/servers/${server.id}.json`}>JSON</a>
+              </p>
+            </section>
+          </div>
 
-          <p class="revision-note">
-            Status against <strong>MCP Authorization {revision.id}</strong> (current revision).
-            {revisions.length > 1 && (
-              <>
-                {" "}Older revisions:{" "}
-                {revisions
-                  .filter((r) => r.id !== revision.id)
-                  .map((r) => (
-                    <a href={`/atlas/mcp/${r.id}/`}>{r.id}</a>
-                  ))}
-              </>
-            )}
-          </p>
+          {revisions.length > 1 && (
+            <p class="revision-note">
+              Older revisions of the matrix:{" "}
+              {revisions
+                .filter((r) => r.id !== revision.id)
+                .map((r) => (
+                  <a href={`/atlas/mcp/${r.id}/`}>{r.id}</a>
+                ))}
+            </p>
+          )}
 
           {parties.map((party) => {
             const features = columns.filter((f) => f.party === party);
             return (
-              <section aria-labelledby={`party-${party}`}>
-                <h2 id={`party-${party}`}>{PARTY_LABEL[party]} features</h2>
+              <section class="party" aria-labelledby={`party-${party}`}>
+                <h2 id={`party-${party}`}>
+                  {PARTY_LABEL[party]} features <span class="count num">{features.length}</span>
+                </h2>
                 <div class="table-wrap">
                   <table class="features">
                     <thead>
@@ -257,43 +274,67 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
 </Base>
 
 <style>
-  .crumbs {
-    font-family: var(--font-display);
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-    margin-bottom: var(--space-4);
-  }
   .head {
     margin-bottom: var(--space-5);
   }
   .notice {
-    border-color: var(--accent-2);
+    border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
     background: var(--accent-2-soft);
   }
   .profile {
-    margin-bottom: var(--space-5);
-  }
-  .profile dl {
     display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: var(--space-2) var(--space-5);
-    margin: 0 0 var(--space-4);
+    grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .profile__status-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--text-sm);
-  }
-  .profile dt {
-    font-family: var(--font-display);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
     color: var(--ink-muted);
-    padding-top: 0.25em;
+    margin-bottom: var(--space-3);
   }
-  .profile dd {
-    margin: 0;
-    overflow-wrap: anywhere;
+  .profile__status-title strong {
+    color: var(--ink);
+    font-weight: 600;
   }
   .muted {
     color: var(--ink-muted);
+  }
+  .bar {
+    display: flex;
+    gap: 2px;
+    height: 0.6rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--bg-sunken);
+    margin: 0 0 var(--space-3);
+  }
+  .seg {
+    display: block;
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+  .seg-supported {
+    background: var(--status-supported);
+  }
+  .seg-partial {
+    background: var(--status-partial);
+  }
+  .seg-unsupported {
+    background: var(--status-unsupported);
+  }
+  .seg-unknown {
+    background: color-mix(in oklch, var(--status-unknown) 35%, transparent);
+  }
+  .seg-not-applicable {
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0 3px,
+      color-mix(in oklch, var(--status-unknown) 35%, transparent) 3px 6px
+    );
   }
   .summary {
     list-style: none;
@@ -301,11 +342,10 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
     margin: 0 0 var(--space-4);
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3) var(--space-5);
+    gap: var(--space-2) var(--space-4);
   }
   .summary .n {
-    font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 600;
   }
   .actions {
     display: flex;
@@ -316,20 +356,66 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
   .revision-note {
     color: var(--ink-muted);
     font-size: var(--text-sm);
+    margin-bottom: var(--space-6);
   }
   .revision-note a {
     margin-right: var(--space-2);
+    font-family: var(--font-mono);
+  }
+  .party h2 {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+  .party .count {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink-faint);
   }
   .table-wrap {
     overflow-x: auto;
     margin-bottom: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm), var(--inset-highlight);
+  }
+  .features {
+    margin: 0;
+  }
+  .features thead th {
+    background: var(--bg-sunken);
+    border-bottom: 1px solid var(--line);
+    padding-block: var(--space-2);
+  }
+  .features th,
+  .features td {
+    padding-inline: var(--space-4);
+    border-bottom-color: var(--line-soft);
+  }
+  .features tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+  .features tbody tr:hover > * {
+    background: color-mix(in oklch, var(--accent-soft) 40%, transparent);
   }
   .features th[scope="row"] {
     text-transform: none;
     letter-spacing: 0;
     font-size: var(--text-sm);
+    font-weight: 500;
     color: var(--ink);
     min-width: 18rem;
+  }
+  .features th[scope="row"] > a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .features th[scope="row"] > a:hover {
+    color: var(--accent);
+    text-decoration: underline;
   }
   .meta {
     display: block;
@@ -337,8 +423,16 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
     font-size: var(--text-xs);
     color: var(--ink-muted);
     margin-top: var(--space-1);
+    line-height: 1.5;
+  }
+  .meta code {
+    font-size: 0.85em;
+  }
+  .features td:nth-child(4) {
+    min-width: 9rem;
   }
   .evidence {
+    min-width: 16rem;
     max-width: 24rem;
     overflow-wrap: anywhere;
   }
@@ -354,8 +448,8 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
     padding-left: 1.2em;
     margin: var(--space-2) 0 0;
   }
-  @media (max-width: 40rem) {
-    .profile dl {
+  @media (max-width: 56rem) {
+    .profile {
       grid-template-columns: 1fr;
     }
   }

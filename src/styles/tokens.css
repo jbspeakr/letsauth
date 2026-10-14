@@ -1,64 +1,79 @@
 /*
  * Design tokens. The one place colours, type, spacing and motion are defined (constitution V).
- * Light values live on :root; dark values are applied for prefers-color-scheme: dark unless the
- * user forced light, and whenever the user forced dark via data-theme.
+ *
+ * Colours are OKLCH pairs resolved with light-dark(): the root follows the system preference
+ * through `color-scheme: light dark`, and data-theme forces one scheme when the viewer chose
+ * one. Nothing else in the site sets a colour literal.
  */
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 
-  /* surfaces and ink: warm paper, cool ink */
-  --bg: #f7f4ec;
-  --bg-elevated: #fffdf8;
-  --bg-sunken: #efeadf;
-  --ink: #1b1a1f;
-  --ink-muted: #5b5962;
-  --ink-faint: #6b6873;
-  --line: #ddd7c9;
-  --line-strong: #b9b2a2;
+  /* surfaces: warm paper by day, deep slate by night */
+  --bg: light-dark(oklch(97.6% 0.008 85), oklch(16.5% 0.012 265));
+  --bg-elevated: light-dark(oklch(99.4% 0.004 85), oklch(20.5% 0.013 265));
+  --bg-sunken: light-dark(oklch(95% 0.012 85), oklch(13.5% 0.012 265));
+  --bg-glass: light-dark(oklch(97.6% 0.008 85 / 90%), oklch(16.5% 0.012 265 / 86%));
+
+  /* ink */
+  --ink: light-dark(oklch(21% 0.014 280), oklch(94% 0.008 85));
+  --ink-muted: light-dark(oklch(44% 0.016 280), oklch(74% 0.012 265));
+  --ink-faint: light-dark(oklch(50% 0.015 280), oklch(66% 0.012 265));
+
+  /* hairlines */
+  --line: light-dark(oklch(89% 0.012 85), oklch(27% 0.014 265));
+  --line-strong: light-dark(oklch(78% 0.016 85), oklch(37% 0.016 265));
+  --line-soft: light-dark(oklch(93% 0.01 85), oklch(23% 0.013 265));
 
   /* accents */
-  --accent: #0f6b62;
-  --accent-ink: #ffffff;
-  --accent-soft: #d9ece7;
-  --accent-2: #b4472d;
-  --accent-2-soft: #f3ded6;
-  --focus: #1f5bd6;
+  --accent: light-dark(oklch(47% 0.09 180), oklch(81% 0.11 175));
+  --accent-strong: light-dark(oklch(40% 0.09 180), oklch(88% 0.1 175));
+  --accent-ink: light-dark(oklch(99% 0 0), oklch(18% 0.05 175));
+  --accent-soft: light-dark(oklch(93.5% 0.035 180), oklch(27% 0.045 175));
+  --accent-glow: light-dark(oklch(75% 0.11 180 / 35%), oklch(70% 0.12 175 / 22%));
+  --accent-2: light-dark(oklch(53% 0.14 35), oklch(79% 0.12 40));
+  --accent-2-soft: light-dark(oklch(94% 0.03 35), oklch(28% 0.06 35));
+  --focus: light-dark(oklch(55% 0.19 262), oklch(78% 0.12 255));
 
-  /* status colours, each with a soft fill and a strong ink */
-  --status-supported: #1f7a3f;
-  --status-supported-soft: #d8efdf;
-  --status-partial: #8a5300;
-  --status-partial-soft: #f8e8c6;
-  --status-unsupported: #b3261e;
-  --status-unsupported-soft: #f7d9d6;
-  --status-unknown: #6f6c78;
-  --status-unknown-soft: #e7e4ea;
-  --status-not-applicable: #6f6c78;
+  /* status colours: an ink for text and outlines, a soft fill, and the ink used on a filled chip */
+  --status-on: light-dark(oklch(99% 0 0), oklch(15% 0.02 265));
+  --status-supported: light-dark(oklch(45% 0.13 152), oklch(78% 0.15 152));
+  --status-supported-soft: light-dark(oklch(93% 0.05 152), oklch(27% 0.06 152));
+  --status-partial: light-dark(oklch(50% 0.12 68), oklch(82% 0.14 80));
+  --status-partial-soft: light-dark(oklch(94% 0.06 85), oklch(29% 0.06 80));
+  --status-unsupported: light-dark(oklch(50% 0.17 25), oklch(76% 0.15 22));
+  --status-unsupported-soft: light-dark(oklch(93% 0.04 25), oklch(28% 0.07 22));
+  --status-unknown: light-dark(oklch(48% 0.012 280), oklch(66% 0.012 265));
+  --status-unknown-soft: light-dark(oklch(92% 0.006 280), oklch(24% 0.01 265));
+  --status-not-applicable: light-dark(oklch(48% 0.012 280), oklch(66% 0.012 265));
   --status-not-applicable-soft: transparent;
 
   /* requirement levels */
   --level-must: var(--accent-2);
-  --level-should: #7a5a00;
-  --level-may: #3f5f8a;
-  --level-deprecated: #6f6c78;
+  --level-should: light-dark(oklch(48% 0.1 78), oklch(82% 0.12 85));
+  --level-may: light-dark(oklch(48% 0.09 255), oklch(78% 0.09 250));
+  --level-deprecated: var(--status-unknown);
 
   /* type */
   --font-display:
     "Bricolage Grotesque Variable", "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui,
     sans-serif;
   --font-body:
-    "Source Serif 4 Variable", "Source Serif 4", Charter, Georgia, "Times New Roman", serif;
+    "Geist Variable", Geist, Inter, "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono:
-    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --text-xs: 0.8rem;
-  --text-sm: 0.9rem;
-  --text-md: 1.05rem;
-  --text-lg: clamp(1.2rem, 1.05rem + 0.6vw, 1.45rem);
-  --text-xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.3rem);
-  --text-2xl: clamp(2.1rem, 1.6rem + 2.6vw, 3.6rem);
-  --leading-tight: 1.15;
+  --text-2xs: 0.7rem;
+  --text-xs: 0.78rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.3rem);
+  --text-xl: clamp(1.5rem, 1.25rem + 1.2vw, 2.1rem);
+  --text-2xl: clamp(2.2rem, 1.5rem + 3.2vw, 4.2rem);
+  --leading-tight: 1.05;
+  --leading-snug: 1.3;
   --leading-body: 1.6;
+  --tracking-tight: -0.03em;
+  --tracking-wide: 0.08em;
 
   /* spacing (4px base) */
   --space-1: 0.25rem;
@@ -69,89 +84,48 @@
   --space-6: 2rem;
   --space-7: 3rem;
   --space-8: 4.5rem;
+  --space-9: 7rem;
   --gutter: clamp(1rem, 4vw, 2.5rem);
-  --measure: 68ch;
-  --page-max: 88rem;
+  --measure: 64ch;
+  --page-max: 84rem;
+  --header-h: 3.75rem;
 
   /* shape and shadow */
-  --radius-sm: 4px;
-  --radius: 8px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 2px rgb(27 26 31 / 6%), 0 8px 24px -12px rgb(27 26 31 / 18%);
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-sm:
+    0 1px 2px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 40%)),
+    0 1px 1px light-dark(oklch(20% 0.02 265 / 4%), oklch(0% 0 0 / 20%));
+  --shadow:
+    0 1px 2px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 40%)),
+    0 10px 30px -14px light-dark(oklch(20% 0.02 265 / 20%), oklch(0% 0 0 / 60%));
+  --shadow-lg:
+    0 2px 4px light-dark(oklch(20% 0.02 265 / 6%), oklch(0% 0 0 / 45%)),
+    0 24px 60px -24px light-dark(oklch(20% 0.02 265 / 30%), oklch(0% 0 0 / 70%));
+  --inset-highlight: inset 0 1px 0 0 light-dark(oklch(100% 0 0 / 70%), oklch(100% 0 0 / 5%));
 
   /* motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 120ms;
   --dur: 220ms;
+  --dur-slow: 480ms;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111318;
-  --bg-elevated: #181b22;
-  --bg-sunken: #0b0d11;
-  --ink: #ebe8e1;
-  --ink-muted: #a7a4ad;
-  --ink-faint: #8e8b99;
-  --line: #2a2e38;
-  --line-strong: #434856;
-  --accent: #5fd3bd;
-  --accent-ink: #06211d;
-  --accent-soft: #14312d;
-  --accent-2: #ff9a78;
-  --accent-2-soft: #3a211a;
-  --focus: #8cb4ff;
-  --status-supported: #6fd08c;
-  --status-supported-soft: #16301f;
-  --status-partial: #f0b84a;
-  --status-partial-soft: #3a2b0d;
-  --status-unsupported: #f08a82;
-  --status-unsupported-soft: #3f1a18;
-  --status-unknown: #9d9aa8;
-  --status-unknown-soft: #23232b;
-  --status-not-applicable: #9d9aa8;
-  --level-should: #e0b85a;
-  --level-may: #8fb3e6;
-  --level-deprecated: #9d9aa8;
-  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 10px 30px -12px rgb(0 0 0 / 60%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #111318;
-    --bg-elevated: #181b22;
-    --bg-sunken: #0b0d11;
-    --ink: #ebe8e1;
-    --ink-muted: #a7a4ad;
-    --ink-faint: #8e8b99;
-    --line: #2a2e38;
-    --line-strong: #434856;
-    --accent: #5fd3bd;
-    --accent-ink: #06211d;
-    --accent-soft: #14312d;
-    --accent-2: #ff9a78;
-    --accent-2-soft: #3a211a;
-    --focus: #8cb4ff;
-    --status-supported: #6fd08c;
-    --status-supported-soft: #16301f;
-    --status-partial: #f0b84a;
-    --status-partial-soft: #3a2b0d;
-    --status-unsupported: #f08a82;
-    --status-unsupported-soft: #3f1a18;
-    --status-unknown: #9d9aa8;
-    --status-unknown-soft: #23232b;
-    --status-not-applicable: #9d9aa8;
-    --level-should: #e0b85a;
-    --level-may: #8fb3e6;
-    --level-deprecated: #9d9aa8;
-    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 10px 30px -12px rgb(0 0 0 / 60%);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-fast: 0ms;
     --dur: 0ms;
+    --dur-slow: 0ms;
   }
 }

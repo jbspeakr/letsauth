@@ -39,13 +39,16 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
         {
           groups.map((g) => (
             <th scope="colgroup" colspan={g.count} data-category={g.category}>
-              {CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}
+              <span>{CATEGORY_LABEL[g.category as keyof typeof CATEGORY_LABEL] ?? g.category}</span>
             </th>
           ))
         }
       </tr>
-      <tr>
-        <th scope="col" class="server-head">Server</th>
+      <tr class="features">
+        <th scope="col" class="server-head">
+          <span class="server-head__label">Server</span>
+          <span class="server-head__hint">{rows.length} listed, A to Z</span>
+        </th>
         {
           columns.map((f) => {
             const entry = featureInRevision(f, revision.id);
@@ -61,26 +64,37 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                 data-party={f.party}
                 title={`${f.name} — ${PARTY_LABEL[f.party]} — ${level}`}
               >
-                <a class="feature-link" href={`/atlas/mcp/features/${f.id}/`}>
-                  <span class="feature-short">{shortLabel(f.id)}</span>
-                  <span class="visually-hidden">{f.name}</span>
-                </a>
-                <span class:list={["level", `level-${level}`]} aria-label={`Level ${level}`}>
-                  {level}
-                </span>
-                <span class="party" aria-hidden="true">
-                  {PARTY_SHORT[f.party]}
-                </span>
-                {changed && changesHref && (
-                  <a class="changed" href={changesHref} title={`Level changed from ${changed.from} to ${changed.to} in ${revision.id}`}>
-                    changed
+                <div class="feature-head">
+                  <span class="feature-marks">
+                    {changed && changesHref && (
+                      <a
+                        class="changed"
+                        href={changesHref}
+                        title={`Level changed from ${changed.from} to ${changed.to} in ${revision.id}`}
+                      >
+                        <span class="visually-hidden">Level changed in {revision.id}</span>
+                      </a>
+                    )}
+                    {added && changesHref && (
+                      <a class="changed new" href={changesHref} title={`New in ${revision.id}`}>
+                        <span class="visually-hidden">New in {revision.id}</span>
+                      </a>
+                    )}
+                  </span>
+                  <a class="feature-link" href={`/atlas/mcp/features/${f.id}/`}>
+                    <span class="feature-short">{shortLabel(f.id)}</span>
+                    <span class="visually-hidden">{f.name}</span>
                   </a>
-                )}
-                {added && changesHref && (
-                  <a class="changed" href={changesHref} title={`New in ${revision.id}`}>
-                    new
-                  </a>
-                )}
+                  <span class="feature-tags">
+                    <span class:list={["level", `level-${level}`]} aria-label={`Level ${level}`}>
+                      {level}
+                    </span>
+                    <span class="party" title={PARTY_LABEL[f.party]}>
+                      <span aria-hidden="true">{PARTY_SHORT[f.party]}</span>
+                      <span class="visually-hidden">{PARTY_LABEL[f.party]}</span>
+                    </span>
+                  </span>
+                </div>
               </th>
             );
           })
@@ -134,7 +148,10 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--bg-elevated);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow), var(--inset-highlight);
+  }
+  .matrix-scroll:focus-visible {
+    outline-offset: 4px;
   }
   .matrix {
     border-collapse: separate;
@@ -142,72 +159,141 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     margin: 0;
     width: max-content;
     min-width: 100%;
+    font-variant-numeric: tabular-nums;
   }
   .matrix th,
   .matrix td {
-    border-bottom: 1px solid var(--line);
-    padding: var(--space-2);
+    border-bottom: 1px solid var(--line-soft);
+    padding: var(--space-2) var(--space-1);
     text-align: center;
     vertical-align: middle;
   }
+  .matrix tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+
+  /* category groups */
   .groups th {
-    text-transform: none;
-    letter-spacing: 0.02em;
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
-    border-left: 1px solid var(--line);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    color: var(--ink-muted);
     background: var(--bg-sunken);
+    padding: var(--space-2) var(--space-2);
+    border-left: 1px solid var(--line);
+  }
+  .groups th span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .groups td {
     background: var(--bg-sunken);
     position: sticky;
     left: 0;
     z-index: 3;
+    border-right: 1px solid var(--line);
   }
-  thead th[data-feature] {
+
+  /* feature columns: a narrow column with its id written upwards */
+  .features th[data-feature] {
+    width: 3rem;
+    min-width: 3rem;
+    max-width: 3rem;
+    padding: var(--space-3) 0 var(--space-2);
+    vertical-align: bottom;
     text-transform: none;
     letter-spacing: 0;
-    vertical-align: bottom;
-    min-width: 6rem;
-    max-width: 7rem;
     color: var(--ink);
+  }
+  .features .server-head + th {
+    border-left: 1px solid var(--line);
+  }
+  .feature-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
   }
   .feature-link {
     display: block;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    height: 10rem;
+    padding-inline: 0.4rem;
     text-decoration: none;
     color: var(--ink);
-  }
-  .feature-link:hover .feature-short {
-    text-decoration: underline;
+    border-radius: var(--radius-sm);
   }
   .feature-short {
     display: block;
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    overflow-wrap: anywhere;
-    hyphens: manual;
-    line-height: 1.25;
-    margin-bottom: var(--space-1);
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 100%;
+    padding: 0.1rem 0;
+  }
+  .feature-link:hover .feature-short {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .feature-marks {
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+  }
+  .feature-tags {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .feature-tags .level {
+    font-size: 0.56rem;
+    padding: 0.25em 0.35em;
   }
   .party {
-    display: inline-block;
-    margin-left: var(--space-1);
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+    font-weight: 500;
     color: var(--ink-faint);
+    letter-spacing: 0.04em;
   }
   .changed {
-    display: block;
-    margin-top: var(--space-1);
-    font-family: var(--font-display);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent-2);
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
     text-decoration: none;
+    --dot: var(--accent-2);
+    --halo: var(--accent-2-soft);
   }
+  .changed::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--dot);
+    box-shadow: 0 0 0 3px var(--halo);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .changed.new {
+    --dot: var(--accent);
+    --halo: var(--accent-soft);
+  }
+  .changed:hover::before {
+    transform: scale(1.3);
+  }
+
+  /* the sticky server column */
   .server-head,
   .server-cell {
     position: sticky;
@@ -216,38 +302,59 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     background: var(--bg-elevated);
     text-align: left;
     border-right: 1px solid var(--line);
-    min-width: 11rem;
+    min-width: 12rem;
+    padding-inline: var(--space-4);
   }
   .server-head {
+    vertical-align: bottom;
     text-transform: none;
     letter-spacing: 0;
-    font-size: var(--text-sm);
     color: var(--ink);
+  }
+  .server-head__label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .server-head__hint {
+    display: block;
+    font-size: var(--text-2xs);
+    color: var(--ink-faint);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    margin-top: 0.15rem;
   }
   .server-cell {
     text-transform: none;
     letter-spacing: 0;
-    font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 500;
     font-size: var(--text-sm);
+    line-height: 1.2;
   }
   .server-cell a {
     color: var(--ink);
     text-decoration: none;
   }
   .server-cell a:hover {
+    color: var(--accent);
     text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
   .claim {
     display: block;
     font-family: var(--font-mono);
     font-weight: 400;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: var(--ink-faint);
+    margin-top: 0.2rem;
   }
   tbody tr:hover > * {
-    background: color-mix(in srgb, var(--accent-soft) 45%, var(--bg-elevated));
+    background: color-mix(in oklch, var(--accent-soft) 55%, var(--bg-elevated));
   }
+
+  /* cells */
   .cell {
     position: relative;
   }
@@ -256,26 +363,31 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     cursor: pointer;
     display: inline-grid;
     place-items: center;
-    border-radius: 50%;
+    padding: 0.15rem;
+    border-radius: 9px;
+    transition: transform var(--dur-fast) var(--ease);
   }
   .cell summary::-webkit-details-marker {
     display: none;
   }
+  .cell summary:hover {
+    transform: scale(1.12);
+  }
   .cell summary:focus-visible {
     outline: 2px solid var(--focus);
-    outline-offset: 2px;
+    outline-offset: 1px;
   }
   .cell[open] > :global(.detail) {
     position: absolute;
-    top: calc(100% + 0.3rem);
+    top: calc(100% + 0.4rem);
     left: 50%;
     transform: translateX(-50%);
     z-index: 4;
     background: var(--bg-elevated);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: var(--space-3);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-4);
     text-align: left;
     width: 22rem;
     max-width: 80vw;

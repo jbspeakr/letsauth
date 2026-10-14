@@ -12,16 +12,54 @@ interface Props {
 const { status, derived = false, variant = "cell" } = Astro.props;
 
 const meta = STATUS_META[status];
+const title = derived ? `${meta.label} (no observation recorded)` : meta.label;
 ---
 
 <span
   class:list={["status", `status-${status}`, variant, { derived }]}
   data-status={status}
-  title={derived ? `${meta.label} (no observation recorded)` : meta.label}
+  title={title}
 >
-  <span class="glyph" aria-hidden="true">{meta.glyph}</span>
-  <span class:list={[{ "visually-hidden": variant === "cell" }]}>
-    {meta.label}{derived && variant === "label" ? " (no observation)" : ""}
+  <span class="glyph" aria-hidden="true">
+    {
+      status === "supported" && (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+        </svg>
+      )
+    }
+    {
+      status === "partial" && (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="8" cy="8" r="4.6" />
+          <path d="M8 3.4a4.6 4.6 0 0 1 0 9.2Z" fill="currentColor" stroke="none" />
+        </svg>
+      )
+    }
+    {
+      status === "unsupported" && (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
+        </svg>
+      )
+    }
+    {
+      status === "unknown" && (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="8" cy="8" r="4.2" stroke-dasharray="2.2 2" />
+        </svg>
+      )
+    }
+    {
+      status === "not-applicable" && (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M4.5 8h7" />
+        </svg>
+      )
+    }
+  </span>
+  <span class:list={["text", { "visually-hidden": variant === "cell" }]}>
+    {meta.label}{derived && variant === "label" ? <span class="note"> no observation</span> : ""}
   </span>
 </span>
 
@@ -31,28 +69,55 @@ const meta = STATUS_META[status];
     --c-soft: var(--status-unknown-soft);
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 0.45em;
     color: var(--c);
-    font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 500;
     font-size: var(--text-sm);
     line-height: 1;
   }
   .status.label {
     white-space: nowrap;
   }
+  .status.label .text {
+    color: var(--ink);
+  }
+  .note {
+    color: var(--ink-faint);
+    font-weight: 400;
+    font-size: var(--text-xs);
+  }
+
+  /* the chip */
   .glyph {
+    --size: 1.5rem;
+    flex: none;
     display: inline-grid;
     place-items: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 50%;
-    background: var(--c-soft);
-    border: 1.5px solid var(--c);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    font-weight: 700;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 7px;
+    color: var(--status-on);
+    background: var(--c);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklch, white 22%, transparent),
+      0 1px 2px color-mix(in oklch, var(--c) 35%, transparent);
+    transition:
+      transform var(--dur-fast) var(--ease),
+      box-shadow var(--dur-fast) var(--ease);
   }
+  .glyph svg {
+    width: calc(var(--size) * 0.68);
+    height: calc(var(--size) * 0.68);
+  }
+  .label .glyph {
+    --size: 1.15rem;
+    border-radius: 5px;
+  }
+  .label .glyph svg {
+    width: calc(var(--size) * 0.78);
+    height: calc(var(--size) * 0.78);
+  }
+
   .status-supported {
     --c: var(--status-supported);
     --c-soft: var(--status-supported-soft);
@@ -65,22 +130,36 @@ const meta = STATUS_META[status];
     --c: var(--status-unsupported);
     --c-soft: var(--status-unsupported-soft);
   }
-  .status-unknown {
+
+  /* an unknown someone recorded: a dashed ring. One nobody recorded: a faint dot. */
+  .status-unknown,
+  .status-not-applicable {
     --c: var(--status-unknown);
     --c-soft: var(--status-unknown-soft);
   }
-  .status-unknown .glyph {
-    border-style: dashed;
+  .status-unknown .glyph,
+  .status-not-applicable .glyph {
+    background: transparent;
+    box-shadow: none;
+    color: var(--c);
   }
-  .status-not-applicable {
-    --c: var(--status-not-applicable);
-    --c-soft: var(--status-not-applicable-soft);
+  .status-unknown.derived .glyph svg {
+    display: none;
+  }
+  .status-unknown.derived .glyph::before {
+    content: "";
+    width: 0.3rem;
+    height: 0.3rem;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    opacity: 0.45;
+  }
+  .status-unknown.derived.label .glyph::before {
+    width: 0.4rem;
+    height: 0.4rem;
+    opacity: 0.6;
   }
   .status-not-applicable .glyph {
-    border-style: dotted;
-    opacity: 0.7;
-  }
-  .derived .glyph {
-    border-width: 1px;
+    opacity: 0.55;
   }
 </style>

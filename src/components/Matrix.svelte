@@ -136,7 +136,7 @@ onMount(() => {
     <div class="cell-dialog__bar">
       <h2 id="cell-dialog-title">Observation</h2>
       <form method="dialog">
-        <button type="submit" class="button" aria-label="Close">Close</button>
+        <button type="submit" class="button small" aria-label="Close">Close</button>
       </form>
     </div>
     <div bind:this={detailHost}></div>
@@ -150,11 +150,25 @@ onMount(() => {
     background: var(--bg-elevated);
     color: var(--ink);
     padding: 0;
-    width: min(32rem, calc(100vw - 2rem));
-    box-shadow: var(--shadow);
+    width: min(34rem, calc(100vw - 2rem));
+    box-shadow: var(--shadow-lg);
+  }
+  .cell-dialog[open] {
+    animation: dialog-in var(--dur) var(--ease-out);
   }
   .cell-dialog::backdrop {
-    background: rgb(0 0 0 / 35%);
+    background: oklch(10% 0.02 265 / 45%);
+    backdrop-filter: blur(4px);
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
   .cell-dialog__inner {
     padding: var(--space-4) var(--space-5) var(--space-5);
@@ -164,10 +178,15 @@ onMount(() => {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
   }
   .cell-dialog__bar h2 {
-    font-size: var(--text-lg);
+    font-size: var(--text-2xs);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--ink-muted);
     margin: 0;
   }
   .cell-dialog__bar form {
