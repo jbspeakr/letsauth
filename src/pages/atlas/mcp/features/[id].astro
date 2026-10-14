@@ -48,11 +48,11 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
 <Base
   title={feature.name}
   description={`${feature.name} in the MCP Authorization specification: what it requires, which revision defines it, and which public MCP servers support it.`}
-  path={`/atlas/mcp/features/${feature.id}`}
+  path={`/atlas/mcp/features/${feature.id}/`}
 >
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp">MCP auth atlas</a> <span aria-hidden="true">/</span> Features
+      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span> Features
     </nav>
     <header class="head">
       <p class="eyebrow">{PARTY_LABEL[feature.party]} · {CATEGORY_LABEL[feature.category]}</p>
@@ -63,13 +63,13 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
         {feature.supersedes && (
           <>
             {" · supersedes "}
-            <a href={`/atlas/mcp/features/${feature.supersedes}`}>{feature.supersedes}</a>
+            <a href={`/atlas/mcp/features/${feature.supersedes}/`}>{feature.supersedes}</a>
           </>
         )}
         {supersededBy && (
           <>
             {" · superseded by "}
-            <a href={`/atlas/mcp/features/${supersededBy.id}`}>{supersededBy.id}</a>
+            <a href={`/atlas/mcp/features/${supersededBy.id}/`}>{supersededBy.id}</a>
           </>
         )}
       </p>
@@ -128,7 +128,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
                 return (
                   <tr>
                     <th scope="row">
-                      <a href={r.id === revision.id ? "/atlas/mcp" : `/atlas/mcp/${r.id}`}>{r.id}</a>
+                      <a href={r.id === revision.id ? "/atlas/mcp/" : `/atlas/mcp/${r.id}/`}>{r.id}</a>
                       {r.status === "current" && <span class="pill">current</span>}
                     </th>
                     <td>
@@ -200,7 +200,7 @@ const supersededBy = data.features.find((f) => f.supersedes === feature.id);
                   <ul>
                     {servers.map((server) => (
                       <li>
-                        <a href={`/atlas/mcp/servers/${server.id}`}>{server.name}</a>
+                        <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
                       </li>
                     ))}
                   </ul>

@@ -23,7 +23,7 @@ for (const f of columns) {
 
 const changedIds = new Map(diff?.changed.map((c) => [c.feature.id, c]) ?? []);
 const addedIds = new Set(diff?.added.map((f) => f.id) ?? []);
-const changesHref = diff ? `/atlas/mcp/changes/${diff.from.id}/${diff.to.id}` : undefined;
+const changesHref = diff ? `/atlas/mcp/changes/${diff.from.id}/${diff.to.id}/` : undefined;
 const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
 ---
 
@@ -61,7 +61,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
                 data-party={f.party}
                 title={`${f.name} — ${PARTY_LABEL[f.party]} — ${level}`}
               >
-                <a class="feature-link" href={`/atlas/mcp/features/${f.id}`}>
+                <a class="feature-link" href={`/atlas/mcp/features/${f.id}/`}>
                   <span class="feature-short">{shortLabel(f.id)}</span>
                   <span class="visually-hidden">{f.name}</span>
                 </a>
@@ -92,7 +92,7 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
         rows.map((server) => (
           <tr data-server={server.id} data-name={server.name.toLowerCase()}>
             <th scope="row" class="server-cell">
-              <a href={`/atlas/mcp/servers/${server.id}`}>{server.name}</a>
+              <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
               {server.authClaimed && (
                 <span class="claim" title={`Authentication as listed by the source: ${server.authClaimed}`}>
                   {server.authClaimed}

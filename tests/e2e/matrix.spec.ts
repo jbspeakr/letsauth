@@ -21,7 +21,7 @@ test.describe("matrix page (US1)", () => {
   test("names the revision and renders every server, feature and cell (FR-001)", async ({
     page,
   }) => {
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     await expect(page.locator("[data-revision]")).toHaveText(revision.id);
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix thead th[data-feature]")).toHaveCount(matrix.columns.length);
@@ -37,7 +37,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -59,7 +59,7 @@ test.describe("matrix page (US1)", () => {
     page,
   }) => {
     test.skip(!allUnknown, "no all-unknown server in the seed data");
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     const row = page.locator(`#matrix tbody tr[data-server="${allUnknown?.id}"]`);
     await expect(row.locator("td[data-status='unknown']")).toHaveCount(matrix.columns.length);
     await expect(row.locator("td[data-status='unsupported']")).toHaveCount(0);
@@ -67,7 +67,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("filter state in the URL restores the filtered view (FR-008)", async ({ page }) => {
-    await page.goto("/atlas/mcp?level=MUST&q=stripe");
+    await page.goto("/atlas/mcp/?level=MUST&q=stripe");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page.locator("#matrix-count")).toHaveText(/^1 of \d+ servers/);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(1);
@@ -84,7 +84,7 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("rows are alphabetical and nothing sorts or scores servers (FR-014)", async ({ page }) => {
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     const names = await page.locator("#matrix tbody th[scope='row'] a").allTextContents();
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
     await expect(page.locator("#matrix [aria-sort]")).toHaveCount(0);
@@ -94,7 +94,7 @@ test.describe("matrix page (US1)", () => {
 
   test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     const summary = page.locator(
       `td[data-server="${withUnsupported?.id}"][data-feature="mcp.as.dcr"] summary`,
@@ -110,12 +110,12 @@ test.describe("matrix page (US1)", () => {
   });
 
   test("has no serious accessibility violations", async ({ page }) => {
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     await expectNoSeriousA11yViolations(page);
   });
 
   test("looks right", async ({ page }) => {
-    await page.goto("/atlas/mcp");
+    await page.goto("/atlas/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
     await expect(page).toHaveScreenshot("matrix.png");
   });
@@ -126,7 +126,7 @@ test.describe("matrix page without JavaScript", () => {
 
   test("renders the full matrix and native cell details", async ({ page }) => {
     test.skip(!withUnsupported, "no server with an unsupported observation in the seed data");
-    await page.goto("/atlas/mcp?level=MUST");
+    await page.goto("/atlas/mcp/?level=MUST");
     await expect(page.locator("#matrix tbody tr[data-server]")).toHaveCount(matrix.rows.length);
     await expect(page.locator("#matrix tbody tr[data-server]:not([hidden])")).toHaveCount(
       matrix.rows.length,

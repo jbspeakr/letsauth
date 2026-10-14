@@ -16,7 +16,7 @@ const { from, to } = Astro.params;
 const data = getDataset();
 const diff = revisionDiff(data, from, to);
 const current = currentRevision(data);
-const href = (id: string) => (id === current.id ? "/atlas/mcp" : `/atlas/mcp/${id}`);
+const href = (id: string) => (id === current.id ? "/atlas/mcp/" : `/atlas/mcp/${id}/`);
 const unchanged = data.features.filter(
   (f) =>
     featureInRevision(f, from) &&
@@ -29,11 +29,11 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
 <Base
   title={`What changed from ${from} to ${to}`}
   description={`Requirements of the MCP Authorization specification whose level changed, or that were added or removed, between revisions ${from} and ${to}.`}
-  path={`/atlas/mcp/changes/${from}/${to}`}
+  path={`/atlas/mcp/changes/${from}/${to}/`}
 >
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp">MCP auth atlas</a> <span aria-hidden="true">/</span> Changes
+      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span> Changes
     </nav>
     <header class="head">
       <p class="eyebrow">Revision diff</p>
@@ -63,7 +63,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
                 const entry = featureInRevision(feature, to);
                 return (
                   <li data-feature={feature.id}>
-                    <a href={`/atlas/mcp/features/${feature.id}`}>{line.name}</a>
+                    <a href={`/atlas/mcp/features/${feature.id}/`}>{line.name}</a>
                     <span class="levels">
                       <span class:list={["level", `level-${a}`]}>{a}</span>
                       <span aria-hidden="true"> → </span>
@@ -100,7 +100,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
                 const entry = featureInRevision(feature, to);
                 return (
                   <li data-feature={feature.id}>
-                    <a href={`/atlas/mcp/features/${feature.id}`}>{line.name}</a>
+                    <a href={`/atlas/mcp/features/${feature.id}/`}>{line.name}</a>
                     {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
                     <span class="meta">
                       <code>{line.id}</code> · {line.party}
@@ -131,7 +131,7 @@ const FeatureLine = (f: Feature) => ({ name: f.name, id: f.id, party: PARTY_LABE
                 const entry = featureInRevision(feature, from);
                 return (
                   <li data-feature={feature.id}>
-                    <a href={`/atlas/mcp/features/${feature.id}`}>{line.name}</a>
+                    <a href={`/atlas/mcp/features/${feature.id}/`}>{line.name}</a>
                     {entry && <span class:list={["level", `level-${entry.level}`]}>{entry.level}</span>}
                     <span class="meta">
                       <code>{line.id}</code> · {line.party}
