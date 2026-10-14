@@ -44,12 +44,12 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
 <Base
   title={server.name}
   description={`${server.name}'s support for the MCP Authorization specification, revision ${revision.id}: current status per feature with the observations behind it.`}
-  path={`/atlas/mcp/servers/${server.id}`}
+  path={`/atlas/mcp/servers/${server.id}/`}
   noindex={Boolean(server.withdrawn)}
 >
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/atlas/mcp">MCP auth atlas</a> <span aria-hidden="true">/</span> Servers
+      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span> Servers
     </nav>
     <header class="head">
       <p class="eyebrow">Server</p>
@@ -68,7 +68,7 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
           </p>
           <p>
             Its observations stay in the repository history, but no status is shown here. The
-            maintainer can ask to be relisted through the <a href="/atlas/mcp/contribute">contribution page</a>.
+            maintainer can ask to be relisted through the <a href="/atlas/mcp/contribute/">contribution page</a>.
           </p>
         </section>
       ) : (
@@ -144,7 +144,7 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
                 {revisions
                   .filter((r) => r.id !== revision.id)
                   .map((r) => (
-                    <a href={`/atlas/mcp/${r.id}`}>{r.id}</a>
+                    <a href={`/atlas/mcp/${r.id}/`}>{r.id}</a>
                   ))}
               </>
             )}
@@ -175,7 +175,7 @@ for (const f of columns) counts[currentCell(data, server, f, revision.id).status
                         return (
                           <tr data-feature={feature.id} data-status={cell.status}>
                             <th scope="row">
-                              <a href={`/atlas/mcp/features/${feature.id}`}>{feature.name}</a>
+                              <a href={`/atlas/mcp/features/${feature.id}/`}>{feature.name}</a>
                               <span class="meta">
                                 <code>{feature.id}</code> · {CATEGORY_LABEL[feature.category]}
                                 {entry && (

@@ -3,9 +3,9 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
-        "http://localhost/atlas/mcp.html",
-        "http://localhost/atlas/mcp/servers/stripe.html",
-        "http://localhost/atlas/mcp/features/mcp.as.cimd.html"
+        "http://localhost/atlas/mcp/index.html",
+        "http://localhost/atlas/mcp/servers/stripe/index.html",
+        "http://localhost/atlas/mcp/features/mcp.as.cimd/index.html"
       ],
       "numberOfRuns": 3,
       "settings": {

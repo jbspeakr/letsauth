@@ -3,10 +3,10 @@
 An open, vendor-neutral lab for seeing, testing and breaking how AI agents are authorized: MCP,
 A2A and agent delegation meet OAuth, OpenID Connect and workload identity, with a European lens.
 
-Live: [letsauth.eu/atlas/mcp](https://letsauth.eu/atlas/mcp), the MCP auth atlas (which
+Live: [letsauth.eu/atlas/mcp](https://letsauth.eu/atlas/mcp/), the MCP auth atlas (which
 public MCP servers support which features of the MCP Authorization specification). Data export:
 [`/atlas/mcp/data.json`](https://letsauth.eu/atlas/mcp/data.json). Contribute:
-[letsauth.eu/atlas/mcp/contribute](https://letsauth.eu/atlas/mcp/contribute).
+[letsauth.eu/atlas/mcp/contribute](https://letsauth.eu/atlas/mcp/contribute/).
 
 Start here:
 

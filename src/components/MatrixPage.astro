@@ -30,7 +30,7 @@ const usedLevels = new Set(
   matrix.columns.map((f) => f.revisions.find((r) => r.revision === revisionId)?.level),
 );
 const usedCategories = [...new Set(matrix.columns.map((f) => f.category))];
-const hrefFor = (id: string) => (id === current.id ? "/atlas/mcp" : `/atlas/mcp/${id}`);
+const hrefFor = (id: string) => (id === current.id ? "/atlas/mcp/" : `/atlas/mcp/${id}/`);
 ---
 
 <div class="wrap">
@@ -69,7 +69,7 @@ const hrefFor = (id: string) => (id === current.id ? "/atlas/mcp" : `/atlas/mcp/
         }
         {
           diff && (
-            <a class="button" href={`/atlas/mcp/changes/${diff.from.id}/${diff.to.id}`}>
+            <a class="button" href={`/atlas/mcp/changes/${diff.from.id}/${diff.to.id}/`}>
               What changed since {diff.from.id}
             </a>
           )
@@ -148,7 +148,7 @@ const hrefFor = (id: string) => (id === current.id ? "/atlas/mcp" : `/atlas/mcp/
     </p>
     <p>
       <a href="/atlas/mcp/data.json">Download this matrix as JSON</a> ·
-      <a href="/atlas/mcp/contribute">Add or correct an observation</a>
+      <a href="/atlas/mcp/contribute/">Add or correct an observation</a>
     </p>
   </footer>
 </div>

@@ -4,7 +4,7 @@ import "@/styles/global.css";
 interface Props {
   title: string;
   description: string;
-  /** Path for the canonical URL, e.g. "/atlas/mcp". Defaults to the current path. */
+  /** Path for the canonical URL, e.g. "/atlas/mcp/". Defaults to the current path. */
   path?: string;
   /** When set, the page is excluded from search indexing and the sitemap hint. */
   noindex?: boolean;
@@ -61,8 +61,8 @@ const fullTitle =
           <span class="brand__name">letsauth</span>
         </a>
         <nav aria-label="Primary">
-          <a href="/atlas/mcp">MCP auth atlas</a>
-          <a href="/atlas/mcp/contribute">Contribute</a>
+          <a href="/atlas/mcp/">MCP auth atlas</a>
+          <a href="/atlas/mcp/contribute/">Contribute</a>
           <a href="https://github.com/jbspeakr/letsauth" rel="noopener">Source</a>
         </nav>
         <button

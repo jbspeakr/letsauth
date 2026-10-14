@@ -13,9 +13,10 @@ the Bunny Storage API (one HTTP `PUT` per file) and purges the pull zone. No thi
 2. Create a **Pull Zone** with the storage zone as origin and attach the `letsauth.eu` hostname
    with a free SSL certificate. Note the pull zone id (in the URL of its dashboard page).
 3. In the pull zone, enable **Optimizer** only if wanted; enable **Brotli** and set the default
-   cache time to one day. Optional: add an edge rule that rewrites requests without an extension
-   to `.html` (the build uses `build.format: "file"`, so `/atlas/mcp` is served from
-   `/atlas/mcp.html`).
+   cache time to one day. No URL rewriting is needed: the build writes every page as
+   `<path>/index.html` and links with a trailing slash, which the storage zone serves as is.
+   Optional: add an edge rule that redirects a request without an extension and without a
+   trailing slash to `{{path}}/`, so hand-typed URLs like `/atlas/mcp` land on the page too.
 
 ## GitHub secrets and variables
 
