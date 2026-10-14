@@ -159,7 +159,7 @@ Single Astro project at the repository root as laid out in plan.md: `data/`, `sr
 - [x] T033 [P] Add `http://localhost/atlas/standards/index.html` and `http://localhost/atlas/standards/rfc8693/index.html` to `lighthouserc.json`
 - [x] T034 [P] Update `docs/roadmap.md` (002 implemented, pull request open), `README.md` (link to the live atlas and its export) and `CLAUDE.md` if a convention changed (none expected)
 - [x] T035 [P] Update `src/layouts/Base.astro` footer "Download the data" to list both exports
-- [ ] T036 Run every quickstart.md scenario (1 to 14) against a production build and record results in `specs/002-agent-auth-atlas/checklists/quickstart-run.md`; refresh screenshot baselines through the `refresh-screenshots` label on the pull request
+- [x] T036 Run every quickstart.md scenario (1 to 14) against a production build and record results in `specs/002-agent-auth-atlas/checklists/quickstart-run.md`; refresh screenshot baselines through the `refresh-screenshots` label on the pull request
 
 ---
 
