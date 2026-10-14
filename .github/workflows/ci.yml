@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  statuses: write # Lighthouse CI posts its scores as a commit status
+
 jobs:
   check:
     name: Validate, lint, test, build
@@ -52,6 +56,8 @@ jobs:
           retention-days: 7
       - name: Lighthouse budgets
         run: pnpm exec lhci autorun --config=lighthouserc.json
+        env:
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Lighthouse reports
         if: failure()
         uses: actions/upload-artifact@v4
