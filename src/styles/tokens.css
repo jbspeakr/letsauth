@@ -122,6 +122,13 @@
   color-scheme: dark;
 }
 
+/* The full wordmark occupies its own row above navigation on phones. */
+@media (max-width: 40rem) {
+  :root {
+    --header-h: 6.25rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-fast: 0ms;

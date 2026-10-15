@@ -45,6 +45,17 @@ pnpm scan <url>     # passive scan of one MCP server (--write appends observatio
 See [`CLAUDE.md`](CLAUDE.md) for conventions, [`docs/atlas-maintenance.md`](docs/atlas-maintenance.md)
 for data changes and [`docs/deploy.md`](docs/deploy.md) for hosting.
 
+## Brand assets
+
+`public/brand/` contains the supplied, outlined icon and horizontal wordmark in light and dark
+palettes. `BrandLogo.astro` selects the wordmark using the page theme (including a stored override)
+without requiring JavaScript. The header and footer share that component.
+
+After changing the SVGs, run `pnpm exec playwright install chromium` and `pnpm generate:brand`
+to regenerate the adaptive favicon, 180×180 Apple touch icon and 1200×630 social card. The
+browser favicon follows the system theme; the touch icon and social card use an opaque light
+surface. Generation uses local assets, the shared design tokens and self-hosted fonts.
+
 ## Licences
 
 Code is [MIT](LICENSE). Data under `data/` and the JSON exports are [CC BY 4.0](LICENSE-DATA).
