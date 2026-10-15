@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { branchFor, commitMessage, upsertPullRequest } from "@/scanner/nightly";
+import {
+  branchFor,
+  closeSuperseded,
+  commitMessage,
+  redact,
+  runStamp,
+  upsertPullRequest,
+} from "@/scanner/nightly";
 
 interface Call {
   url: string;
@@ -97,10 +104,55 @@ describe("nightly pull request", () => {
     ).rejects.toThrow(/listing pull requests: HTTP 401 bad credentials/);
   });
 
-  it("names the branch and the commit by the run date", () => {
-    expect(branchFor("2026-10-14")).toBe("scanner/2026-10-14");
-    expect(commitMessage("2026-10-14", "| a | b |\n")).toBe(
-      "Scanner: observations from the run of 2026-10-14\n\n| a | b |\n",
+  it("names a new branch per run and the commit by the run time", () => {
+    const now = new Date("2026-10-15T09:08:47.762Z");
+    expect(branchFor(now)).toBe("scanner/2026-10-15-0908");
+    expect(runStamp(now)).toBe("2026-10-15 09:08 UTC");
+    expect(commitMessage(runStamp(now), "| a | b |\n")).toBe(
+      "Scanner: observations from the run of 2026-10-15 09:08 UTC\n\n| a | b |\n",
     );
+  });
+});
+
+describe("superseded scanner pull requests", () => {
+  it("closes the older open scanner pull requests and deletes their branches, nothing else", async () => {
+    const calls: string[] = [];
+    const fetchImpl = async (url: string, init?: RequestInit): Promise<Response> => {
+      const method = init?.method ?? "GET";
+      calls.push(`${method} ${url}`);
+      if (method === "GET")
+        return Response.json([
+          { number: 15, head: { ref: "scanner/2026-10-15" } },
+          { number: 17, head: { ref: "claude/roadmap" } },
+          { number: 18, head: { ref: "scanner/2026-10-15-0908" } },
+        ]);
+      return Response.json({});
+    };
+    const closed = await closeSuperseded({
+      repo: "o/r",
+      token: "t",
+      base: "main",
+      keep: 18,
+      fetch: fetchImpl,
+    });
+    expect(closed).toEqual([15]);
+    expect(calls).toEqual([
+      "GET https://api.github.com/repos/o/r/pulls?state=open&base=main&per_page=100",
+      "POST https://api.github.com/repos/o/r/issues/15/comments",
+      "PATCH https://api.github.com/repos/o/r/pulls/15",
+      "DELETE https://api.github.com/repos/o/r/git/refs/heads/scanner/2026-10-15",
+    ]);
+  });
+});
+
+describe("redact", () => {
+  it("removes the token and its basic-auth form from a failed command's message", () => {
+    const token = "github_pat_example";
+    const header = Buffer.from(`x-access-token:${token}`).toString("base64");
+    const message = `Command failed: git -c http.extraheader=AUTHORIZATION: basic ${header} push (${token})`;
+    const out = redact(message, [token]);
+    expect(out).not.toContain(token);
+    expect(out).not.toContain(header);
+    expect(out).toBe("Command failed: git -c http.extraheader=AUTHORIZATION: basic *** push (***)");
   });
 });

@@ -27,11 +27,15 @@ What one run does, in order:
 3. Runs `pnpm validate:data` and `pnpm check:append-only HEAD`; a failure aborts the run with
    exit 1 and nothing is pushed.
 4. When nothing under `data/observations/` changed: logs `nothing to append`, exit 0.
-5. Otherwise commits the appended entries to the branch `scanner/<date>` with the summary as the
-   commit body, pushes it (force-with-lease: a second run on the same day replaces its own
-   branch), and opens one pull request `Scanner: <date>` against the base branch with the summary
-   as its description and the label `data`; when an open pull request for that branch exists its
-   description is updated instead. Exit 0.
+5. Otherwise commits the appended entries to a new branch `scanner/<date>-<hhmm>` (UTC, unique per
+   run) with the summary as the commit body, pushes it without force, and opens one pull request
+   `Scanner: <date> <hh:mm> UTC` against the base branch with the summary as its description and
+   the label `data`. It then closes every other open pull request from a `scanner/` branch with a
+   "superseded by" comment and deletes that branch, since the newest run carries all unmerged
+   observations. Exit 0.
+6. The token is never part of an argument list, a remote URL, the clone's config or any printed
+   message: git reads the `Authorization` header from `GIT_CONFIG_*` environment variables, other
+   commands run without the token in their environment, and failure messages are redacted.
 
 The pull request is opened with a personal token, so CI runs on it like on any other pull
 request. Nothing is merged without review.

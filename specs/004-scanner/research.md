@@ -136,8 +136,9 @@ neutral by design; the report is where the letter belongs).
 cron schedule `17 3 * * *`, from the image `Dockerfile` builds, with the command
 `pnpm scan:nightly` (`scripts/scan-nightly.ts`). The job shallow-clones `main`, runs
 `pnpm scan --all --write --summary`, validates the data and the append-only rule, and when
-anything was appended commits to `scanner/<date>`, pushes and opens one pull request with the run
-summary as its description (or updates the open one for that branch). It authenticates to GitHub
+anything was appended commits to a new branch `scanner/<date>-<hhmm>`, pushes and opens one pull
+request with the run summary as its description, closing the older scanner pull requests it
+supersedes. It authenticates to GitHub
 with a fine-grained token (`SCANNER_TOKEN`, the job's secret) sent as an `Authorization` header,
 so the pull request triggers CI like any other. `contracts/job.md` is the contract.
 
