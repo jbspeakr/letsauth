@@ -115,19 +115,36 @@ observation per `(server, feature)` is the current one, older ones are history.
 
 ### Scenario
 
-A Delegation Chain Explorer scenario: actors, steps, tokens at each hop, attack toggles.
+A Delegation Chain Explorer scenario: actors, steps, tokens at each hop, attack toggles. One
+file per scenario under `data/scenarios/`; the explorer renders the diagram, the step list and
+the token views from this one definition.
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | string | |
+| `id` | string | kebab-case, equals the file name |
 | `title` | string | |
-| `actors` | Actor[] | `{ id, kind: user/agent/mcp-client/mcp-server/authorization-server/resource/idp, name }` |
+| `summary` | string | One or two sentences |
+| `actors` | Actor[] | At least two; `{ id, kind, name }` with `kind` one of `user`, `agent`, `mcp-client`, `mcp-server`, `authorization-server`, `resource`, `idp`; the order is the diagram's lane order |
 | `features` | feature id[] | Features the scenario exercises |
-| `steps` | Step[] | `{ id, from, to, message, cites: ref, token?: TokenView }` |
-| `toggles` | Toggle[] | `{ id, name, kind: attack/misconfiguration, replaces: stepId → Step[], cites: ref, vulnerability?: id }` |
+| `steps` | Step[] | At least one, ids unique within the scenario |
+| `toggles` | Toggle[] | May be empty, ids unique within the scenario |
 
-A `TokenView` is a decoded token (`header`, `claims`) plus annotations on claims that changed since
-the previous hop.
+A **Step** is `{ id, from, to, message, note?, cites, token? }`: `from` and `to` are actor ids
+(equal for a self-message such as a server validating a token), `message` is one line, `note` a
+sentence or two of context, `cites` a Citation, `token` the TokenView the message carries.
+
+A **Citation** is `{ spec, revision, section }`: a revision reference plus the document's own
+heading or anchor. Every step and every toggle carries one.
+
+A **TokenView** is a decoded token: `{ name, header?, claims, note? }`, with `header` and
+`claims` as maps of claim name to value (string, number, boolean, list of strings, or a nested
+map for `act`). The marks on claims that changed since the previous hop are derived by the
+explorer, never stored.
+
+A **Toggle** is `{ id, name, kind, summary, cites, replaces, violates?, vulnerability? }`: `kind`
+is `attack` or `misconfiguration`; `replaces` maps a step id of this scenario to the list of
+steps that take its place (an empty list removes the step); `violates` lists the feature ids the
+toggle defeats, so the explorer can point at the atlas; `vulnerability` names a replay.
 
 ### Vulnerability
 
@@ -145,7 +162,9 @@ the previous hop.
 
 1. Ids are stable. Renaming an id is a migration with a redirect.
 2. Every `cites` or `revisions[]` reference must resolve to a revision that exists in `data/specs`.
-   The build fails otherwise.
+   The build fails otherwise. A scenario's actors, features, toggled steps and vulnerabilities
+   must resolve the same way: a step names a declared actor, a toggle replaces a step that exists,
+   and ids stay unique across the chain a toggle produces.
 3. Observations are never edited or deleted, only appended. Corrections are new observations.
 4. `unknown` is written explicitly and rendered as unknown, never as unsupported.
 5. A feature's `level` belongs to the revision that defines it. When a new revision changes the
