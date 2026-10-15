@@ -13,6 +13,47 @@ const pages = [
 ];
 
 test.describe("foundation pages", () => {
+  test("wordmarks follow the system theme and preserve a visitor override", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/");
+    const logos = page.locator(".brand-logo");
+    await expect(logos).toHaveCount(2);
+    for (const logo of await logos.all()) {
+      await expect(logo.locator('img[src="/brand/wordmark-dark.svg"]')).toBeVisible();
+      await expect(logo.locator('img[src="/brand/wordmark.svg"]')).toBeHidden();
+    }
+    await page.getByRole("button", { name: "Toggle colour theme" }).click();
+    await page.reload();
+    for (const logo of await logos.all()) {
+      await expect(logo.locator('img[src="/brand/wordmark.svg"]')).toBeVisible();
+      await expect(logo.locator('img[src="/brand/wordmark-dark.svg"]')).toBeHidden();
+    }
+    await page.getByRole("button", { name: "Toggle colour theme" }).click();
+    await page.emulateMedia({ colorScheme: "light" });
+    for (const logo of await logos.all()) {
+      await expect(logo.locator('img[src="/brand/wordmark-dark.svg"]')).toBeVisible();
+    }
+  });
+
+  test("the wordmark and primary navigation fit from phone to desktop", async ({ page }) => {
+    await page.goto("/");
+    for (const width of [320, 390, 640, 641, 768, 896, 897, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      const header = page.locator(".site-header");
+      const bounds = await header.boundingBox();
+      expect(bounds).not.toBeNull();
+      for (const el of await header.locator("a:visible, button:visible").all()) {
+        const box = await el.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box?.x).toBeGreaterThanOrEqual(0);
+        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+      }
+      const nav = header.getByRole("navigation", { name: "Primary" });
+      expect(await nav.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    }
+  });
+
   for (const { path, heading } of pages) {
     test(`${path} renders and is accessible`, async ({ page }) => {
       await page.goto(path);
