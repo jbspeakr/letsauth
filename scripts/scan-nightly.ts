@@ -2,8 +2,12 @@
  * The nightly run (specs/004-scanner, research R8): the command a Scaleway Serverless Job
  * executes on its cron schedule from the scanner image.
  *
- *   SCANNER_TOKEN     required: a fine-grained GitHub token with contents and pull requests
- *                     write on the repository
+ *   SCANNER_APP_ID, SCANNER_APP_PRIVATE_KEY
+ *                     preferred: the scanner's GitHub App. Each run mints an installation token
+ *                     valid for one hour, limited to the repository; commits and pull requests
+ *                     show up as <app-slug>[bot]
+ *   SCANNER_TOKEN     fallback when no App is configured: a fine-grained personal token with
+ *                     contents and pull requests write on the repository
  *   SCANNER_REPO      owner/name (default jbspeakr/letsauth)
  *   SCANNER_BASE      base branch (default main)
  *   SCANNER_WORKDIR   where to clone (default a fresh directory under the system temp dir)
@@ -23,6 +27,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { installationToken } from "../src/scanner/github-app";
 import {
   branchFor,
   closeSuperseded,
@@ -32,38 +37,16 @@ import {
   upsertPullRequest,
 } from "../src/scanner/nightly";
 
-function requireToken(): string {
-  const value = process.env.SCANNER_TOKEN;
-  if (!value) {
-    console.error("SCANNER_TOKEN is not set; the nightly run cannot push or open a pull request");
-    process.exit(1);
-  }
-  return value;
-}
+const SECRET_VARS = ["SCANNER_TOKEN", "SCANNER_APP_PRIVATE_KEY"] as const;
 
-const token = requireToken();
-const repo = process.env.SCANNER_REPO ?? "jbspeakr/letsauth";
-const base = process.env.SCANNER_BASE ?? "main";
-const workdir = process.env.SCANNER_WORKDIR ?? mkdtempSync(join(tmpdir(), "letsauth-scan-"));
-const now = new Date();
-const stamp = runStamp(now);
-const branch = branchFor(now);
-
-function withoutToken(): NodeJS.ProcessEnv {
-  const { SCANNER_TOKEN: _, ...rest } = process.env;
-  return rest;
-}
-
-// git takes the auth header from the environment (GIT_CONFIG_COUNT/KEY/VALUE), so it is never
-// part of an argument list that an error message or a process listing could show
-const gitEnv: NodeJS.ProcessEnv = {
-  ...withoutToken(),
-  GIT_CONFIG_COUNT: "1",
-  GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
-  GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`,
-  GIT_TERMINAL_PROMPT: "0",
-};
-const safe = (text: string) => redact(text, [token]);
+// everything that must never be printed; filled before the first line is written
+const secrets: string[] = SECRET_VARS.flatMap((name) => {
+  const value = process.env[name];
+  if (!value) return [];
+  // a PEM is also matched line by line, in case one line of it ends up in a message
+  return [value, ...value.split(/\\n|\n/).filter((line) => line.length >= 16)];
+});
+const safe = (text: string) => redact(text, secrets);
 
 // last line of defence: whatever this process prints, by any path, is redacted on the way out
 for (const stream of [process.stdout, process.stderr]) {
@@ -73,6 +56,61 @@ for (const stream of [process.stdout, process.stderr]) {
       typeof chunk === "string" || Buffer.isBuffer(chunk) ? safe(String(chunk)) : chunk,
       ...rest,
     )) as typeof stream.write;
+}
+
+interface Credentials {
+  token: string;
+  name: string;
+  email: string;
+  via: string;
+}
+
+async function credentials(): Promise<Credentials> {
+  const appId = process.env.SCANNER_APP_ID;
+  const privateKey = process.env.SCANNER_APP_PRIVATE_KEY;
+  if (appId && privateKey) {
+    const minted = await installationToken({ credentials: { appId, privateKey }, repo });
+    secrets.push(minted.token);
+    return { ...minted, via: `GitHub App ${minted.name}, token valid until ${minted.expiresAt}` };
+  }
+  const token = process.env.SCANNER_TOKEN;
+  if (token) {
+    return {
+      token,
+      name: "letsauth scanner",
+      email: "scanner@letsauth.eu",
+      via: "personal token (SCANNER_TOKEN)",
+    };
+  }
+  throw new Error(
+    "neither SCANNER_APP_ID with SCANNER_APP_PRIVATE_KEY nor SCANNER_TOKEN is set; the nightly run cannot push or open a pull request",
+  );
+}
+
+const repo = process.env.SCANNER_REPO ?? "jbspeakr/letsauth";
+const base = process.env.SCANNER_BASE ?? "main";
+const workdir = process.env.SCANNER_WORKDIR ?? mkdtempSync(join(tmpdir(), "letsauth-scan-"));
+const now = new Date();
+const stamp = runStamp(now);
+const branch = branchFor(now);
+
+function withoutSecrets(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const name of [...SECRET_VARS, "SCANNER_APP_ID"]) delete env[name];
+  return env;
+}
+
+// git takes the auth header from the environment (GIT_CONFIG_COUNT/KEY/VALUE), so it is never
+// part of an argument list that an error message or a process listing could show
+let gitEnv: NodeJS.ProcessEnv = withoutSecrets();
+function authenticateGit(token: string): void {
+  gitEnv = {
+    ...withoutSecrets(),
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+    GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`,
+    GIT_TERMINAL_PROMPT: "0",
+  };
 }
 
 interface RunOptions {
@@ -86,7 +124,7 @@ interface RunOptions {
 function run(cmd: string, args: string[], options: RunOptions = {}): string {
   console.log(`$ ${[cmd, ...args].join(" ")}`);
   // git gets the auth environment; pnpm and the scanner never see the token
-  const env = cmd === "git" ? gitEnv : withoutToken();
+  const env = cmd === "git" ? gitEnv : withoutSecrets();
   const result = spawnSync(cmd, args, {
     cwd: options.cwd,
     env,
@@ -107,6 +145,10 @@ const inRepo: RunOptions = { cwd: workdir };
 
 async function main(): Promise<void> {
   try {
+    const auth = await credentials();
+    const token = auth.token;
+    authenticateGit(token);
+    console.log(`authenticated as ${auth.via}`);
     run("git", [
       "clone",
       "--depth",
@@ -136,8 +178,8 @@ async function main(): Promise<void> {
     }
 
     const summary = readFileSync(join(workdir, "scan-summary.md"), "utf8");
-    run("git", ["config", "user.name", "letsauth scanner"], inRepo);
-    run("git", ["config", "user.email", "scanner@letsauth.eu"], inRepo);
+    run("git", ["config", "user.name", auth.name], inRepo);
+    run("git", ["config", "user.email", auth.email], inRepo);
     run("git", ["checkout", "-B", branch], inRepo);
     run("git", ["add", "data/observations"], inRepo);
     run("git", ["commit", "-q", "-m", commitMessage(stamp, summary)], inRepo);

@@ -14,7 +14,7 @@ triggered by visitors (owner decision, 2026-10-14).
 | Schedule | `17 3 * * *` (03:17 UTC, once a night) |
 | Resources | 1 vCPU, 1 GB memory, timeout 30 minutes; no network listener; nothing persisted |
 | Environment | `SCANNER_REPO` (`jbspeakr/letsauth`), `SCANNER_BASE` (`main`) |
-| Secret | `SCANNER_TOKEN`: a fine-grained GitHub token for this repository with *Contents: write* and *Pull requests: write*, stored as the job's secret, never in the image or the repository |
+| Secret | Preferred: `SCANNER_APP_ID` and `SCANNER_APP_PRIVATE_KEY` of the scanner's GitHub App; each run mints an installation token valid for one hour, limited to this repository with *Contents: write* and *Pull requests: write*, and commits and pull requests carry the App's bot identity. Fallback: `SCANNER_TOKEN`, a fine-grained token with the same scope. Stored as the job's secrets, never in the image or the repository |
 
 What one run does, in order:
 
