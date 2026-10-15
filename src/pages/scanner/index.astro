@@ -30,8 +30,9 @@ const issue = `${repo}/issues/new?template=observation.yml`;
         <p class="lede">
           The scanner reads the public authorization metadata an MCP server publishes for every
           client and judges the {checks.length} requirements of MCP Authorization {revision.id} that
-          metadata can answer. Nothing else is sent: no token, no authorization flow, no request to
-          the endpoint itself. Results land in the atlas as observations, by pull request.
+          metadata can answer. Nothing else is sent: no token, no authorization flow, no protocol
+          message; the one request to the endpoint itself carries no credentials and only its
+          status and headers are read. Results land in the atlas as observations, by pull request.
         </p>
       </div>
       <dl class="facts" aria-label="Scanner at a glance">
@@ -67,14 +68,24 @@ const issue = `${repo}/issues/new?template=observation.yml`;
               derived from the server URL, then at the root.
             </li>
             <li>
+              The challenge the endpoint returns to one unauthenticated <code>GET</code>: the
+              status and the <code>WWW-Authenticate</code> header, which RFC 9728 and the MCP
+              specification define as the other way to announce that metadata. The response body
+              is never read. When the well-known locations had nothing and the challenge names a
+              <code>resource_metadata</code> URL, that document is fetched.
+            </li>
+            <li>
               For the first authorization server the metadata names: its metadata at the three
               well-known locations the MCP specification lists (RFC 8414 and OpenID Connect
               Discovery, path-inserted and path-appended).
             </li>
           </ol>
           <p>
-            At most five <code>GET</code> requests over HTTPS, no credentials, redirects followed
-            only on the same host. It identifies itself as <code>{USER_AGENT}</code>.
+            At most seven <code>GET</code> requests over HTTPS, no credentials, no body sent,
+            redirects followed only on the same host. It identifies itself as{" "}
+            <code>{USER_AGENT}</code>. The challenge is the only thing read from the endpoint, and
+            it is what every anonymous client receives; that is why it still counts as a passive
+            scan (<a href={`${repo}/blob/main/specs/008-discovery-challenge/spec.md`} rel="noopener">why</a>).
           </p>
         </article>
         <article class="card">
@@ -174,8 +185,8 @@ pnpm scan notion --write                # append what the nightly rule would</co
       <section class="prose" aria-labelledby="not-title">
         <h2 id="not-title">What it does not check</h2>
         <p>
-          {unscanned.length} server-side requirements need a request to the endpoint or a reading of
-          the implementation and stay out of a passive scan: for example
+          {unscanned.length} server-side requirements need a token, a scope or a reading of the
+          implementation and stay out of a passive scan: for example
           {unscanned.slice(0, 3).map((f, i) => (
             <>
               {i > 0 && ", "}
@@ -188,7 +199,8 @@ pnpm scan notion --write                # append what the nightly rule would</co
         <p>
           If you run a listed server and do not want it scanned,{" "}
           <a href={issue} rel="noopener">withdraw it</a> from the atlas; a withdrawn server is never
-          contacted again. The scanner only reads documents a server publishes for every client.
+          contacted again. The scanner only reads what a server publishes for every client: its
+          metadata documents and the challenge it sends to anyone without a token.
         </p>
       </section>
     </div>

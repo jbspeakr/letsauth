@@ -29,27 +29,34 @@ export const GRADE_RULE: readonly string[] = [
   "C when every MUST-level check is supported and a SHOULD-level check is unsupported or partial.",
   "B when every MUST-level check is supported, no SHOULD-level check fails, and a SHOULD-level check is unknown.",
   "A when every MUST-level and SHOULD-level check is supported.",
-  "A MUST the server may meet in either of two ways counts as unknown, not unsupported, while the other way is unknown: protected resource metadata missing from both well-known locations may still be announced in a WWW-Authenticate challenge, which a passive scan does not provoke.",
+  "A MUST the server may meet in either of two ways is met when either way is supported, and counts as unknown, not unsupported, while the other way is unknown: protected resource metadata may be served at a well-known location or announced in the WWW-Authenticate challenge the endpoint returns to an unauthenticated request; the scanner reads both.",
   "MAY-level and deprecated requirements are listed and never change the grade.",
   "Servers listed as open or API-key are not graded: there is no OAuth authorization to check.",
 ];
 
 /**
  * MUST-level requirements a server meets through either of two mechanisms (feature → its
- * alternative). The specification asks for one of them, so one failing alone fails nothing.
+ * alternative, in both directions). The specification asks for one of them, so one failing
+ * alone fails nothing.
  */
 export const EITHER_OR: Readonly<Record<string, string>> = {
   "mcp.prm.well-known": "mcp.prm.www-authenticate",
+  "mcp.prm.www-authenticate": "mcp.prm.well-known",
 };
 
 const failing = (s: ObservationStatus) => s === "unsupported" || s === "partial";
 
-/** The status a check counts with under the either-or rule; the alternative may be absent. */
+/**
+ * The status a check counts with under the either-or rule; the alternative may be absent. A
+ * member that is not supported counts as supported when the other is; a failing member counts
+ * as unknown while the other is unknown; both failing fail.
+ */
 function effective(c: Gradable, checks: readonly Gradable[]): ObservationStatus {
   const other = c.feature ? EITHER_OR[c.feature] : undefined;
-  if (!other || !failing(c.status)) return c.status;
+  if (!other || c.status === "supported") return c.status;
   const alt = checks.find((x) => x.feature === other)?.status ?? "unknown";
   if (alt === "supported") return "supported";
+  if (!failing(c.status)) return c.status;
   return failing(alt) ? c.status : "unknown";
 }
 

@@ -2,8 +2,11 @@
 import Base from "@/layouts/Base.astro";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
+import { passiveChecks } from "@/lib/scanner";
 
-const revision = currentRevision(getDataset());
+const data = getDataset();
+const revision = currentRevision(data);
+const scannerChecks = passiveChecks(data).length;
 const repo = "https://github.com/jbspeakr/letsauth";
 const issue = `${repo}/issues/new?template=observation.yml`;
 const entry = `- server: stripe                     # must equal the file's server id
@@ -69,8 +72,8 @@ const entry = `- server: stripe                     # must equal the file's serv
 
     <h3>Run the scanner</h3>
     <p>
-      For the twelve requirements the <a href="/scanner/">passive scanner</a> can read from
-      public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
+      For the {scannerChecks} requirements the <a href="/scanner/">passive scanner</a> can read
+      from public metadata, prefer <code>pnpm scan &lt;server-id&gt; --write</code> over a hand-written
       entry. It appends exactly the observations whose status or evidence changed, with evidence
       anyone can reproduce by running the same command. The nightly run does the same for every
       listed server and opens its own pull request.

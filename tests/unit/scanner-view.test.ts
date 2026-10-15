@@ -9,6 +9,7 @@ import {
   scannerIndex,
   unscannedFeatures,
 } from "@/lib/scanner";
+import { OBSERVER, SCANNER_ID } from "@/scanner/version";
 import type { Observation } from "@/schema";
 
 const base = getDataset();
@@ -29,7 +30,7 @@ function obs(
     status,
     method: "passive-scan",
     observedAt: "2026-10-15T03:17:04Z",
-    observedBy: "scanner@0.1.0",
+    observedBy: OBSERVER,
     evidence: `https://example.com/.well-known/x — HTTP 200; ${feature}`,
     ...extra,
   };
@@ -40,8 +41,8 @@ function withObservations(observations: Observation[]): Dataset {
 }
 
 describe("passiveChecks", () => {
-  it("returns the twelve passive server-party features, MCP server party first", () => {
-    expect(checks).toHaveLength(12);
+  it("returns the thirteen passive server-party features, MCP server party first", () => {
+    expect(checks).toHaveLength(13);
     const parties = checks.map((c) => c.feature.party);
     expect(parties.indexOf("authorization-server")).toBe(parties.lastIndexOf("mcp-server") + 1);
     for (const c of checks) expect(c.entry.level).toBeDefined();
@@ -129,7 +130,7 @@ describe("reportFromView", () => {
     const r = reportFromView(latestScan(withObservations(all), server), "2026-10-16T00:00:00Z");
     expect(r).toMatchObject({
       version: 1,
-      scanner: "letsauth-scanner/0.1.0",
+      scanner: SCANNER_ID,
       recorded: true,
       target: { url: server?.url, server: server?.id },
       revision: { spec: "mcp-authorization", revision },
@@ -138,7 +139,7 @@ describe("reportFromView", () => {
       discovered: null,
       observations: [],
     });
-    expect(r.checks).toHaveLength(12);
+    expect(r.checks).toHaveLength(13);
     expect(r.grade.letter).toBe("A");
   });
 });

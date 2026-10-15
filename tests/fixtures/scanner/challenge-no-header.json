@@ -1,0 +1,9 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/mcp": {
+      "status": 401,
+      "headers": {}
+    }
+  }
+}

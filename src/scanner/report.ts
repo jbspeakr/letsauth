@@ -11,7 +11,13 @@ import { runChecks } from "./checks";
 import type { Fetcher } from "./fetch";
 import { type Grade, grade } from "./grade";
 import type { Guard } from "./guard";
-import { type AsCacheEntry, type Probe, probe, type RequestRecord } from "./probe";
+import {
+  type AsCacheEntry,
+  type PrmLocation,
+  type Probe,
+  probe,
+  type RequestRecord,
+} from "./probe";
 import { OBSERVER, SCANNER_ID } from "./version";
 
 /** Bumps on a breaking change of the report shape (contracts/report.md). */
@@ -34,10 +40,17 @@ export interface CheckResult {
 export interface Discovered {
   protectedResource: {
     url: string;
-    location: "path-aware" | "root";
+    location: PrmLocation;
     resource?: string;
     authorizationServers: string[];
     scopesSupported?: string[];
+  } | null;
+  /** The endpoint's answer to the one unauthenticated request; null when it gave no answer. */
+  challenge: {
+    url: string;
+    status: number;
+    header: string | null;
+    resourceMetadata: string | null;
   } | null;
   authorizationServer: {
     issuer: string;
@@ -114,6 +127,14 @@ function discoveredOf(p: Probe): Discovered {
           resource: p.prm.resource,
           authorizationServers: p.prm.authorizationServers,
           scopesSupported: p.prm.scopesSupported,
+        }
+      : null,
+    challenge: p.challenge
+      ? {
+          url: p.challenge.url,
+          status: p.challenge.status,
+          header: p.challenge.header ?? null,
+          resourceMetadata: p.challenge.resourceMetadata ?? null,
         }
       : null,
     authorizationServer: p.as

@@ -38,6 +38,11 @@ definite `404`/`4xx`.
 | `mcp.as.dcr` | `as.registration_endpoint` is a string | `as` found and the field is absent | `as` not found |
 | `mcp.as.iss-param` | `as.authorization_response_iss_parameter_supported === true` | `as` found and the field is absent or not `true` | `as` not found |
 
+Added by 008 (`specs/008-discovery-challenge/data-model.md`): the `mcp.prm.www-authenticate` row,
+judged from the endpoint's answer to one unauthenticated `GET`; `prm` may now come from the
+challenge's `resource_metadata` pointer when the well-known locations had nothing, in which case
+`mcp.prm.well-known` is still judged from the well-known locations alone.
+
 A check for a passive feature that this table does not cover fails the run with a message naming
 the feature, so a new passive feature cannot be silently skipped (research R5).
 
@@ -72,7 +77,7 @@ never edits or removes an entry. The file is written by appending YAML entries t
 | `wellKnownPrmUrls(serverUrl)` | URL | string[] | path-aware then root (research R4); one entry when the path is empty |
 | `wellKnownAsUrls(issuer)` | URL | string[] | the three MCP locations in order; two when the issuer has no path |
 | `guardUrl(url, resolve)` | string, resolver | `{ ok: true, url } \| { ok: false, reason }` | research R3 |
-| `probe(target, fetcher)` | URL, fetcher | `Probe` | every request made, the documents found, the issuer judged |
+| `probe(target, fetcher)` | URL, fetcher | `Probe` | every request made, the documents found, the challenge read (008), the issuer judged |
 | `runChecks(probe, checks)` | probe, check list | `CheckResult[]` | the decision table |
 | `grade(results)` | results with levels | `Grade` | FR-008 |
 | `scan(target, data, fetcher, now)` | | `Report` | `probe` → `runChecks` → `grade`, plus the observations |

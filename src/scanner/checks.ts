@@ -44,6 +44,24 @@ function show(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+/** The well-known requests of a probe, as words for the evidence. */
+function wellKnownTried(probe: Probe): string {
+  return probe.requests
+    .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
+    .map((r) => httpWord(r))
+    .join(", ");
+}
+
+/** How the challenge route ended, as words for the evidence. */
+function challengeWord(probe: Probe): string {
+  if (probe.challenge?.resourceMetadata) {
+    if (probe.pointerOutcome === "found") return "challenge pointer followed";
+    return `challenge pointer ${probe.pointerLast ? httpWord(probe.pointerLast) : "not followed"}`;
+  }
+  if (probe.challengeOutcome === "found") return "challenge without resource_metadata";
+  return `endpoint ${httpWord(probe.challengeLast)}`;
+}
+
 /** Why no PRM could be judged: the decisive request and a word for the reader. */
 function prmMissing(probe: Probe): CheckOutcome {
   const last = probe.prmLast;
@@ -51,19 +69,19 @@ function prmMissing(probe: Probe): CheckOutcome {
   if (probe.prmOutcome === "error") {
     return {
       status: "unknown",
-      evidence: evidence(url, last, "could not fetch the protected resource metadata"),
+      evidence: evidence(
+        url,
+        last,
+        `could not fetch the protected resource metadata (well-known ${wellKnownTried(probe)}; ${challengeWord(probe)})`,
+      ),
     };
   }
-  const tried = probe.requests
-    .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
-    .map((r) => httpWord(r))
-    .join(", ");
   return {
     status: "unknown",
     evidence: evidence(
       url,
       last,
-      `no protected resource metadata at a well-known location (${tried})`,
+      `no protected resource metadata at a well-known location (${wellKnownTried(probe)}) and none reached through the challenge (${challengeWord(probe)})`,
     ),
   };
 }
@@ -133,16 +151,21 @@ function withAs(
 }
 
 export const PASSIVE_CHECKS: Record<string, Check> = {
+  // judged from the well-known locations alone: a document reached through the challenge's
+  // pointer does not count here (008 FR-004)
   "mcp.prm.well-known": (probe) => {
-    if (probe.prm) {
+    if (probe.prm && probe.prm.location !== "challenge") {
       const rec = probe.requests.find((r) => r.url === probe.prm?.url);
       return {
         status: "supported",
         evidence: evidence(probe.prm.url, rec, `found at the ${probe.prm.location} location`),
       };
     }
-    if (probe.prmOutcome === "absent") {
+    const last = probe.wellKnownLast;
+    const url = last?.url ?? probe.target;
+    if (probe.wellKnownOutcome === "absent") {
       const tried = probe.requests
+        .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
         .map(
           (r) =>
             `${r.url.endsWith("/oauth-protected-resource") ? "root" : "path-aware"} ${httpWord(r)}`,
@@ -150,14 +173,47 @@ export const PASSIVE_CHECKS: Record<string, Check> = {
         .join(", ");
       return {
         status: "unsupported",
+        evidence: evidence(url, last, `not at either well-known location (${tried})`),
+      };
+    }
+    return {
+      status: "unknown",
+      evidence: evidence(url, last, "could not fetch the well-known protected resource metadata"),
+    };
+  },
+
+  // the endpoint's answer to one unauthenticated GET (008 FR-002); headers only
+  "mcp.prm.www-authenticate": (probe) => {
+    const rec = probe.challengeLast;
+    const url = rec?.url ?? probe.target;
+    if (probe.challengeOutcome === "error") {
+      return { status: "unknown", evidence: evidence(url, rec, "could not reach the endpoint") };
+    }
+    const c = probe.challenge;
+    if (!c || probe.challengeOutcome !== "found") {
+      return {
+        status: "unknown",
         evidence: evidence(
-          probe.prmLast?.url ?? probe.target,
-          probe.prmLast,
-          `not at either well-known location (${tried})`,
+          url,
+          rec,
+          "no 401 challenge to an unauthenticated GET, nothing to judge",
         ),
       };
     }
-    return prmMissing(probe);
+    if (c.resourceMetadata) {
+      return {
+        status: "supported",
+        evidence: evidence(url, rec, `WWW-Authenticate resource_metadata: ${c.resourceMetadata}`),
+      };
+    }
+    return {
+      status: "unsupported",
+      evidence: evidence(
+        url,
+        rec,
+        `WWW-Authenticate: ${c.header ?? "absent"}, no resource_metadata parameter`,
+      ),
+    };
   },
 
   "mcp.prm": (probe) =>

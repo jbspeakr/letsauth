@@ -5,8 +5,10 @@ import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 import { PASSIVE_CHECKS, runChecks } from "@/scanner/checks";
 import { type Fixture, recordingFetcher } from "@/scanner/fetch";
+import { type Guard, guardUrl } from "@/scanner/guard";
 import { probe } from "@/scanner/probe";
 import { passiveFeatures, scan } from "@/scanner/report";
+import { OBSERVER } from "@/scanner/version";
 import type { ObservationStatus } from "@/schema";
 
 const data = getDataset();
@@ -19,27 +21,30 @@ function fixture(name: string): Fixture {
   ) as Fixture;
 }
 
-async function statuses(name: string) {
+async function statuses(name: string, guard?: Guard) {
   const f = fixture(name);
   const fetcher = recordingFetcher(f);
-  const p = await probe(f.target, { fetcher });
+  const p = await probe(f.target, { fetcher, guard });
   const out: Record<string, { status: ObservationStatus; evidence: string }> = {};
   for (const run of runChecks(p, features)) out[run.feature.id] = run.outcome;
   return { probe: p, requests: fetcher.requests, out };
 }
 
+const ENDPOINT = "https://mcp.example.com/mcp";
 const PRM_PATH = "https://mcp.example.com/.well-known/oauth-protected-resource/mcp";
 const PRM_ROOT = "https://mcp.example.com/.well-known/oauth-protected-resource";
+const POINTER = "https://mcp.example.com/oauth/prm.json";
 const AS_RFC = "https://auth.example.com/.well-known/oauth-authorization-server";
 const AS_OIDC = "https://auth.example.com/.well-known/openid-configuration";
 
 describe("the passive features of the current revision", () => {
-  it("are the twelve the decision table covers, server party first", () => {
+  it("are the thirteen the decision table covers, server party first", () => {
     expect(features.map((f) => f.id)).toEqual([
       "mcp.prm",
       "mcp.prm.authorization-servers",
       "mcp.prm.scopes-supported",
       "mcp.prm.well-known",
+      "mcp.prm.www-authenticate",
       "mcp.prm.no-offline-access",
       "mcp.as.issuer-match",
       "mcp.as.metadata",
@@ -63,7 +68,7 @@ describe("the passive features of the current revision", () => {
 describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () => {
   it("complete: every check supported except DCR, with the second issuer not checked", async () => {
     const { probe: p, requests, out } = await statuses("complete");
-    expect(requests).toEqual([PRM_PATH, AS_RFC]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC]);
     for (const [id, o] of Object.entries(out)) {
       expect(o.status, id).toBe(id === "mcp.as.dcr" ? "unsupported" : "supported");
       expect(o.evidence, id).toMatch(/^https:\/\//);
@@ -71,7 +76,15 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
     }
     expect(p.othersNotChecked).toEqual(["https://auth2.example.com"]);
     expect(out["mcp.prm.well-known"]?.evidence).toContain("path-aware");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toBe(
+      `${ENDPOINT} — HTTP 401; WWW-Authenticate resource_metadata: ${PRM_PATH}`,
+    );
     expect(out["mcp.as.pkce-s256"]?.evidence).toContain("S256");
+    // the endpoint was asked once, and nothing of its body was read (008 FR-001, SC-003)
+    expect(requests.filter((u) => u === ENDPOINT)).toHaveLength(1);
+    const endpoint = p.requests.find((r) => r.url === ENDPOINT);
+    expect(endpoint).toMatchObject({ status: 401, ok: false });
+    expect(p.prm?.location).toBe("path-aware");
   });
 
   it("root-prm: finds the PRM at the root and the AS at the path-appended OIDC location", async () => {
@@ -79,6 +92,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
     expect(requests).toEqual([
       PRM_PATH,
       PRM_ROOT,
+      ENDPOINT,
       "https://auth.example.com/.well-known/oauth-authorization-server/tenant",
       "https://auth.example.com/.well-known/openid-configuration/tenant",
       "https://auth.example.com/tenant/.well-known/openid-configuration",
@@ -89,14 +103,18 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
     expect(out["mcp.as.issuer-match"]?.status).toBe("supported");
   });
 
-  it("no-prm: well-known unsupported, everything else unknown", async () => {
+  it("no-prm: well-known unsupported, everything else unknown (the endpoint answered 404)", async () => {
     const { requests, out } = await statuses("no-prm");
-    expect(requests).toEqual([PRM_PATH, PRM_ROOT]);
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT]);
     expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
     expect(out["mcp.prm.well-known"]?.evidence).toContain("HTTP 404");
     for (const id of Object.keys(out).filter((k) => k !== "mcp.prm.well-known")) {
       expect(out[id]?.status, id).toBe("unknown");
     }
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toBe(
+      `${ENDPOINT} — HTTP 404; no 401 challenge to an unauthenticated GET, nothing to judge`,
+    );
+    expect(out["mcp.prm"]?.evidence).toContain("none reached through the challenge");
   });
 
   it.each(["prm-5xx", "prm-timeout", "redirect-cross-host"])(
@@ -122,7 +140,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
 
   it("no-as: PRM checks judged, AS metadata unsupported, the other AS checks unknown", async () => {
     const { requests, out } = await statuses("no-as");
-    expect(requests).toEqual([PRM_PATH, AS_RFC, AS_OIDC]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC, AS_OIDC]);
     expect(out["mcp.prm"]?.status).toBe("supported");
     expect(out["mcp.as.metadata"]?.status).toBe("unsupported");
     for (const id of [
@@ -146,7 +164,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
 
   it("empty-servers: authorization_servers unsupported and no issuer to check", async () => {
     const { requests, out } = await statuses("empty-servers");
-    expect(requests).toEqual([PRM_PATH]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT]);
     expect(out["mcp.prm.authorization-servers"]?.status).toBe("unsupported");
     expect(out["mcp.as.metadata"]?.status).toBe("unknown");
     expect(out["mcp.as.metadata"]?.evidence).toContain("no authorization server named");
@@ -193,10 +211,132 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
   });
 
   it("evidence never exceeds 300 characters", async () => {
-    for (const name of ["complete", "no-prm", "redirect-cross-host", "http-endpoint"]) {
+    for (const name of [
+      "complete",
+      "no-prm",
+      "redirect-cross-host",
+      "http-endpoint",
+      "challenge-pointer",
+      "challenge-neither",
+      "challenge-pointer-private",
+    ]) {
       const { out } = await statuses(name);
       for (const o of Object.values(out)) expect(o.evidence.length).toBeLessThanOrEqual(300);
     }
+  });
+});
+
+describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
+  const PRM_IDS = ["mcp.prm", "mcp.prm.authorization-servers", "mcp.prm.scopes-supported"];
+
+  it("challenge-pointer: no well-known document, the pointer is followed and judged", async () => {
+    const { probe: p, requests, out } = await statuses("challenge-pointer");
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT, POINTER, AS_RFC]);
+    expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("supported");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toBe(
+      `${ENDPOINT} — HTTP 401; WWW-Authenticate resource_metadata: ${POINTER}`,
+    );
+    for (const id of PRM_IDS) {
+      expect(out[id]?.status, id).toBe("supported");
+      expect(out[id]?.evidence, id).toMatch(new RegExp(`^${POINTER} — HTTP 200;`));
+    }
+    expect(out["mcp.as.metadata"]?.status).toBe("supported");
+    expect(p.prm?.location).toBe("challenge");
+    expect(p.pointerOutcome).toBe("found");
+  });
+
+  it("challenge-pointer: the report's grade is not withheld for discovery", async () => {
+    const f = fixture("challenge-pointer");
+    const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
+    expect(report.grade.reasons.join(" ")).not.toMatch(/well-known|challenge/i);
+    expect(report.discovered?.protectedResource?.location).toBe("challenge");
+    expect(report.discovered?.challenge).toEqual({
+      url: ENDPOINT,
+      status: 401,
+      header: `Bearer realm="mcp", resource_metadata="${POINTER}"`,
+      resourceMetadata: POINTER,
+    });
+  });
+
+  it("challenge-no-pointer: a 401 without the parameter is unsupported, quoting the header", async () => {
+    const { requests, out } = await statuses("challenge-no-pointer");
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC]);
+    expect(out["mcp.prm.well-known"]?.status).toBe("supported");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toBe(
+      `${ENDPOINT} — HTTP 401; WWW-Authenticate: Bearer realm="mcp", no resource_metadata parameter`,
+    );
+  });
+
+  it("challenge-no-pointer: the grade is unaffected, because the well-known way is met", async () => {
+    const f = fixture("challenge-no-pointer");
+    const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
+    expect(report.grade.letter).not.toBe("F");
+    expect(report.grade.label).not.toBe("Withheld");
+  });
+
+  it("challenge-neither: both discovery cells unsupported, the grade F naming both", async () => {
+    const f = fixture("challenge-neither");
+    const { out } = await statuses("challenge-neither");
+    expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unsupported");
+    expect(out["mcp.prm"]?.status).toBe("unknown");
+    expect(out["mcp.prm"]?.evidence).toContain("challenge without resource_metadata");
+    const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
+    expect(report.grade.letter).toBe("F");
+    expect(report.grade.reasons).toHaveLength(2);
+  });
+
+  it("challenge-no-header: a 401 without any WWW-Authenticate header is unsupported", async () => {
+    const { out } = await statuses("challenge-no-header");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("WWW-Authenticate: absent");
+  });
+
+  it("challenge-405: any status but 401 is unknown with the status named, nothing else moves", async () => {
+    const { requests, out } = await statuses("challenge-405");
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC]);
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unknown");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("HTTP 405");
+    expect(out["mcp.prm.well-known"]?.status).toBe("supported");
+    expect(out["mcp.as.metadata"]?.status).toBe("supported");
+  });
+
+  it("challenge-timeout: an unreachable endpoint is unknown with the failure named", async () => {
+    const { out } = await statuses("challenge-timeout");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unknown");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("timeout");
+    expect(out["mcp.prm"]?.status).toBe("unknown");
+  });
+
+  it("challenge-pointer-private: a pointer the guard refuses is not fetched", async () => {
+    const guard: Guard = async (url) =>
+      url.startsWith("https://10.")
+        ? { ok: false, reason: "IP addresses are not scanned; use a host name" }
+        : { ok: true, url };
+    const { requests, out } = await statuses("challenge-pointer-private", guard);
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT]);
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("supported");
+    for (const id of PRM_IDS) {
+      expect(out[id]?.status, id).toBe("unknown");
+      expect(out[id]?.evidence, id).toContain("refused (IP addresses are not scanned");
+    }
+  });
+
+  it("challenge-pointer-5xx: a pointer that errors leaves the metadata unknown, never unsupported", async () => {
+    const { requests, out } = await statuses("challenge-pointer-5xx");
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT, POINTER]);
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("supported");
+    expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
+    for (const id of PRM_IDS) expect(out[id]?.status, id).toBe("unknown");
+    expect(out["mcp.prm"]?.evidence).toContain("HTTP 503");
+  });
+
+  it("challenge-pointer-http: a plain-http pointer is refused by the guard, not fetched", async () => {
+    const { requests, out } = await statuses("challenge-pointer-http", guardUrl);
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT]);
+    expect(out["mcp.prm"]?.evidence).toContain("only https: URLs are scanned");
   });
 });
 
@@ -224,7 +364,7 @@ describe("scan() shapes the report (contracts/report.md)", () => {
     expect(report.observations[0]).toMatchObject({
       server: "example",
       method: "passive-scan",
-      observedBy: "scanner@0.1.0",
+      observedBy: OBSERVER,
       observedAt: "2026-10-15T03:17:04Z",
       revision: { spec: "mcp-authorization", revision },
     });
