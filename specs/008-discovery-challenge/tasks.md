@@ -39,7 +39,7 @@ never touch the network in tests.
 - [x] T015 [P] [US2] `src/pages/atlas/mcp/contribute.astro`: replace "twelve" with the count derived from `passiveChecks`
 - [x] T016 [P] [US2] `docs/scanner.md`: what it reads (the endpoint step and the pointer), the request count, the "never does" list, the version bump; `docs/atlas-maintenance.md`: `observable: passive` includes the challenge; `docs/roadmap.md`: 008 implemented (pull request open)
 - [x] T017 [P] [US2] `specs/004-scanner/data-model.md`: a line pointing at the 008 rows and the new probe fields; `specs/004-scanner/contracts/report.md`: the additive fields
-- [ ] T018 [US2] `pnpm check`; `pnpm build && pnpm test:e2e` where Chromium allows; add the `refresh-screenshots` label to the pull request for the scanner page baselines (the check count changed)
+- [x] T018 [US2] `pnpm check`; `pnpm build && pnpm test:e2e` where Chromium allows; add the `refresh-screenshots` label to the pull request for the scanner page baselines (the check count changed)
 
 **Checkpoint**: pages and docs say what the scanner sends; the challenge feature is a report row
 
