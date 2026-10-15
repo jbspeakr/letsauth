@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "build": "pnpm validate:data && astro build",
     "preview": "astro preview",
+    "generate:brand": "tsx scripts/generate-brand-assets.ts",
     "validate:data": "tsx scripts/validate-data.ts",
     "check:append-only": "tsx scripts/check-observations-append-only.ts",
     "scan": "tsx scripts/scan.ts",
