@@ -35,7 +35,8 @@ What one run does, in order:
    observations. Exit 0.
 6. The token is never part of an argument list, a remote URL, the clone's config or any printed
    message: git reads the `Authorization` header from `GIT_CONFIG_*` environment variables, other
-   commands run without the token in their environment, and failure messages are redacted.
+   commands run without the token in their environment, child output is captured rather than
+   inherited, and everything the job writes to stdout and stderr is redacted.
 
 The pull request is opened with a personal token, so CI runs on it like on any other pull
 request. Nothing is merged without review.

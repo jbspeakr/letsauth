@@ -15,10 +15,11 @@
  * without review. Exit 0 when nothing changed or the pull request is up; exit 1 when a step fails.
  *
  * The token never appears in a command line, a remote URL, the clone's config or a log line:
- * git reads the auth header from GIT_CONFIG_* environment variables, and every message printed
- * on failure passes through `redact`.
+ * git reads the auth header from GIT_CONFIG_* environment variables, child processes never write
+ * to the job's output directly (their output is captured and redacted first), and everything
+ * this process writes to stdout and stderr passes through `redact`.
  */
-import { type ExecFileSyncOptions, execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -64,14 +65,45 @@ const gitEnv: NodeJS.ProcessEnv = {
 };
 const safe = (text: string) => redact(text, [token]);
 
-function run(cmd: string, args: string[], options: ExecFileSyncOptions = {}): string {
-  console.log(safe(`$ ${[cmd, ...args].join(" ")}`));
-  // git gets the auth environment; pnpm and the scanner never see the token
-  const env = cmd === "git" ? gitEnv : withoutToken();
-  return String(execFileSync(cmd, args, { stdio: ["ignore", "pipe", "inherit"], env, ...options }));
+// last line of defence: whatever this process prints, by any path, is redacted on the way out
+for (const stream of [process.stdout, process.stderr]) {
+  const write = stream.write.bind(stream) as (chunk: unknown, ...rest: unknown[]) => boolean;
+  stream.write = ((chunk: unknown, ...rest: unknown[]) =>
+    write(
+      typeof chunk === "string" || Buffer.isBuffer(chunk) ? safe(String(chunk)) : chunk,
+      ...rest,
+    )) as typeof stream.write;
 }
 
-const inRepo: ExecFileSyncOptions = { cwd: workdir };
+interface RunOptions {
+  cwd?: string;
+}
+
+/**
+ * Runs a command with its output captured, never inherited, so it reaches the log only through
+ * the redacting streams above. Throws on a non-zero exit with a redacted message.
+ */
+function run(cmd: string, args: string[], options: RunOptions = {}): string {
+  console.log(`$ ${[cmd, ...args].join(" ")}`);
+  // git gets the auth environment; pnpm and the scanner never see the token
+  const env = cmd === "git" ? gitEnv : withoutToken();
+  const result = spawnSync(cmd, args, {
+    cwd: options.cwd,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.error) throw new Error(safe(`${cmd}: ${result.error.message}`));
+  if (result.status !== 0) {
+    throw new Error(safe(`${cmd} ${args[0] ?? ""} exited with ${result.status ?? result.signal}`));
+  }
+  return result.stdout ?? "";
+}
+
+const inRepo: RunOptions = { cwd: workdir };
 
 async function main(): Promise<void> {
   try {
@@ -89,16 +121,13 @@ async function main(): Promise<void> {
 
     // a refused or failing server exits 1 but the others are still written; the summary says which
     try {
-      run("pnpm", ["scan", "--all", "--write", "--summary", "scan-summary.md"], {
-        ...inRepo,
-        stdio: "inherit",
-      });
+      run("pnpm", ["scan", "--all", "--write", "--summary", "scan-summary.md"], inRepo);
     } catch {
       console.warn("some servers could not be scanned; see the summary");
     }
 
-    run("pnpm", ["validate:data"], { ...inRepo, stdio: "inherit" });
-    run("pnpm", ["check:append-only", "HEAD"], { ...inRepo, stdio: "inherit" });
+    run("pnpm", ["validate:data"], inRepo);
+    run("pnpm", ["check:append-only", "HEAD"], inRepo);
 
     const changed = run("git", ["status", "--porcelain", "--", "data/observations"], inRepo).trim();
     if (!changed) {

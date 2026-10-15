@@ -64,8 +64,9 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
    branches: each run compares against `main`, so the newest pull request carries everything.
 
 The token never appears in a command line, a remote URL or a log: git reads the auth header from
-`GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, and failure messages
-are redacted. If a token ever does reach a log or a chat, revoke it on GitHub and replace the
+`GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, every child process's
+output is captured rather than inherited, and everything the job prints passes through a redactor
+that removes the token and its basic-auth form. If a token ever does reach a log or a chat, revoke it on GitHub and replace the
 `SCANNER_TOKEN` secret in Scaleway.
 
 The pull request is opened with a personal token, so CI runs on it like on any other. Nothing is
