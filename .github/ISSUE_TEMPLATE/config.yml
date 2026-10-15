@@ -3,3 +3,6 @@ contact_links:
   - name: How to contribute
     url: https://letsauth.eu/atlas/mcp/contribute
     about: The entry format, the append-only rule and how withdrawal works.
+  - name: Contributing guide
+    url: https://github.com/jbspeakr/letsauth/blob/main/CONTRIBUTING.md
+    about: Data rules, code conventions and what a pull request needs.

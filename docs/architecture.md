@@ -1,0 +1,111 @@
+# Architecture
+
+letsauth.eu is a static site rendered from one dataset, plus one scheduled job that feeds that
+dataset. This page describes the pieces and how data moves between them. The rules behind the
+design are in the [constitution](../.specify/memory/constitution.md); the model is in
+[`data-model.md`](data-model.md).
+
+## One model, many views
+
+Every product on the site is a view on the same entities:
+
+| Entity | Files | What it is |
+|---|---|---|
+| Spec and revision | `data/specs/<id>.yaml` | A specification, draft or EU act with its publisher, maturity and dated revisions. Exactly one revision is `current`. |
+| Feature | `data/features/<id>.yaml` | One requirement of the MCP Authorization spec, with the level (MUST, SHOULD, MAY) it has in each revision that defines it and the section it comes from. |
+| Server | `data/servers/<id>.yaml` | A public MCP server: URL, transport, why it is listed, what its vendor claims. |
+| Observation | `data/observations/<server>.yaml` | A dated statement that a server has a status for a feature under a revision, with a method (`manual`, `vendor-claim`, `passive-scan`, `active-scan`) and evidence. Append-only. |
+| Relation | `data/relations.yaml` | One edge between two specs: `builds-on`, `profiles`, `references`, `replaces`, `competes-with`, `solves-same-problem-as`. |
+
+`src/schema/` is the executable form of the model (Zod). `src/lib/data.ts` loads every file,
+validates it and cross-checks references; `scripts/validate-data.ts` runs the same checks from
+the command line and in CI. A product that needs a field the model lacks amends the model first.
+
+## Data flow
+
+```
+ specifications ─┐                                    ┌─▶ /atlas/mcp        matrix, server, feature, revision pages
+ vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /atlas/standards  the standards map
+ nightly scanner ┘        ▲                           ├─▶ /scanner          report per server, grade
+                          │                           └─▶ *.json            exports under CC BY 4.0
+                   review: CI green,
+                   evidence opened
+```
+
+- **In.** Specifications are entered from the publisher's page. Observations come from reading
+  vendor documentation by hand (`vendor-claim`, `manual`) or from the scanner (`passive-scan`).
+  Both arrive as pull requests; nothing writes to `data/` directly.
+- **Build.** `astro build` pre-renders every page from the dataset. The build contacts no server:
+  nothing under `src/` except `src/scanner/` may fetch, and the site never imports that code.
+  Citations are resolved at build time and a dangling one fails the build.
+- **Out.** HTML pages, one JSON export per atlas and one per scanner report, a sitemap, and a
+  Pagefind index for search. Everything is static files.
+
+## Repository layout
+
+```
+data/            the dataset: specs, features, servers, observations, relations (YAML)
+docs/            this documentation, the roadmap and the research notes
+public/          static assets copied as is: brand SVGs, favicon, social card, robots.txt
+scripts/         command-line entry points: validate-data, scan, scan-nightly, append-only check,
+                 and the generators for brand and README assets
+specs/           Spec Kit artifacts per feature: spec, plan, tasks, contracts
+src/
+  components/    Astro components and the Svelte islands (matrix, standards map, scan report)
+  layouts/       Base (header, footer, theme) and Document (long-form pages)
+  lib/           pure functions over the dataset: atlas matrix, standards graph, exports, citations
+  pages/         routes; file-system routing, every page pre-rendered
+  scanner/       the passive scanner: url guard, fetch, checks, grade, observations, nightly job
+  schema/        Zod schemas, the contract for data/
+  styles/        tokens.css (the one token system), global.css (shared surfaces), fonts.css
+tests/
+  unit/          Vitest over src/lib and src/scanner, with fixtures
+  e2e/           Playwright against the built site, with screenshot baselines
+.specify/        the constitution and the Spec Kit templates and scripts
+.github/         CI, deploy, scanner deploy and screenshot workflows; issue and PR templates
+```
+
+## The site
+
+- **Astro 7** with strict TypeScript. Content is data-driven: the pages under `src/pages/atlas/`
+  and `src/pages/scanner/` are generated from the dataset at build time.
+- **Svelte 5** islands only where interaction needs them: the matrix filters, the standards map
+  and the scan report. Every page reads fully without JavaScript, and no page ships more than
+  150 kB of compressed JavaScript.
+- **One design token system** in `src/styles/tokens.css`. Colours are OKLCH pairs resolved with
+  `light-dark()`; `data-theme` only flips `color-scheme`. Type is Bricolage Grotesque for
+  headlines, Geist for text, Geist Mono for ids and code, all self-hosted.
+- **Status glyphs** are one component, `StatusCell`: observed statuses are filled chips, a recorded
+  `unknown` is a dashed ring, a derived status (no observation) a faint dot. The distinction is
+  the honesty of the atlas and is kept everywhere.
+- **Budgets** are enforced in CI with Lighthouse: performance and accessibility at or above 95 on
+  the atlas, the standards map and the scanner pages. WCAG 2.2 AA, both themes, reduced motion,
+  phone width without horizontal scroll.
+- **Search** is Pagefind, built from the rendered pages.
+
+## The scanner
+
+The scanner is the one backend and the only code that contacts third-party servers. It reads
+public OAuth metadata (the protected-resource and authorization-server well-known documents and
+the `WWW-Authenticate` challenge), never a token, a body or an authorization flow, and judges each
+passively observable requirement of the current MCP Authorization revision. It runs in exactly
+one place: a Scaleway Serverless Job in an EU region, every night, from the image `Dockerfile`
+builds. A run writes observations and opens one pull request; nothing on the site triggers a
+scan. [`scanner.md`](scanner.md) has the request list, the grade and the job.
+
+## Hosting and delivery
+
+- The site is uploaded to a Bunny Storage Zone in the EU and served by a Bunny CDN pull zone.
+  `.github/workflows/deploy.yml` runs after CI has passed on `main`, never on a red commit.
+  [`deploy.md`](deploy.md) has the setup.
+- The scanner image goes to Scaleway's container registry through
+  `.github/workflows/scanner-deploy.yml`, also only after a green CI run.
+- Analytics is Plausible (EU), emitted only when `PUBLIC_PLAUSIBLE_DOMAIN` is set. No cookies
+  that require consent, no other third-party script.
+
+## Workflow
+
+Work follows [Spec Kit](https://github.com/github/spec-kit): constitution, then a feature spec,
+a plan with a constitution check, tasks, implementation. One feature per product under `specs/`.
+The [roadmap](roadmap.md) orders the features and records their status. Releases are continuous:
+every merge to `main` deploys.
