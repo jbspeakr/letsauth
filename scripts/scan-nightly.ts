@@ -10,15 +10,27 @@
  *
  * Steps: shallow-clone the base branch, install, `pnpm scan --all --write --summary`, validate
  * the data and the append-only rule, and when anything under data/observations changed commit
- * to scanner/<date>, push and open (or update) one pull request whose description is the run
- * summary. Nothing is merged without review. Exit 0 when nothing changed or the pull request is
- * up; exit 1 when a step fails.
+ * to a new branch scanner/<date>-<hhmm>, push it, open one pull request whose description is the
+ * run summary, and close the older open scanner pull requests it supersedes. Nothing is merged
+ * without review. Exit 0 when nothing changed or the pull request is up; exit 1 when a step fails.
+ *
+ * The token never appears in a command line, a remote URL, the clone's config or a log line:
+ * git reads the auth header from GIT_CONFIG_* environment variables, child processes never write
+ * to the job's output directly (their output is captured and redacted first), and everything
+ * this process writes to stdout and stderr passes through `redact`.
  */
-import { type ExecFileSyncOptions, execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { branchFor, commitMessage, upsertPullRequest } from "../src/scanner/nightly";
+import {
+  branchFor,
+  closeSuperseded,
+  commitMessage,
+  redact,
+  runStamp,
+  upsertPullRequest,
+} from "../src/scanner/nightly";
 
 function requireToken(): string {
   const value = process.env.SCANNER_TOKEN;
@@ -33,26 +45,69 @@ const token = requireToken();
 const repo = process.env.SCANNER_REPO ?? "jbspeakr/letsauth";
 const base = process.env.SCANNER_BASE ?? "main";
 const workdir = process.env.SCANNER_WORKDIR ?? mkdtempSync(join(tmpdir(), "letsauth-scan-"));
-const date = new Date().toISOString().slice(0, 10);
-const branch = branchFor(date);
+const now = new Date();
+const stamp = runStamp(now);
+const branch = branchFor(now);
 
-// git authenticates with the token in an extra header, so the token never lands in a remote URL
-// or in the clone's config
-const auth = `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
-const gitAuth = ["-c", `http.https://github.com/.extraheader=${auth}`];
-
-function run(cmd: string, args: string[], options: ExecFileSyncOptions = {}): string {
-  const printable = [cmd, ...args].map((a) => (a.includes(auth) ? "-c http.extraheader=***" : a));
-  console.log(`$ ${printable.join(" ")}`);
-  return String(execFileSync(cmd, args, { stdio: ["ignore", "pipe", "inherit"], ...options }));
+function withoutToken(): NodeJS.ProcessEnv {
+  const { SCANNER_TOKEN: _, ...rest } = process.env;
+  return rest;
 }
 
-const inRepo: ExecFileSyncOptions = { cwd: workdir };
+// git takes the auth header from the environment (GIT_CONFIG_COUNT/KEY/VALUE), so it is never
+// part of an argument list that an error message or a process listing could show
+const gitEnv: NodeJS.ProcessEnv = {
+  ...withoutToken(),
+  GIT_CONFIG_COUNT: "1",
+  GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+  GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`,
+  GIT_TERMINAL_PROMPT: "0",
+};
+const safe = (text: string) => redact(text, [token]);
+
+// last line of defence: whatever this process prints, by any path, is redacted on the way out
+for (const stream of [process.stdout, process.stderr]) {
+  const write = stream.write.bind(stream) as (chunk: unknown, ...rest: unknown[]) => boolean;
+  stream.write = ((chunk: unknown, ...rest: unknown[]) =>
+    write(
+      typeof chunk === "string" || Buffer.isBuffer(chunk) ? safe(String(chunk)) : chunk,
+      ...rest,
+    )) as typeof stream.write;
+}
+
+interface RunOptions {
+  cwd?: string;
+}
+
+/**
+ * Runs a command with its output captured, never inherited, so it reaches the log only through
+ * the redacting streams above. Throws on a non-zero exit with a redacted message.
+ */
+function run(cmd: string, args: string[], options: RunOptions = {}): string {
+  console.log(`$ ${[cmd, ...args].join(" ")}`);
+  // git gets the auth environment; pnpm and the scanner never see the token
+  const env = cmd === "git" ? gitEnv : withoutToken();
+  const result = spawnSync(cmd, args, {
+    cwd: options.cwd,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.error) throw new Error(safe(`${cmd}: ${result.error.message}`));
+  if (result.status !== 0) {
+    throw new Error(safe(`${cmd} ${args[0] ?? ""} exited with ${result.status ?? result.signal}`));
+  }
+  return result.stdout ?? "";
+}
+
+const inRepo: RunOptions = { cwd: workdir };
 
 async function main(): Promise<void> {
   try {
     run("git", [
-      ...gitAuth,
       "clone",
       "--depth",
       "1",
@@ -66,16 +121,13 @@ async function main(): Promise<void> {
 
     // a refused or failing server exits 1 but the others are still written; the summary says which
     try {
-      run("pnpm", ["scan", "--all", "--write", "--summary", "scan-summary.md"], {
-        ...inRepo,
-        stdio: "inherit",
-      });
+      run("pnpm", ["scan", "--all", "--write", "--summary", "scan-summary.md"], inRepo);
     } catch {
       console.warn("some servers could not be scanned; see the summary");
     }
 
-    run("pnpm", ["validate:data"], { ...inRepo, stdio: "inherit" });
-    run("pnpm", ["check:append-only", "HEAD"], { ...inRepo, stdio: "inherit" });
+    run("pnpm", ["validate:data"], inRepo);
+    run("pnpm", ["check:append-only", "HEAD"], inRepo);
 
     const changed = run("git", ["status", "--porcelain", "--", "data/observations"], inRepo).trim();
     if (!changed) {
@@ -88,21 +140,25 @@ async function main(): Promise<void> {
     run("git", ["config", "user.email", "scanner@letsauth.eu"], inRepo);
     run("git", ["checkout", "-B", branch], inRepo);
     run("git", ["add", "data/observations"], inRepo);
-    run("git", ["commit", "-q", "-m", commitMessage(date, summary)], inRepo);
-    run("git", [...gitAuth, "push", "--force-with-lease", "origin", branch], inRepo);
+    run("git", ["commit", "-q", "-m", commitMessage(stamp, summary)], inRepo);
+    // a new branch per run: a plain push, nothing to overwrite
+    run("git", ["push", "origin", `HEAD:refs/heads/${branch}`], inRepo);
 
     const pr = await upsertPullRequest({
       repo,
       token,
       head: branch,
       base,
-      title: `Scanner: ${date}`,
+      title: `Scanner: ${stamp}`,
       body: summary,
       labels: ["data"],
     });
     console.log(`${pr.action} pull request #${pr.number}: ${pr.url}`);
+    const closed = await closeSuperseded({ repo, token, base, keep: pr.number });
+    if (closed.length > 0)
+      console.log(`closed superseded: ${closed.map((n) => `#${n}`).join(", ")}`);
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(safe(error instanceof Error ? error.message : String(error)));
     process.exit(1);
   } finally {
     if (!process.env.SCANNER_WORKDIR) rmSync(workdir, { recursive: true, force: true });

@@ -57,9 +57,17 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 3. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
    is pushed;
 4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
-5. otherwise commits to `scanner/<date>`, pushes, and opens one pull request `Scanner: <date>`
-   whose description is the run summary (per server the grade, the cells appended and the checks
-   that could not be judged), or updates the open pull request for that branch.
+5. otherwise commits to a new branch `scanner/<date>-<hhmm>` (UTC), pushes it, and opens one pull
+   request `Scanner: <date> <hh:mm> UTC` whose description is the run summary (per server the
+   grade, the cells appended and the checks that could not be judged);
+6. closes the older open scanner pull requests with a "superseded by" comment and deletes their
+   branches: each run compares against `main`, so the newest pull request carries everything.
+
+The token never appears in a command line, a remote URL or a log: git reads the auth header from
+`GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, every child process's
+output is captured rather than inherited, and everything the job prints passes through a redactor
+that removes the token and its basic-auth form. If a token ever does reach a log or a chat, revoke it on GitHub and replace the
+`SCANNER_TOKEN` secret in Scaleway.
 
 The pull request is opened with a personal token, so CI runs on it like on any other. Nothing is
 merged without review. `specs/004-scanner/contracts/job.md` is the contract.

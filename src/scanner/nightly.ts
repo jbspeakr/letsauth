@@ -12,7 +12,7 @@ export interface PullRequestOptions {
   repo: string;
   /** a fine-grained token with contents and pull requests write on the repository */
   token: string;
-  /** the branch the run pushed, e.g. `scanner/2026-10-14` */
+  /** the branch the run pushed, e.g. `scanner/2026-10-14-0317` */
   head: string;
   /** the base branch, normally `main` */
   base: string;
@@ -107,12 +107,100 @@ export async function upsertPullRequest(options: PullRequestOptions): Promise<Pu
   return { action: "created", number: created.number, url: created.html_url };
 }
 
-/** The commit message of a nightly run: subject line, blank line, the summary. */
-export function commitMessage(date: string, summary: string): string {
-  return `Scanner: observations from the run of ${date}\n\n${summary.trim()}\n`;
+interface OpenPullJson {
+  number: number;
+  head: { ref: string };
 }
 
-/** The branch a run of `date` pushes to. */
-export function branchFor(date: string): string {
-  return `scanner/${date}`;
+/**
+ * Closes the other open scanner pull requests: every run diffs against the base branch, so the
+ * newest pull request carries everything an older unmerged one did. Comments, closes and deletes
+ * the old branch; a failure on one of them is reported, never fatal (the new pull request is up).
+ */
+export async function closeSuperseded(options: {
+  repo: string;
+  token: string;
+  base: string;
+  keep: number;
+  prefix?: string;
+  fetch?: FetchLike;
+  apiBase?: string;
+}): Promise<number[]> {
+  const fetchImpl = options.fetch ?? fetch;
+  const api = (options.apiBase ?? "https://api.github.com").replace(/\/+$/, "");
+  const prefix = options.prefix ?? "scanner/";
+  const h = headers(options.token);
+  const base = `${api}/repos/${options.repo}`;
+  const open = (await expectOk(
+    await fetchImpl(
+      `${base}/pulls?state=open&base=${encodeURIComponent(options.base)}&per_page=100`,
+      {
+        headers: h,
+      },
+    ),
+    "listing open pull requests",
+  )) as OpenPullJson[];
+  const closed: number[] = [];
+  for (const pr of open) {
+    if (pr.number === options.keep || !pr.head.ref.startsWith(prefix)) continue;
+    try {
+      await fetchImpl(`${base}/issues/${pr.number}/comments`, {
+        method: "POST",
+        headers: h,
+        body: JSON.stringify({
+          body: `Superseded by #${options.keep}, which carries this run's observations too.`,
+        }),
+      });
+      await expectOk(
+        await fetchImpl(`${base}/pulls/${pr.number}`, {
+          method: "PATCH",
+          headers: h,
+          body: JSON.stringify({ state: "closed" }),
+        }),
+        `closing #${pr.number}`,
+      );
+      await fetchImpl(
+        `${base}/git/refs/heads/${pr.head.ref.split("/").map(encodeURIComponent).join("/")}`,
+        {
+          method: "DELETE",
+          headers: h,
+        },
+      );
+      closed.push(pr.number);
+    } catch (error) {
+      console.warn(error instanceof Error ? error.message : String(error));
+    }
+  }
+  return closed;
+}
+
+/** Replaces every secret (and its base64 forms in an Authorization header) in `text` with ***. */
+export function redact(text: string, secrets: readonly string[]): string {
+  let out = text;
+  for (const secret of secrets) {
+    if (!secret) continue;
+    for (const form of [secret, Buffer.from(`x-access-token:${secret}`).toString("base64")]) {
+      out = out.split(form).join("***");
+    }
+  }
+  return out;
+}
+
+/** The commit message of a nightly run: subject line, blank line, the summary. */
+export function commitMessage(stamp: string, summary: string): string {
+  return `Scanner: observations from the run of ${stamp}\n\n${summary.trim()}\n`;
+}
+
+/** `2026-10-15 03:17 UTC` for a run started at `now`. */
+export function runStamp(now: Date): string {
+  return `${now.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
+/**
+ * The branch a run started at `now` pushes to, e.g. `scanner/2026-10-15-0317`. Unique per run
+ * (to the minute; the job runs with concurrency 1), so a push never has to overwrite a branch.
+ */
+export function branchFor(now: Date): string {
+  const iso = now.toISOString();
+  return `scanner/${iso.slice(0, 10)}-${iso.slice(11, 13)}${iso.slice(14, 16)}`;
 }
