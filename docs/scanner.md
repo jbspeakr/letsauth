@@ -138,7 +138,8 @@ the image forward, so those settings stay where the owner put them.
 
 ## The grade
 
-Shown on report pages and the scanner index, never used to sort or rank:
+Shown on report pages, on atlas server pages and next to each server name in the atlas matrix,
+never used to sort or rank:
 
 1. F when a MUST-level check is unsupported or partial.
 2. Withheld (no letter) when a MUST-level check is unknown.

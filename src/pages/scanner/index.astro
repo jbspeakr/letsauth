@@ -1,5 +1,4 @@
 ---
-import GradeBadge from "@/components/GradeBadge.astro";
 import Base from "@/layouts/Base.astro";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
@@ -19,7 +18,7 @@ const issue = `${repo}/issues/new?template=observation.yml`;
 
 <Base
   title="Scanner"
-  description={`The passive scanner behind the MCP auth atlas: what it reads, how it grades, and the latest report for each of the ${facts.servers} listed servers against MCP Authorization ${revision.id}.`}
+  description={`The passive scanner behind the MCP auth atlas: what it reads, how it grades, and where its reports for the ${facts.servers} listed servers show against MCP Authorization ${revision.id}.`}
   path="/scanner/"
 >
   <div class="wrap">
@@ -115,56 +114,18 @@ const issue = `${repo}/issues/new?template=observation.yml`;
       </div>
     </section>
 
-    <section class="index" aria-labelledby="index-title">
-      <h2 id="index-title">Latest report per listed server</h2>
-      <p class="muted">
-        Alphabetical. A server without a scanner observation reads "not scanned": the nightly run
-        has not yet been able to read its metadata, or has not run since it was listed.
+    <section class="where" aria-labelledby="where-title">
+      <h2 id="where-title">Where the results show</h2>
+      <p>
+        The scanner has no list of its own. Its results live in the
+        <a href="/atlas/mcp/">MCP auth atlas</a>: the letter next to each server name in the matrix is
+        that server's latest grade, and every <a href="/atlas/mcp/servers/">server page</a> carries the
+        same grade with a link to the full report at <code>/scanner/&lt;server&gt;/</code>, which lists
+        each of the {checks.length} checks with the metadata it read. A server without a scanner
+        observation reads "not scanned": the nightly run has not yet been able to read its metadata, or
+        has not run since it was listed. Open servers and servers behind an API key read "no OAuth"
+        and are not scanned.
       </p>
-      <div class="table-wrap">
-        <table id="scanner-index">
-          <thead>
-            <tr>
-              <th scope="col">Server</th>
-              <th scope="col">Grade</th>
-              <th scope="col">Newest scan</th>
-              <th scope="col">Unknown</th>
-              <th scope="col">Report</th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              views.map((v) => (
-                <tr data-server={v.server.id} data-grade={v.grade.letter ?? v.grade.label}>
-                  <th scope="row">
-                    <a href={`/scanner/${v.server.id}/`}>{v.server.name}</a>
-                    <span class="meta">
-                      <code>{v.server.url}</code>
-                    </span>
-                  </th>
-                  <td>
-                    <GradeBadge grade={v.grade} />
-                  </td>
-                  <td>
-                    {v.scannedAt ? (
-                      <time datetime={v.scannedAt}>{v.scannedAt.slice(0, 10)}</time>
-                    ) : (
-                      <span class="muted">–</span>
-                    )}
-                  </td>
-                  <td class="num">
-                    {v.scanned ? v.checks.filter((c) => c.status === "unknown").length : <span class="muted">–</span>}
-                  </td>
-                  <td>
-                    <a href={`/scanner/${v.server.id}/`}>Report</a> ·{" "}
-                    <a href={`/scanner/${v.server.id}.json`}>JSON</a>
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-      </div>
     </section>
 
     <div class="split">
@@ -247,12 +208,19 @@ pnpm scan notion --write                # append what the nightly rule would</co
     color: var(--ink-muted);
   }
   .how,
-  .index {
+  .where {
     margin-bottom: var(--space-7);
   }
   .how h2,
-  .index h2 {
+  .where h2 {
     font-size: var(--text-xl);
+  }
+  .where p {
+    max-width: 70ch;
+    color: var(--ink-muted);
+  }
+  .where a {
+    color: var(--ink);
   }
   .how__grid {
     display: grid;
@@ -283,58 +251,6 @@ pnpm scan notion --write                # append what the nightly rule would</co
   }
   .muted {
     color: var(--ink-muted);
-  }
-  .table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--bg-elevated);
-    box-shadow: var(--shadow-sm), var(--inset-highlight);
-  }
-  #scanner-index {
-    margin: 0;
-  }
-  #scanner-index thead th {
-    background: var(--bg-sunken);
-    border-bottom: 1px solid var(--line);
-    padding-block: var(--space-2);
-  }
-  #scanner-index th,
-  #scanner-index td {
-    padding-inline: var(--space-4);
-    border-bottom-color: var(--line-soft);
-  }
-  #scanner-index tbody tr:last-child > * {
-    border-bottom: 0;
-  }
-  #scanner-index tbody tr:hover > * {
-    background: color-mix(in oklch, var(--accent-soft) 40%, transparent);
-  }
-  #scanner-index th[scope="row"] {
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--ink);
-  }
-  #scanner-index th[scope="row"] > a {
-    color: var(--ink);
-    text-decoration: none;
-  }
-  #scanner-index th[scope="row"] > a:hover {
-    color: var(--accent);
-    text-decoration: underline;
-  }
-  .meta {
-    display: block;
-    font-weight: 400;
-    font-size: var(--text-xs);
-    color: var(--ink-muted);
-    margin-top: var(--space-1);
-  }
-  .meta code {
-    font-size: 0.85em;
-    overflow-wrap: anywhere;
   }
   .split {
     display: grid;

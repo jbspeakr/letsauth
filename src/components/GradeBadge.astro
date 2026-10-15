@@ -3,8 +3,8 @@ import type { Grade } from "@/scanner/grade";
 
 interface Props {
   grade: Grade;
-  /** "small" for table cells; "label" adds the word "Grade". */
-  variant?: "small" | "label";
+  /** "small" for table cells; "label" adds the word "Grade"; "cell" is the letter box alone. */
+  variant?: "small" | "label" | "cell";
 }
 
 const { grade, variant = "small" } = Astro.props;
@@ -60,6 +60,19 @@ const title = grade.reasons.length > 0 ? grade.reasons.join(" ") : word;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
+  }
+  .badge.cell .word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .badge.cell .letter {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: var(--text-sm);
   }
   .badge.small.badge-none .word {
     position: static;
