@@ -228,3 +228,123 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as Open; no OAuth authorization server is involved."
+- server: deepwiki
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; not at either well-known location (path-aware HTTP 404, root HTTP 404)
+- server: deepwiki
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)
+- server: deepwiki
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://mcp.deepwiki.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404)

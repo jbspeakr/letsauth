@@ -8,3 +8,123 @@
   observedAt: "2026-10-13T00:00:00Z"
   observedBy: jbspeakr
   evidence: "https://github.com/jaw9c/awesome-remote-mcp-servers lists the server as OAuth 2.1 without saying whether Dynamic Client Registration is offered."
+- server: cloudflare-workers
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-protected-resource/sse — HTTP 200; resource: https://bindings.mcp.cloudflare.com/sse"
+- server: cloudflare-workers
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-protected-resource/sse — HTTP 200; authorization_servers: [https://bindings.mcp.cloudflare.com]"
+- server: cloudflare-workers
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-protected-resource/sse — HTTP 200; scopes_supported: absent"
+- server: cloudflare-workers
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://bindings.mcp.cloudflare.com/.well-known/oauth-protected-resource/sse — HTTP 200; found at the path-aware location
+- server: cloudflare-workers
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-protected-resource/sse — HTTP 200; scopes_supported: absent, so no scope is advertised to judge"
+- server: cloudflare-workers
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://bindings.mcp.cloudflare.com equals the issuer the PRM named"
+- server: cloudflare-workers
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; issuer: https://bindings.mcp.cloudflare.com"
+- server: cloudflare-workers
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; client_id_metadata_document_supported: false"
+- server: cloudflare-workers
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; registration_endpoint: https://bindings.mcp.cloudflare.com/register"
+- server: cloudflare-workers
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; authorization_response_iss_parameter_supported: true"
+- server: cloudflare-workers
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: "https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; code_challenge_methods_supported: [S256]"
+- server: cloudflare-workers
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: supported
+  method: passive-scan
+  observedAt: 2026-10-15T01:18:22Z
+  observedBy: scanner@0.1.0
+  evidence: https://bindings.mcp.cloudflare.com/.well-known/oauth-authorization-server — HTTP 200; all 4 endpoints use https
