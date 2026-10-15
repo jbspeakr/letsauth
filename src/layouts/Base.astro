@@ -30,6 +30,7 @@ const footerGroups = [
     links: [
       { href: "/atlas/mcp/", label: "MCP auth atlas" },
       { href: "/atlas/standards/", label: "Agent auth atlas" },
+      { href: "/explorer/", label: "Delegation chain explorer" },
       { href: "/scanner/", label: "Scanner" },
     ],
   },
@@ -38,6 +39,7 @@ const footerGroups = [
     links: [
       { href: "/atlas/mcp/data.json", label: "MCP atlas (JSON)" },
       { href: "/atlas/standards/data.json", label: "Standards (JSON)" },
+      { href: "/explorer/data.json", label: "Scenarios (JSON)" },
       { href: "/atlas/mcp/contribute/", label: "Contribute" },
       { href: REPO, label: "Source on GitHub", external: true },
     ],
@@ -63,6 +65,12 @@ const nav = [
     label: "Agent auth atlas",
     short: "Standards",
     match: (p: string) => p.startsWith("/atlas/standards/"),
+  },
+  {
+    href: "/explorer/",
+    label: "Explorer",
+    short: "Explore",
+    match: (p: string) => p.startsWith("/explorer/"),
   },
   {
     href: "/scanner/",

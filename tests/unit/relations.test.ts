@@ -24,6 +24,8 @@ function dataset(relations: Relation[]): Dataset {
     servers: [],
     observations: [],
     relations,
+    scenarios: [],
+    vulnerabilities: [],
   };
 }
 

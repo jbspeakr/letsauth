@@ -13,6 +13,10 @@ Live:
   specifications, drafts and EU acts behind agent authorization as one map of what builds on,
   profiles, competes with and replaces what, with maturity and dated revisions per document.
   Data export: [`/atlas/standards/data.json`](https://letsauth.eu/atlas/standards/data.json).
+- [letsauth.eu/explorer](https://letsauth.eu/explorer/), the delegation chain explorer: scenarios
+  of how authority travels from a person to an agent to an API, step by step, with the decoded
+  token at each hop and toggles for the attacks and misconfigurations that break the chain. Every
+  step cites a specification revision. Data export: [`/explorer/data.json`](https://letsauth.eu/explorer/data.json).
 - [letsauth.eu/scanner](https://letsauth.eu/scanner/), the passive scanner: reads each listed
   server's public OAuth metadata, grades it against the MCP Authorization specification and
   opens a nightly pull request of observations. Report per server at `/scanner/<id>/` and

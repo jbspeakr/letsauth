@@ -1,0 +1,234 @@
+id: mcp-enterprise-idp
+title: An enterprise identity provider brokers the token
+summary: >
+  The same agent host and tasks server, with the company's identity provider deciding who may
+  use which MCP server. The host signs Alex in at the identity provider, exchanges the ID token
+  for an Identity Assertion JWT Authorization Grant (ID-JAG) addressed to the server's
+  authorization server, and presents that grant for an access token. No consent screen at the
+  tasks server: the policy lives at the identity provider.
+actors:
+  - { id: user, kind: user, name: Alex }
+  - { id: client, kind: mcp-client, name: Agent host }
+  - { id: idp, kind: idp, name: Enterprise IdP (idp.corp.example) }
+  - { id: as, kind: authorization-server, name: auth.tasks.example }
+  - { id: server, kind: mcp-server, name: Tasks MCP server }
+features:
+  - mcp.prm.well-known
+  - mcp.prm.authorization-servers
+  - mcp.as.metadata
+  - mcp.rs.bearer-header
+  - mcp.rs.audience-validation
+steps:
+  - id: sign-in
+    from: user
+    to: idp
+    message: "Alex signs in to the agent host with the company's single sign-on"
+    note: >
+      The host is an application the enterprise manages. The identity provider authenticates
+      Alex and issues the host an ID token it keeps for later.
+    cites: { spec: id-jag, revision: draft-04, section: "4.2. User Authentication" }
+  - id: id-token
+    from: idp
+    to: client
+    message: "ID token for the agent host"
+    cites: { spec: id-jag, revision: draft-04, section: "4.2. User Authentication" }
+    token:
+      name: ID token
+      header: { typ: JWT, alg: RS256, kid: idp-2026 }
+      claims:
+        iss: https://idp.corp.example
+        sub: u-48213
+        aud: agent-host
+        email: alex@corp.example
+        exp: 1790000000
+        iat: 1789996400
+  - id: discovery
+    from: client
+    to: server
+    message: "Unauthenticated request, challenge, protected resource metadata and authorization server metadata, as in the baseline chain"
+    note: >
+      Discovery is unchanged: the host learns the server's resource identifier and that
+      auth.tasks.example is its authorization server, and the server declares the
+      enterprise-managed authorization extension.
+    cites: { spec: mcp-enterprise-managed-authorization, revision: stable, section: "Implementation guide › For MCP servers" }
+  - id: jag-request
+    from: client
+    to: idp
+    message: "POST /token: grant_type=token-exchange, subject_token=<ID token>, subject_token_type=id_token, requested_token_type=id-jag, audience=https://auth.tasks.example, resource=https://mcp.tasks.example/mcp, scope=tasks:read"
+    note: >
+      Instead of sending Alex to the tasks server's authorization endpoint, the host asks the
+      identity provider for a grant it can present there. The audience is the resource
+      authorization server, not the MCP server.
+    cites: { spec: id-jag, revision: draft-04, section: "4.3. Token Exchange" }
+  - id: policy
+    from: idp
+    to: idp
+    message: "Evaluate policy: may this user, through this app, reach this server with this scope?"
+    note: >
+      Group membership, the approved-app list and conditional access are checked here, once,
+      centrally. A user without access gets an error and the host never receives a grant.
+    cites: { spec: id-jag, revision: draft-04, section: "4.3.3. Processing Rules" }
+  - id: jag-response
+    from: idp
+    to: client
+    message: "issued_token_type=id-jag with the signed grant"
+    cites: { spec: id-jag, revision: draft-04, section: "4.3.4. Response" }
+    token:
+      name: Identity Assertion JWT Authorization Grant
+      header: { typ: oauth-id-jag+jwt, alg: RS256, kid: idp-2026 }
+      claims:
+        iss: https://idp.corp.example
+        sub: u-48213
+        aud: https://auth.tasks.example
+        client_id: https://agent.example/client.json
+        scope: tasks:read
+        resource: https://mcp.tasks.example/mcp
+        jti: 3a9e
+        exp: 1789996700
+        iat: 1789996400
+      note: The required claims are iss, sub, aud, client_id, jti, exp and iat; scope and resource are optional and carry what the policy allowed.
+  - id: access-token-request
+    from: client
+    to: as
+    message: "POST /token: grant_type=jwt-bearer, assertion=<ID-JAG>, client authentication"
+    note: >
+      The grant is presented as an assertion; the host authenticates with the credentials it
+      holds at this authorization server.
+    cites: { spec: id-jag, revision: draft-04, section: "4.4. Access Token Request" }
+  - id: validate-jag
+    from: as
+    to: as
+    message: "Validate the grant: signature against the IdP's keys, iss is a trusted IdP, aud is this server, exp, jti unused; map sub to an account"
+    note: >
+      The authorization server trusts the identity provider's decision and issues no consent
+      screen of its own.
+    cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }
+  - id: access-token
+    from: as
+    to: client
+    message: "Access token for the tasks server, scope as granted"
+    cites: { spec: id-jag, revision: draft-04, section: "4.4.2. Response" }
+    token:
+      name: Access token for the Tasks MCP server
+      header: { typ: at+jwt, alg: ES256, kid: auth-2026-1 }
+      claims:
+        iss: https://auth.tasks.example
+        sub: alex
+        aud: https://mcp.tasks.example/mcp
+        client_id: https://agent.example/client.json
+        scope: tasks:read
+        exp: 1790000000
+        iat: 1789996800
+        jti: d02f
+  - id: bearer-call
+    from: client
+    to: server
+    message: "POST /mcp (tools/call) with Authorization: Bearer <access token>"
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization › Access Token Usage" }
+    token:
+      name: Access token as presented
+      header: { typ: at+jwt, alg: ES256, kid: auth-2026-1 }
+      claims:
+        iss: https://auth.tasks.example
+        sub: alex
+        aud: https://mcp.tasks.example/mcp
+        client_id: https://agent.example/client.json
+        scope: tasks:read
+        exp: 1790000000
+        iat: 1789996800
+        jti: d02f
+  - id: validate
+    from: server
+    to: server
+    message: "Validate signature, iss, exp and that aud is this server; check scope"
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Security Considerations › Token Audience Binding and Validation" }
+toggles:
+  - id: scope-accumulation
+    name: Scope accumulation
+    kind: misconfiguration
+    summary: >
+      The resource authorization server ignores the scope in the grant and issues the access
+      token with everything the host's client registration allows. The identity provider's
+      policy said tasks:read; the token says tasks:read tasks:write tasks:admin. Each hop that
+      widens scope defeats the one before it.
+    cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }
+    replaces:
+      access-token:
+        - id: widened-token
+          from: as
+          to: client
+          message: "Access token with the client's full registered scope, not the grant's"
+          note: >
+            The grant's scope is the ceiling the identity provider set. A token wider than the
+            grant means the central policy no longer decides what the host may do.
+          cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }
+          token:
+            name: Access token, wider than the grant
+            header: { typ: at+jwt, alg: ES256, kid: auth-2026-1 }
+            claims:
+              iss: https://auth.tasks.example
+              sub: alex
+              aud: https://mcp.tasks.example/mcp
+              client_id: https://agent.example/client.json
+              scope: tasks:read tasks:write tasks:admin
+              exp: 1790000000
+              iat: 1789996800
+              jti: d02f
+      bearer-call:
+        - id: widened-call
+          from: client
+          to: server
+          message: "POST /mcp (tools/call) with the widened token"
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: "Authorization › Access Token Usage" }
+          token:
+            name: Access token as presented
+            header: { typ: at+jwt, alg: ES256, kid: auth-2026-1 }
+            claims:
+              iss: https://auth.tasks.example
+              sub: alex
+              aud: https://mcp.tasks.example/mcp
+              client_id: https://agent.example/client.json
+              scope: tasks:read tasks:write tasks:admin
+              exp: 1790000000
+              iat: 1789996800
+              jti: d02f
+  - id: jag-audience-unchecked
+    name: Grant audience not checked
+    kind: attack
+    summary: >
+      The resource authorization server accepts any grant the identity provider signed, without
+      checking that the grant's audience is itself. A grant the host obtained for a different
+      application's authorization server is presented here and redeemed for a tasks-server
+      token the identity provider never approved.
+    cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }
+    replaces:
+      access-token-request:
+        - id: misdirected-assertion
+          from: client
+          to: as
+          message: "POST /token: grant_type=jwt-bearer, assertion=<an ID-JAG issued for https://auth.notes.example>"
+          note: >
+            The grant is genuine, signed by the trusted identity provider, unexpired, for the
+            right user; only its audience is another server.
+          cites: { spec: id-jag, revision: draft-04, section: "3.1. ID-JAG Claims" }
+          token:
+            name: An ID-JAG for another authorization server
+            header: { typ: oauth-id-jag+jwt, alg: RS256, kid: idp-2026 }
+            claims:
+              iss: https://idp.corp.example
+              sub: u-48213
+              aud: https://auth.notes.example
+              client_id: https://agent.example/client.json
+              scope: notes:read
+              jti: 51c0
+              exp: 1789996700
+              iat: 1789996400
+      validate-jag:
+        - id: validate-jag-without-aud
+          from: as
+          to: as
+          message: "Validate signature, iss, exp and jti; aud is not compared with this server's issuer"
+          note: >
+            With the audience unchecked, one grant from the identity provider opens every
+            authorization server that trusts it.
+          cites: { spec: id-jag, revision: draft-04, section: "4.4.1. Processing Rules" }

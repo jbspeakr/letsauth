@@ -1,0 +1,241 @@
+---
+import Base from "@/layouts/Base.astro";
+import { getDataset } from "@/lib/data";
+import { scenarioList } from "@/lib/explorer";
+import { ACTOR_KIND_LABEL, TOGGLE_KIND_LABEL } from "@/lib/labels";
+
+const data = getDataset();
+const scenarios = scenarioList(data);
+const toggleCount = scenarios.reduce((n, s) => n + s.toggles.length, 0);
+const stepCount = scenarios.reduce((n, s) => n + s.stepCount, 0);
+const citedSpecs = new Set<string>();
+for (const { scenario } of scenarios) {
+  for (const s of scenario.steps) citedSpecs.add(s.cites.spec);
+  for (const t of scenario.toggles) {
+    citedSpecs.add(t.cites.spec);
+    for (const steps of Object.values(t.replaces))
+      for (const s of steps) citedSpecs.add(s.cites.spec);
+  }
+}
+---
+
+<Base
+  title="Delegation chain explorer"
+  description={`Step through how authority flows through agent systems: ${scenarios.length} scenarios, ${stepCount} steps with the decoded token at each hop, and ${toggleCount} attack and misconfiguration toggles, every step citing a specification revision.`}
+  path="/explorer/"
+>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">Delegation chain explorer</p>
+      <h1>Watch authority travel from a person to an agent to an API, one hop at a time</h1>
+      <p class="lede">
+        Each scenario is a chain of requests between a user, agents, MCP servers and
+        authorization servers. Every step cites the specification section it follows and shows
+        the token it carries, decoded, with the claims that changed since the previous hop. Turn
+        an attack or a misconfiguration on to see which steps change and what the token looks
+        like once a control is gone.
+      </p>
+      <dl class="facts" aria-label="Explorer at a glance">
+        <div>
+          <dt>Scenarios</dt>
+          <dd class="num">{scenarios.length}</dd>
+        </div>
+        <div>
+          <dt>Steps</dt>
+          <dd class="num">{stepCount}</dd>
+        </div>
+        <div>
+          <dt>Toggles</dt>
+          <dd class="num">{toggleCount}</dd>
+        </div>
+        <div>
+          <dt>Specifications cited</dt>
+          <dd class="num">{citedSpecs.size}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <ul id="scenario-list" class="scenarios" role="list">
+      {
+        scenarios.map(({ scenario, stepCount, toggles, features }) => (
+          <li class="scenario card" data-scenario={scenario.id}>
+            <h2>
+              <a href={`/explorer/${scenario.id}/`}>{scenario.title}</a>
+            </h2>
+            <p class="scenario__summary">{scenario.summary}</p>
+            <p class="scenario__actors" aria-label="Actors">
+              {scenario.actors.map((a) => (
+                <span class="pill">
+                  <span class="scenario__kind">{ACTOR_KIND_LABEL[a.kind]}</span> {a.name}
+                </span>
+              ))}
+            </p>
+            <p class="scenario__meta">
+              {stepCount} steps · {features.length} requirements exercised
+            </p>
+            {toggles.length > 0 && (
+              <div class="scenario__toggles">
+                <span class="scenario__label">Toggles</span>
+                <ul role="list">
+                  {toggles.map((t) => (
+                    <li>
+                      <a class:list={["toggle", `kind-${t.kind}`]} href={`/explorer/${scenario.id}/${t.id}/`} data-toggle={t.id}>
+                        {t.name}
+                        <span class="toggle__kind">{TOGGLE_KIND_LABEL[t.kind]}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+
+    <section class="about card" aria-labelledby="about-title">
+      <h2 id="about-title">How to read a chain</h2>
+      <p>
+        Actors are columns, steps are arrows. A step's citation is the section of the revision it
+        follows; a step that carries a token shows it decoded, and a claim is marked added or
+        changed when it differs from the token one hop earlier. A toggle replaces or removes
+        steps; the page says which, and names the atlas requirements the toggle defeats so you
+        can see how many listed servers meet them. Scenarios are illustrative of the
+        specifications, not of any product: the domains are examples and no real token is
+        involved.
+      </p>
+      <p>
+        Scenarios are data: one YAML file each, validated at build time against the shared model,
+        open under CC BY 4.0 as <a href="/explorer/data.json">one JSON document</a>. To add or
+        correct one, edit the file in the
+        <a href="https://github.com/jbspeakr/letsauth/tree/main/data/scenarios" rel="noopener">repository</a>.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin: var(--space-4) 0 0;
+  }
+  .facts div {
+    display: grid;
+    gap: 2px;
+  }
+  .facts dt {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .facts dd {
+    margin: 0;
+  }
+  .scenarios {
+    list-style: none;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  .scenario h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-xl);
+  }
+  .scenario h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .scenario h2 a:hover {
+    text-decoration: underline;
+  }
+  .scenario__summary {
+    margin: 0 0 var(--space-3);
+    color: var(--ink-muted);
+  }
+  .scenario__actors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    max-width: none;
+  }
+  .scenario__actors .pill {
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    color: var(--ink);
+  }
+  .scenario__kind {
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .scenario__meta {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+  }
+  .scenario__toggles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .scenario__label {
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .scenario__toggles ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.35em 0.8em;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-elevated);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .toggle:hover {
+    border-color: var(--line-strong);
+  }
+  .toggle.kind-attack .toggle__kind {
+    color: var(--status-unsupported);
+  }
+  .toggle.kind-misconfiguration .toggle__kind {
+    color: var(--status-partial);
+  }
+  .toggle__kind {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .about {
+    margin-top: var(--space-7);
+  }
+  .about h2 {
+    margin-top: 0;
+  }
+</style>

@@ -1,0 +1,193 @@
+---
+import type { ResolvedToken } from "@/lib/explorer";
+import type { TokenValue } from "@/schema";
+
+interface Props {
+  token: ResolvedToken;
+}
+
+const { token } = Astro.props;
+const changeOf = (name: string) =>
+  token.diff.added.includes(name)
+    ? "added"
+    : token.diff.changed.includes(name)
+      ? "changed"
+      : "same";
+const isBlock = (v: TokenValue) => typeof v === "object" && !Array.isArray(v);
+const show = (v: TokenValue) =>
+  Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v, null, 2) : String(v);
+const marks = token.diff.added.length + token.diff.changed.length + token.diff.removed.length;
+---
+
+<div class="token" data-token>
+  <p class="token__name">
+    <span class="token__eyebrow">Token</span>
+    {token.name}
+  </p>
+  {
+    token.header && (
+      <p class="token__header">
+        <span class="token__eyebrow">Header</span>
+        {Object.entries(token.header).map(([k, v]) => (
+          <code
+            data-header={k}
+            data-change={token.headerDiff.added.includes(k) ? "added" : token.headerDiff.changed.includes(k) ? "changed" : "same"}
+          >
+            {k}: {String(v)}
+          </code>
+        ))}
+      </p>
+    )
+  }
+  <dl class="claims">
+    {
+      Object.entries(token.claims).map(([name, value]) => {
+        const change = changeOf(name);
+        return (
+          <div data-claim={name} data-change={change}>
+            <dt>
+              <code>{name}</code>
+              {change !== "same" && <span class:list={["mark", change]}>{change}</span>}
+            </dt>
+            <dd>{isBlock(value) ? <pre>{show(value)}</pre> : <code>{show(value)}</code>}</dd>
+          </div>
+        );
+      })
+    }
+    {
+      token.diff.removed.map((name) => (
+        <div data-removed-claim={name} class="removed">
+          <dt>
+            <code>
+              <s>{name}</s>
+            </code>
+            <span class="mark removed">removed</span>
+          </dt>
+          <dd>no longer in the token</dd>
+        </div>
+      ))
+    }
+  </dl>
+  <p class="token__foot">
+    {marks === 0 ? "No claim changed since the previous token in this chain." : `${marks} claim${marks === 1 ? "" : "s"} differ from the previous token in this chain.`}
+    {token.note && <span class="token__note"> {token.note}</span>}
+  </p>
+</div>
+
+<style>
+  .token {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-sunken);
+    font-size: var(--text-sm);
+  }
+  .token__eyebrow {
+    display: inline-block;
+    margin-right: var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .token__name {
+    margin: 0 0 var(--space-2);
+    font-weight: 600;
+    color: var(--ink);
+    max-width: none;
+  }
+  .token__header {
+    margin: 0 0 var(--space-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    align-items: center;
+    max-width: none;
+  }
+  .token__header code,
+  .claims code,
+  .claims pre {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .token__header code {
+    padding: 0.1em 0.45em;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+    color: var(--ink-muted);
+  }
+  .claims {
+    margin: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .claims > div {
+    display: grid;
+    grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0.3em 0.5em;
+    border-radius: var(--radius-sm);
+    align-items: start;
+  }
+  .claims > div[data-change="added"] {
+    background: var(--status-supported-soft);
+  }
+  .claims > div[data-change="changed"] {
+    background: var(--status-partial-soft);
+  }
+  .claims > div.removed {
+    background: var(--status-unsupported-soft);
+    color: var(--ink-muted);
+  }
+  .claims dt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    color: var(--ink);
+  }
+  .claims dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .claims pre {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+  .mark {
+    font-family: var(--font-body);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.05em 0.5em;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .mark.added {
+    color: var(--status-supported);
+  }
+  .mark.changed {
+    color: var(--status-partial);
+  }
+  .mark.removed {
+    color: var(--status-unsupported);
+  }
+  .token__foot {
+    margin: var(--space-2) 0 0;
+    color: var(--ink-muted);
+    font-size: var(--text-xs);
+    max-width: none;
+  }
+  @media (max-width: 40rem) {
+    .claims > div {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+</style>

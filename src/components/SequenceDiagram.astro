@@ -1,0 +1,220 @@
+---
+import type { Chain } from "@/lib/explorer";
+import { wrapLabel } from "@/lib/graph";
+import { ACTOR_KIND_LABEL } from "@/lib/labels";
+import { HEAD_H, LANE_W, layoutSequence, PAD, SELF_W } from "@/lib/sequence";
+
+interface Props {
+  chain: Chain;
+}
+
+const { chain } = Astro.props;
+const layout = layoutSequence(chain.scenario.actors, chain.steps);
+const { lanes, rows, width, height } = layout;
+const nameOf = new Map(chain.scenario.actors.map((a) => [a.id, a.name]));
+const labelFor = (x1: number, x2: number) =>
+  Math.max(18, Math.floor((Math.abs(x2 - x1) || LANE_W) / 6.2));
+---
+
+<figure class="chain" id="chain-diagram" aria-labelledby="chain-caption">
+  <div class="chain__frame" tabindex="0" role="region" aria-label="Sequence diagram, scrolls horizontally">
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-labelledby="chain-title"
+      data-steps={rows.length}
+    >
+      <title id="chain-title">
+        {chain.scenario.title}: {lanes.length} actors and {rows.length} steps{chain.toggle ? `, with the toggle "${chain.toggle.name}" on` : ""}. The list below carries every step as text.
+      </title>
+      <defs>
+        <marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow" />
+        </marker>
+        <marker id="seq-arrow-toggled" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow arrow-toggled" />
+        </marker>
+      </defs>
+      <g class="lanes" aria-hidden="true">
+        {
+          lanes.map((lane) => {
+            const lines = wrapLabel(lane.actor.name, 20, 2);
+            return (
+              <g class="lane" data-actor={lane.actor.id}>
+                <line x1={lane.x} x2={lane.x} y1={HEAD_H} y2={height - PAD} class="lifeline" />
+                <rect x={lane.x - LANE_W / 2 + 8} y={PAD / 2} width={LANE_W - 16} height={HEAD_H - PAD} rx="8" class="actor-box" />
+                <text x={lane.x} y={PAD / 2 + 18} text-anchor="middle" class="actor-name">
+                  {lines.map((line, i) => (
+                    <tspan x={lane.x} dy={i === 0 ? 0 : 13}>
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+                <text x={lane.x} y={HEAD_H - PAD / 2 - 4} text-anchor="middle" class="actor-kind">
+                  {ACTOR_KIND_LABEL[lane.actor.kind]}
+                </text>
+              </g>
+            );
+          })
+        }
+      </g>
+      <g class="rows">
+        {
+          rows.map((row) => {
+            const s = row.step;
+            const marker = row.toggled && !row.removed ? "url(#seq-arrow-toggled)" : "url(#seq-arrow)";
+            const label = `${s.index} · ${s.message}`;
+            const lines = row.self ? wrapLabel(label, 34, 2) : wrapLabel(label, labelFor(row.x1, row.x2), 2);
+            const mid = (row.x1 + row.x2) / 2;
+            const title = row.self
+              ? `${s.index}. ${nameOf.get(s.from)}, to itself: ${s.message}`
+              : `${s.index}. ${nameOf.get(s.from)} to ${nameOf.get(s.to)}: ${s.message}`;
+            return (
+              <g
+                class:list={["row", { "is-toggled": row.toggled, "is-removed": row.removed, "is-self": row.self }]}
+                data-step={s.id}
+                data-index={s.index}
+              >
+                <title>{title}{row.removed ? " (removed by this toggle)" : ""}</title>
+                <rect x={PAD / 2} y={row.y - 22} width={width - PAD} height={44} rx="6" class="row-bg" />
+                {row.self ? (
+                  <path
+                    d={`M${row.x1},${row.y - 10} h${SELF_W} v20 h-${SELF_W - 4}`}
+                    class="message"
+                    marker-end={marker}
+                  />
+                ) : (
+                  <line x1={row.x1} x2={row.x2} y1={row.y} y2={row.y} class="message" marker-end={marker} />
+                )}
+                <text
+                  x={row.self ? row.x1 + SELF_W + 8 : mid}
+                  y={row.y - (lines.length > 1 ? 17 : 6)}
+                  text-anchor={row.self ? "start" : "middle"}
+                  class="label"
+                >
+                  {lines.map((line, i) => (
+                    <tspan x={row.self ? row.x1 + SELF_W + 8 : mid} dy={i === 0 ? 0 : 12}>
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              </g>
+            );
+          })
+        }
+      </g>
+    </svg>
+  </div>
+  <figcaption id="chain-caption">
+    One column per actor, one arrow per step, in order. Changed steps are drawn in the second
+    accent; a removed step is dashed and struck through. The{" "}
+    <a href="#chain-steps">step list</a> carries the same steps as text, with the citations and
+    the tokens.
+  </figcaption>
+</figure>
+
+<style>
+  .chain {
+    margin: 0 0 var(--space-6);
+  }
+  .chain__frame {
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow), var(--inset-highlight);
+  }
+  .chain__frame:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  svg {
+    display: block;
+    font-family: var(--font-body);
+  }
+  figcaption {
+    margin-top: var(--space-2);
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+    max-width: var(--measure);
+  }
+  .lifeline {
+    stroke: var(--line-strong);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+  .actor-box {
+    fill: var(--bg);
+    stroke: var(--line-strong);
+    stroke-width: 1.2;
+  }
+  .actor-name {
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+  .actor-kind {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--ink-muted);
+  }
+  .row-bg {
+    fill: transparent;
+    transition: fill var(--dur-fast) var(--ease);
+  }
+  .message {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.6;
+  }
+  .arrow {
+    fill: var(--ink);
+  }
+  .arrow-toggled {
+    fill: var(--accent-2);
+  }
+  .label {
+    font-size: 11px;
+    fill: var(--ink);
+    font-family: var(--font-mono);
+    /* a halo in the frame's colour keeps labels legible where they cross a lifeline */
+    stroke: var(--bg-elevated);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    paint-order: stroke fill;
+  }
+  .is-toggled .message {
+    stroke: var(--accent-2);
+    stroke-width: 2.2;
+  }
+  .is-toggled .label {
+    fill: var(--accent-2);
+    font-weight: 600;
+  }
+  .is-removed .message {
+    stroke: var(--ink-faint);
+    stroke-dasharray: 5 4;
+    stroke-width: 1.4;
+  }
+  .is-removed .label {
+    fill: var(--ink-faint);
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+  /* step-through: driven by the island */
+  :global(#chain-diagram .row.is-current .row-bg) {
+    fill: var(--accent-soft);
+  }
+  :global(#chain-diagram .row.is-future) {
+    opacity: 0.45;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row-bg {
+      transition: none;
+    }
+  }
+</style>
