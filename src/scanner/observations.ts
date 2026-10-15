@@ -68,7 +68,7 @@ export function summarise(results: RunResult[], startedAt: string, revisionId: s
   );
   lines.push("");
   lines.push(
-    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public well-known metadata was read; every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`.`,
+    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public metadata was read: the well-known documents, and the challenge the endpoint returns to one unauthenticated request (status and headers only, no body); every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`.`,
   );
   lines.push("");
   lines.push("| Server | Grade | Appended | Could not judge | Notes |");

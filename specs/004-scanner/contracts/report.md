@@ -26,6 +26,7 @@ the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `
   "discovered": {
     "protectedResource": {                 // or null
       "url": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
+      "location": "path-aware",            // "path-aware" | "root" | "challenge" (008)
       "resource": "https://mcp.example.com/mcp",
       "authorizationServers": ["https://auth.example.com"],
       "scopesSupported": ["read", "write"]
@@ -38,6 +39,11 @@ the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `
       "clientIdMetadataDocumentSupported": true,
       "registrationEndpoint": null,
       "authorizationResponseIssParameterSupported": true
+    },
+    "challenge": {                         // the endpoint's answer (008), or null when it gave none
+      "url": "https://mcp.example.com/mcp", "status": 401,
+      "header": "Bearer realm=\"mcp\", resource_metadata=\"https://…\"",
+      "resourceMetadata": "https://…"      // or null
     },
     "othersNotChecked": ["https://auth2.example.com"]   // further issuers in the PRM
   },

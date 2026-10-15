@@ -1,0 +1,8 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/mcp": {
+      "error": "timeout"
+    }
+  }
+}

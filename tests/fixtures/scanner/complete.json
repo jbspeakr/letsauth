@@ -27,6 +27,12 @@
         "client_id_metadata_document_supported": true,
         "authorization_response_iss_parameter_supported": true
       }
+    },
+    "https://mcp.example.com/mcp": {
+      "status": 401,
+      "headers": {
+        "www-authenticate": "Bearer realm=\"mcp\", resource_metadata=\"https://mcp.example.com/.well-known/oauth-protected-resource/mcp\""
+      }
     }
   }
 }

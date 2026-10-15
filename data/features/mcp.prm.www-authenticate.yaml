@@ -5,7 +5,7 @@ description: >
   resource_metadata parameter pointing at the PRM document.
 category: discovery
 party: mcp-server
-observable: active
+observable: passive
 revisions:
   - spec: mcp-authorization
     revision: "2025-11-25"

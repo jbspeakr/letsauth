@@ -1,0 +1,11 @@
+{
+  "target": "https://mcp.example.com/mcp",
+  "responses": {
+    "https://mcp.example.com/mcp": {
+      "status": 401,
+      "headers": {
+        "www-authenticate": "Bearer realm=\"mcp\", resource_metadata=\"https://10.0.0.1/prm\""
+      }
+    }
+  }
+}

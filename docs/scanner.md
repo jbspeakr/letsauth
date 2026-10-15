@@ -1,9 +1,10 @@
 # The scanner
 
-The scanner (roadmap 004, `specs/004-scanner/`) automates what the MCP auth atlas did by hand:
-it reads the public authorization metadata of every listed server, judges the passively
-observable requirements of the current MCP Authorization revision, and writes the result as
-observations, each with the metadata URL it read as evidence. It is the one piece of the project
+The scanner (roadmap 004, `specs/004-scanner/`; the discovery challenge check is roadmap 008,
+`specs/008-discovery-challenge/`) automates what the MCP auth atlas did by hand: it reads the
+public authorization metadata of every listed server, judges the passively observable
+requirements of the current MCP Authorization revision, and writes the result as observations,
+each with the URL it read as evidence. It is the one piece of the project
 that contacts other servers, and it runs in exactly one place: a scheduled job on the project's
 own backend (Scaleway, EU region). Nothing on the site triggers a scan, and the only output of a
 run is a pull request against this repository.
@@ -14,17 +15,29 @@ For a server URL `https://h/p` it fetches, with `GET` over HTTPS and no credenti
 
 1. `https://h/.well-known/oauth-protected-resource/p` (RFC 9728, path-aware), then
    `https://h/.well-known/oauth-protected-resource` (root);
-2. for the first issuer in `authorization_servers`:
+2. `https://h/p` itself, once, with the `Accept` header an MCP client sends and nothing else:
+   only the status and the `WWW-Authenticate` header are read, and the body is cancelled before
+   a byte of it is consumed. A 401 with a `resource_metadata` parameter is the other discovery
+   mechanism the specification allows (`mcp.prm.www-authenticate`); any other status is
+   `unknown`, never a failure;
+3. when step 1 found nothing and step 2 named a `resource_metadata` URL: that document, under
+   the same rules as every other metadata URL (it is guarded like an issuer, so a non-public
+   host or a plain-http pointer is refused and recorded);
+4. for the first issuer in `authorization_servers`:
    `/.well-known/oauth-authorization-server<path>`, `/.well-known/openid-configuration<path>` and
    `<path>/.well-known/openid-configuration` (the three locations the MCP specification names).
 
-That is all: at most five requests, never to the MCP endpoint itself, never with a token, never
-an authorization flow. Redirects are followed only to the same host over HTTPS. URLs that are not
+That is all: at most seven requests, never with a token, never a body, never a protocol message,
+never an authorization flow. The request to the endpoint reads what the specification requires
+the server to tell every client without a token; `specs/008-discovery-challenge/spec.md` says
+why that is still a passive scan under the constitution. Redirects are followed only to the same
+host over HTTPS. URLs that are not
 HTTPS, carry credentials or a port, name an IP address or a local name, or resolve to a private
 address are refused, whether they are a listed server's URL or an issuer found in metadata. The
 `User-Agent` is `letsauth-scanner/<version> (+https://letsauth.eu/scanner/)`.
 
-Every status is decided by the table in `specs/004-scanner/data-model.md`. A document that could
+Every status is decided by the table in `specs/004-scanner/data-model.md` (the challenge row is
+in `specs/008-discovery-challenge/data-model.md`). A document that could
 not be fetched (timeout, connection, TLS, 5xx, refused redirect) makes every check that depends
 on it `unknown`; `unsupported` is written only when a document was fetched and the field is
 absent or wrong. `partial` is written only when some but not all authorization server endpoints
@@ -134,10 +147,12 @@ Shown on report pages and the scanner index, never used to sort or rank:
    check is unknown.
 5. A when every MUST-level and SHOULD-level check is supported.
 
-A MUST the server may meet in either of two ways counts as unknown while the other way is
-unknown. Protected resource metadata missing from both well-known locations may still be
-announced in a `WWW-Authenticate` challenge, which a passive scan does not provoke, so such a
-server is withheld, not failed. MAY-level and deprecated requirements are listed and never change
+A MUST the server may meet in either of two ways is met when either way is supported, and counts
+as unknown while the other way is unknown. Protected resource metadata may be served at a
+well-known location or announced in the `WWW-Authenticate` challenge; the scanner reads both, so
+a server that offers only the challenge is graded, one where the challenge could not be judged
+and the well-known document is missing is withheld, and only a server that offers neither fails
+on discovery. MAY-level and deprecated requirements are listed and never change
 the grade. Servers listed as open or API-key are neither scanned nor graded ("No OAuth").
 
 ## What there is not
@@ -151,5 +166,6 @@ to see their server's report asks for it to be listed; a contributor who wants f
 
 A server owner who does not want their server scanned withdraws it from the atlas through the
 [issue form](https://github.com/jbspeakr/letsauth/issues/new?template=observation.yml) ("withdraw
-my server"); a withdrawn server is never contacted again. The scanner only ever reads the
-well-known documents a server publishes for every client, and identifies itself in every request.
+my server"); a withdrawn server is never contacted again. The scanner only ever reads what a
+server publishes for every client, the well-known documents and the challenge it sends to anyone
+without a token, and identifies itself in every request.

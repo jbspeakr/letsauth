@@ -85,6 +85,42 @@ describe("grade rule (FR-008, SC-004)", () => {
     ).toBe("F");
   });
 
+  it("treats the two discovery mechanisms as alternatives in both directions (008 FR-005)", () => {
+    const wellKnown = {
+      feature: "mcp.prm.well-known",
+      name: "PRM well-known",
+      level: "MUST" as const,
+    };
+    const header = {
+      feature: "mcp.prm.www-authenticate",
+      name: "PRM header",
+      level: "MUST" as const,
+    };
+    const statuses = ["supported", "unsupported", "unknown"] as const;
+    const expected = (a: string, b: string): string => {
+      if (a === "supported" || b === "supported") return "A";
+      if (a === "unknown" || b === "unknown") return "Withheld";
+      return "F";
+    };
+    for (const a of statuses) {
+      for (const b of statuses) {
+        const g = grade([
+          { ...wellKnown, status: a },
+          { ...header, status: b },
+        ]);
+        expect(g.label, `${a} / ${b}`).toBe(expected(a, b));
+      }
+    }
+    // the case the one-directional rule got wrong: a challenge without a pointer next to a
+    // well-known document is not a failure
+    const g = grade([
+      { ...wellKnown, status: "supported" },
+      { ...header, status: "unsupported" },
+    ]);
+    expect(g.letter).toBe("A");
+    expect(g.reasons).not.toContain("MUST-level check unsupported: PRM header");
+  });
+
   it("publishes its rule lines", () => {
     expect(GRADE_RULE).toHaveLength(8);
     const levels: FeatureLevel[] = ["MUST", "SHOULD", "MAY"];

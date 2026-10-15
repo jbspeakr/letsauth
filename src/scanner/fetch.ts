@@ -2,9 +2,14 @@ import type { Guard } from "./guard";
 import { USER_AGENT } from "./version";
 
 /**
- * The one way the scanner talks to the network (research R2): GET, HTTPS, a timeout, a body cap,
- * redirects followed only to the same host over HTTPS. `Fetcher` is injected so the whole
+ * The one way the scanner talks to the network (004 research R2): GET, HTTPS, a timeout, a body
+ * cap, redirects followed only to the same host over HTTPS. `Fetcher` is injected so the whole
  * pipeline runs over recorded responses in tests, which must not touch the network.
+ *
+ * Two modes. "json" (the default) reads a metadata document. "challenge" (008) is the one
+ * request to the MCP endpoint itself: the same GET with the Accept header a client sends, no
+ * credentials, no body; only the status and the WWW-Authenticate header are read, and the
+ * response body is cancelled before a byte of it is consumed.
  */
 
 export type FetchError =
@@ -17,8 +22,18 @@ export type FetchError =
   | "refused"
   | "server-error";
 
-/** found: 2xx and a JSON object. absent: a definite answer without one (4xx, or 2xx that is not JSON). error: no answer to judge by. */
+/**
+ * json mode — found: 2xx and a JSON object. absent: a definite answer without one (4xx, or 2xx
+ * that is not JSON). error: no answer to judge by.
+ * challenge mode — found: a 401 (a challenge to read, header present or not). absent: any other
+ * definite status. error: no answer to judge by.
+ */
 export type FetchKind = "found" | "absent" | "error";
+
+export type FetchMode = "json" | "challenge";
+
+/** What an MCP client sends on its first request; both transports accept it. */
+export const CHALLENGE_ACCEPT = "application/json, text/event-stream";
 
 export interface FetchResult {
   url: string;
@@ -26,14 +41,16 @@ export interface FetchResult {
   /** HTTP status, or null when no response arrived. */
   status: number | null;
   contentType?: string;
-  /** The parsed JSON object when `kind` is "found". */
+  /** The parsed JSON object when `kind` is "found" in json mode. */
   json?: Record<string, unknown>;
+  /** The WWW-Authenticate header as received, in challenge mode, when the server sent one. */
+  wwwAuthenticate?: string;
   error?: FetchError;
   /** One line a reader can act on: the redirect target, the exception name, the byte count. */
   detail?: string;
 }
 
-export type Fetcher = (url: string) => Promise<FetchResult>;
+export type Fetcher = (url: string, mode?: FetchMode) => Promise<FetchResult>;
 
 export interface NodeFetcherOptions {
   timeoutMs?: number;
@@ -87,7 +104,7 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
   const timeoutMs = options.timeoutMs ?? 10_000;
   const maxBytes = options.maxBytes ?? 1_048_576;
   const maxRedirects = options.maxRedirects ?? 3;
-  return async (start) => {
+  return async (start, mode = "json") => {
     let url = start;
     for (let hop = 0; ; hop += 1) {
       let res: Response;
@@ -95,7 +112,10 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
         res = await fetch(url, {
           method: "GET",
           redirect: "manual",
-          headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+          headers: {
+            Accept: mode === "challenge" ? CHALLENGE_ACCEPT : "application/json",
+            "User-Agent": USER_AGENT,
+          },
           signal: AbortSignal.timeout(timeoutMs),
         });
       } catch (err) {
@@ -155,6 +175,11 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
           detail: `HTTP ${status}`,
         };
       }
+      if (mode === "challenge") {
+        // the endpoint itself: headers only, the body is never read (008 FR-001)
+        await res.body?.cancel().catch(() => {});
+        return challengeResult(url, status, contentType, res.headers.get("www-authenticate"));
+      }
       if (status < 200 || status >= 300) {
         await res.body?.cancel().catch(() => {});
         return { url, kind: "absent", status, contentType };
@@ -195,6 +220,19 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
   };
 }
 
+/** The result of the endpoint request from its status and challenge header. */
+function challengeResult(
+  url: string,
+  status: number,
+  contentType: string | undefined,
+  header: string | null | undefined,
+): FetchResult {
+  const out: FetchResult = { url, kind: status === 401 ? "found" : "absent", status };
+  if (contentType) out.contentType = contentType;
+  if (header) out.wwwAuthenticate = header;
+  return out;
+}
+
 /** A recorded response for tests and the quickstart fixture server. */
 export interface FixtureResponse {
   status?: number;
@@ -218,7 +256,7 @@ export interface RecordingFetcher extends Fetcher {
 /** Answers from a fixture and records every URL asked; never touches the network. */
 export function recordingFetcher(fixture: Fixture): RecordingFetcher {
   const requests: string[] = [];
-  const fetcher = (async (url: string): Promise<FetchResult> => {
+  const fetcher = (async (url: string, mode: FetchMode = "json"): Promise<FetchResult> => {
     requests.push(url);
     const r = fixture.responses[url];
     if (!r) return { url, kind: "absent", status: 404 };
@@ -251,6 +289,8 @@ export function recordingFetcher(fixture: Fixture): RecordingFetcher {
         error: "server-error",
         detail: `HTTP ${status}`,
       };
+    if (mode === "challenge")
+      return challengeResult(url, status, contentType, r.headers?.["www-authenticate"]);
     if (status < 200 || status >= 300) return { url, kind: "absent", status, contentType };
     const body = typeof r.body === "string" ? safeParse(r.body) : r.body;
     if (!isObject(body))
