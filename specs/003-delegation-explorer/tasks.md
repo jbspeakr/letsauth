@@ -53,7 +53,7 @@ extended before the cross-checks; e2e over the built site.
 ## Phase 6: Verification
 
 - [x] T022 `tests/e2e/explorer.spec.ts`: index cards and toggle links; scenario page counts and ids match the resolved chain, citations resolve; toggle page marks, struck step, notice with counts; no-JS completeness; step-through and fragment; axe in light, dark, phone; no horizontal scroll at 412 px; screenshots of the index and a scenario page
-- [ ] T023 `pnpm check`; `pnpm build && pnpm test:e2e` where Chromium allows; island size from the build output; add the `refresh-screenshots` label to the pull request for the new baselines; record the run in `checklists/quickstart-run.md`
+- [x] T023 `pnpm check`; `pnpm build && pnpm test:e2e` where Chromium allows; island size from the build output; add the `refresh-screenshots` label to the pull request for the new baselines; record the run in `checklists/quickstart-run.md`
 
 ## Dependencies
 

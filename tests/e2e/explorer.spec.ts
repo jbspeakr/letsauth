@@ -45,7 +45,7 @@ test.describe("explorer index (US3)", () => {
     );
   });
 
-  test("is accessible in this theme and matches the baseline", async ({ page }) => {
+  test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto("/explorer/");
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("explorer.png", { fullPage: false });
@@ -159,7 +159,7 @@ test.describe("scenario page (US1)", () => {
     expect(scroll).toBeLessThanOrEqual(inner);
   });
 
-  test("is accessible in this theme and matches the baseline", async ({ page }) => {
+  test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto(`/explorer/${scenario.id}/`);
     await expectNoSeriousA11yViolations(page);
     await expect(page).toHaveScreenshot("scenario.png", { fullPage: false });
