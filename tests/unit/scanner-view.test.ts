@@ -65,6 +65,16 @@ describe("latestScan (FR-007)", () => {
     expect(v.checks.every((c) => c.status === "unknown" && c.observedAt === undefined)).toBe(true);
   });
 
+  it("does not grade a server listed as open or API-key, even with scanner observations", () => {
+    const open = { ...server, authClaimed: "open" as const };
+    const v = latestScan(
+      withObservations(checks.map((c) => obs(c.feature.id, "unsupported"))),
+      open,
+    );
+    expect(v.grade.letter).toBeNull();
+    expect(v.grade.label).toBe("No OAuth");
+  });
+
   it("ignores manual and documentation observations", () => {
     const data = withObservations([
       obs("mcp.prm", "supported", { method: "vendor-claim", observedBy: "jbspeakr" }),

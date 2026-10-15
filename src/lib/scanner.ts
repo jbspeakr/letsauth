@@ -1,4 +1,4 @@
-import { type Grade, grade, NOT_SCANNED } from "../scanner/grade";
+import { claimsNoOAuth, type Grade, grade, NO_OAUTH, NOT_SCANNED } from "../scanner/grade";
 import { type CheckResult, passiveFeatures, REPORT_VERSION, type Report } from "../scanner/report";
 import { SCANNER_ID } from "../scanner/version";
 import type { Feature, FeatureRevision, Observation, Server } from "../schema";
@@ -90,7 +90,7 @@ export function latestScan(
     checks,
     scannedAt,
     scanned,
-    grade: scanned ? grade(checks) : NOT_SCANNED,
+    grade: claimsNoOAuth(server.authClaimed) ? NO_OAUTH : scanned ? grade(checks) : NOT_SCANNED,
   };
 }
 

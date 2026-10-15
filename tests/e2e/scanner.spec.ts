@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { getDataset } from "../../src/lib/data";
 import { passiveChecks, scannerIndex } from "../../src/lib/scanner";
 import { GRADE_RULE } from "../../src/scanner/grade";
@@ -12,6 +12,19 @@ const unscanned = views.find((v) => !v.scanned);
 const first = views[0];
 if (!first) throw new Error("the seed data needs at least one listed server");
 
+/**
+ * Screenshots guard the design, not the nightly data: blank what each scanner pull request
+ * changes (counts, dates, grades, statuses) so those pull requests do not need new baselines.
+ */
+async function hideNightlyData(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll<HTMLElement>("[data-nightly]")) {
+      el.textContent = "0";
+      el.classList.remove("muted");
+    }
+  });
+}
+
 test.describe("scanner index (US2)", () => {
   test("lists every listed server alphabetically with a grade and a report link (FR-010)", async ({
     page,
@@ -24,8 +37,9 @@ test.describe("scanner index (US2)", () => {
     for (const v of views.slice(0, 5)) {
       const row = page.locator(`#scanner-index tr[data-server="${v.server.id}"]`);
       await expect(row).toHaveAttribute("data-grade", v.grade.letter ?? v.grade.label);
-      await expect(row.locator("[data-grade]").first()).toContainText(
-        v.grade.letter ? new RegExp(`\\b${v.grade.letter}\\b`) : v.grade.label,
+      // the badge's word, not its decorative letter, carries the grade for every reader
+      await expect(row.locator("[data-grade] .word").first()).toHaveText(
+        v.grade.letter ?? v.grade.label,
       );
       await expect(row.locator(`a[href="/scanner/${v.server.id}/"]`).first()).toBeVisible();
     }
@@ -61,7 +75,11 @@ test.describe("scanner index (US2)", () => {
   test("has no serious accessibility violations and looks right", async ({ page }) => {
     await page.goto("/scanner/");
     await expectNoSeriousA11yViolations(page);
-    await expect(page).toHaveScreenshot("scanner.png", { fullPage: false });
+    await hideNightlyData(page);
+    await expect(page).toHaveScreenshot("scanner.png", {
+      fullPage: false,
+      mask: [page.locator("#scanner-index")],
+    });
   });
 });
 
@@ -114,8 +132,12 @@ test.describe("scan report page (US2)", () => {
   });
 
   test("has no serious accessibility violations and looks right", async ({ page }) => {
-    await page.goto(`/scanner/${(scanned ?? first).server.id}/`);
+    await page.goto(`/scanner/${first.server.id}/`);
     await expectNoSeriousA11yViolations(page);
-    await expect(page).toHaveScreenshot("report.png", { fullPage: false });
+    await hideNightlyData(page);
+    await expect(page).toHaveScreenshot("report.png", {
+      fullPage: false,
+      mask: [page.locator("[data-report]")],
+    });
   });
 });

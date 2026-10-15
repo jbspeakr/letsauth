@@ -3,7 +3,7 @@
  *
  *   pnpm scan <url>                       report for any MCP server URL, nothing written
  *   pnpm scan <server-id>                 report for a listed server
- *   pnpm scan --all                       every listed server with an HTTP transport
+ *   pnpm scan --all                       every listed OAuth server with an HTTP transport
  *   --write                               append the observations the nightly rule would
  *   --summary <file>                      write the run summary (Markdown) to a file
  *   --json                                print the report(s) as JSON instead of text
@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { currentRevision } from "../src/lib/atlas";
 import { DATA_ROOT, type Dataset, getDataset } from "../src/lib/data";
 import { nodeFetcher } from "../src/scanner/fetch";
+import { claimsNoOAuth } from "../src/scanner/grade";
 import { guardUrl } from "../src/scanner/guard";
 import {
   appendObservations,
@@ -100,12 +101,17 @@ async function main(): Promise<number> {
   if (args.all) {
     for (const s of data.servers) {
       if (s.withdrawn || s.transport === "stdio-only") continue;
+      // open and API-key servers have no OAuth to judge; a scan would only record 404s as failures
+      if (claimsNoOAuth(s.authClaimed)) continue;
       targets.push({ id: s.id, name: s.name, url: s.url });
     }
   }
   for (const t of args.targets) {
     const server = data.servers.find((s) => s.id === t);
-    if (server) targets.push({ id: server.id, name: server.name, url: server.url });
+    if (server && claimsNoOAuth(server.authClaimed)) {
+      // still report on the URL, but write nothing over the listing's not-applicable cells
+      targets.push({ name: server.name, url: server.url });
+    } else if (server) targets.push({ id: server.id, name: server.name, url: server.url });
     else targets.push({ name: t, url: t });
   }
 

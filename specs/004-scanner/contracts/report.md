@@ -52,7 +52,7 @@ the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `
   ],
   "grade": {
     "letter": "C",                         // "A" | "B" | "C" | "F" | null
-    "label": "C",                          // or "Withheld" / "Not scanned"
+    "label": "C",                          // or "Withheld" / "Not scanned" / "No OAuth"
     "reasons": ["SHOULD-level check unsupported: Client ID Metadata Documents supported"]
   },
   "observations": [                        // the same checks as data-model observations;
