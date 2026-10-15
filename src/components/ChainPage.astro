@@ -1,7 +1,6 @@
 ---
 import Citation from "@/components/Citation.astro";
 import Explorer from "@/components/Explorer.svelte";
-import SequenceDiagram from "@/components/SequenceDiagram.astro";
 import TokenView from "@/components/TokenView.astro";
 import Base from "@/layouts/Base.astro";
 import { getDataset } from "@/lib/data";
@@ -19,6 +18,8 @@ const data = getDataset();
 const chain = resolveChain(scenario, toggleId);
 const toggle = chain.toggle;
 const path = toggle ? `/explorer/${scenario.id}/${toggle.id}/` : `/explorer/${scenario.id}/`;
+const lanes = scenario.actors.length;
+const laneOf = new Map(scenario.actors.map((a, i) => [a.id, i]));
 const actorById = new Map(scenario.actors.map((a) => [a.id, a]));
 const featureById = new Map(data.features.map((f) => [f.id, f]));
 const exercised = scenario.features.flatMap((id) => {
@@ -33,6 +34,17 @@ const description = toggle
   : scenario.summary.trim();
 const removedCount = chain.steps.filter((s) => s.removed).length;
 const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
+
+// the arrow of a step: which lane it starts in, how many lanes it spans, and its direction
+function arrow(from: string, to: string) {
+  const a = laneOf.get(from) ?? 0;
+  const b = laneOf.get(to) ?? 0;
+  return {
+    start: Math.min(a, b),
+    span: Math.abs(b - a),
+    dir: a === b ? "self" : b > a ? "right" : "left",
+  };
+}
 ---
 
 <Base title={title} description={description} path={path}>
@@ -45,121 +57,127 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
       <p class="eyebrow">Delegation chain explorer</p>
       <h1>{scenario.title}</h1>
       <p class="lede">{scenario.summary}</p>
-      <p class="actors" aria-label="Actors">
-        {
-          scenario.actors.map((a) => (
-            <span class="pill" data-actor={a.id}>
-              <span class="actors__kind">{ACTOR_KIND_LABEL[a.kind]}</span> {a.name}
-            </span>
-          ))
-        }
-      </p>
     </header>
 
-    <nav class="toggles card" aria-label="Toggles">
-      <p class="toggles__label">
-        {scenario.toggles.length === 0 ? "This scenario has no toggles yet." : "Turn one attack or misconfiguration on:"}
-      </p>
-      <ul role="list" class="toggles__list">
-        <li>
-          <a class:list={["toggle", { current: !toggle }]} href={`/explorer/${scenario.id}/`} aria-current={!toggle ? "page" : undefined}>
-            Baseline
+    <nav class="toggles" aria-label="Toggles">
+      <a class:list={["toggle", { current: !toggle }]} href={`/explorer/${scenario.id}/`} aria-current={!toggle ? "page" : undefined}>
+        Baseline
+      </a>
+      {
+        scenario.toggles.map((t) => (
+          <a
+            class:list={["toggle", `kind-${t.kind}`, { current: toggle?.id === t.id }]}
+            href={`/explorer/${scenario.id}/${t.id}/`}
+            aria-current={toggle?.id === t.id ? "page" : undefined}
+            data-toggle={t.id}
+            title={TOGGLE_KIND_LABEL[t.kind]}
+          >
+            <span class="toggle__dot" aria-hidden="true" />
+            {t.name}
           </a>
-        </li>
-        {
-          scenario.toggles.map((t) => (
-            <li>
-              <a
-                class:list={["toggle", `kind-${t.kind}`, { current: toggle?.id === t.id }]}
-                href={`/explorer/${scenario.id}/${t.id}/`}
-                aria-current={toggle?.id === t.id ? "page" : undefined}
-                data-toggle={t.id}
-              >
-                {t.name}
-                <span class="toggle__kind">{TOGGLE_KIND_LABEL[t.kind]}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
+        ))
+      }
     </nav>
 
     {
       toggle && (
-        <section class:list={["notice", "card", `kind-${toggle.kind}`]} data-toggle-notice aria-labelledby="toggle-title">
-          <p class="eyebrow">{TOGGLE_KIND_LABEL[toggle.kind]} on</p>
-          <h2 id="toggle-title">{toggle.name}</h2>
+        <section class:list={["notice", `kind-${toggle.kind}`]} data-toggle-notice aria-labelledby="toggle-title">
+          <h2 id="toggle-title">
+            <span class="notice__kind">{TOGGLE_KIND_LABEL[toggle.kind]}</span>
+            {toggle.name}
+          </h2>
           <p>{toggle.summary}</p>
           <p class="notice__meta">
             {toggledCount > 0 && <span>{toggledCount} step{toggledCount === 1 ? "" : "s"} changed</span>}
             {removedCount > 0 && <span>{removedCount} step{removedCount === 1 ? "" : "s"} removed</span>}
             <span>
-              Forbidden or warned against in <Citation entry={toggle.cites} withRevision />
+              Against <Citation entry={toggle.cites} withRevision />
             </span>
           </p>
           {violated.length > 0 && (
-            <div class="violates">
-              <h3>Requirements this defeats</h3>
-              <ul role="list">
-                {violated.map((v) => (
-                  <li data-violates={v.feature.id}>
-                    <a href={`/atlas/mcp/features/${v.feature.id}/`}>{v.feature.name}</a>
-                    <span class="pill">{PARTY_LABEL[v.feature.party]}</span>
-                    {v.observed ? (
-                      <span class="violates__counts">
-                        Listed servers under MCP Authorization {v.revisionId}: {v.counts.supported} supported, {v.counts.partial} partial, {v.counts.unsupported} unsupported, {v.counts.unknown} unknown
-                        {v.counts.notApplicable > 0 && `, ${v.counts.notApplicable} not applicable`}.
-                      </span>
-                    ) : (
-                      <span class="violates__counts">{v.reason}.</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ul class="violates" role="list" aria-label="Requirements this defeats">
+              {violated.map((v) => (
+                <li data-violates={v.feature.id}>
+                  <span class="violates__name">
+                    Defeats <a href={`/atlas/mcp/features/${v.feature.id}/`}>{v.feature.name}</a>
+                    <span class="violates__party">{PARTY_LABEL[v.feature.party]}</span>
+                  </span>
+                  <span class="violates__counts">
+                    {v.observed
+                      ? `Listed servers under MCP Authorization ${v.revisionId}: ${v.counts.supported} supported, ${v.counts.partial} partial, ${v.counts.unsupported} unsupported, ${v.counts.unknown} unknown${v.counts.notApplicable > 0 ? `, ${v.counts.notApplicable} not applicable` : ""}.`
+                      : `${v.reason[0]?.toUpperCase()}${v.reason.slice(1)}.`}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       )
     }
 
     <Explorer client:idle />
-    <SequenceDiagram chain={chain} />
 
-    <section class="steps-section" aria-labelledby="steps-title">
-      <h2 id="steps-title">The chain, step by step</h2>
-      <ol id="chain-steps" class="steps" role="list">
+    <section class="chain" id="chain" aria-labelledby="chain-title" style={`--lanes: ${lanes}`}>
+      <h2 id="chain-title" class="visually-hidden">The chain, step by step</h2>
+      <div class="chain__head">
+        <div class="chain__actors" role="list" aria-label="Actors">
+          {
+            scenario.actors.map((a) => (
+              <div class="actor" role="listitem" data-actor={a.id}>
+                <span class="actor__name">{a.name}</span>
+                <span class="actor__kind">{ACTOR_KIND_LABEL[a.kind]}</span>
+              </div>
+            ))
+          }
+        </div>
+        <div class="chain__controls" id="chain-controls"></div>
+      </div>
+      <ol id="chain-steps" class="steps" role="list" data-steps={chain.steps.length}>
         {
           chain.steps.map((s) => {
             const from = actorById.get(s.from);
             const to = actorById.get(s.to);
+            const { start, span, dir } = arrow(s.from, s.to);
             return (
               <li
                 id={`step-${s.id}`}
-                class:list={["step", "card", { "is-toggled": s.toggled && !s.removed, "is-removed": s.removed }]}
+                class:list={["step", { "is-toggled": s.toggled && !s.removed, "is-removed": s.removed }]}
                 data-step={s.id}
                 data-index={s.index}
                 data-toggled={s.toggled && !s.removed ? "" : undefined}
                 data-removed={s.removed ? "" : undefined}
                 data-replaces={s.replaces}
               >
-                <p class="step__who">
-                  <span class="step__num" aria-hidden="true">{s.index}</span>
-                  <span class="visually-hidden">Step {s.index}:</span>
-                  <strong>{from?.name}</strong>
-                  <span class="step__arrow" aria-hidden="true">→</span>
-                  <span class="visually-hidden">to</span>
-                  <strong>{s.from === s.to ? "itself" : to?.name}</strong>
-                  {s.toggled && !s.removed && (
-                    <span class="pill accent">{s.replaces ? `replaces step "${s.replaces}"` : "changed by the toggle"}</span>
-                  )}
-                  {s.removed && <span class="pill removed">removed by the toggle</span>}
-                </p>
-                <p class="step__message">{s.removed ? <s>{s.message}</s> : s.message}</p>
-                {s.note && <p class="step__note">{s.note}</p>}
-                <p class="step__cite">
-                  Cites <Citation entry={s.cites} withRevision />
-                </p>
-                {s.token && !s.removed && <TokenView token={s.token} />}
+                <div class="step__lanes" aria-hidden="true">
+                  {scenario.actors.map(() => (
+                    <span class="lane" />
+                  ))}
+                  <span
+                    class:list={["arrow", `arrow-${dir}`]}
+                    style={`--start: ${start}; --span: ${span}`}
+                  >
+                    <span class="arrow__num">{s.index}</span>
+                  </span>
+                </div>
+                <div class="step__body">
+                  <p class="step__who">
+                    <span class="visually-hidden">Step {s.index}: </span>
+                    {from?.name}
+                    <span aria-hidden="true"> → </span>
+                    <span class="visually-hidden"> to </span>
+                    {s.from === s.to ? "itself" : to?.name}
+                    {s.toggled && !s.removed && (
+                      <span class="tag tag-toggled">{s.replaces ? `replaces "${s.replaces}"` : "changed by the toggle"}</span>
+                    )}
+                    {s.removed && <span class="tag tag-removed">removed by the toggle</span>}
+                  </p>
+                  <p class="step__message">{s.removed ? <s>{s.message}</s> : s.message}</p>
+                  {s.note && <p class="step__note">{s.note}</p>}
+                  <p class="step__cite">
+                    <Citation entry={s.cites} withRevision />
+                  </p>
+                  {s.token && !s.removed && <TokenView token={s.token} />}
+                </div>
               </li>
             );
           })
@@ -169,73 +187,36 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
 
     <section id="requirements" class="requirements" aria-labelledby="requirements-title">
       <h2 id="requirements-title">Requirements this chain exercises</h2>
-      <p class="muted">
-        Each is a feature of the MCP auth atlas; the atlas page shows which listed servers meet it.
-      </p>
       <ul role="list" class="requirements__list">
         {
           exercised.map((f) => (
             <li data-feature={f.id}>
               <a href={`/atlas/mcp/features/${f.id}/`}>{f.name}</a>
-              <span class="pill">{PARTY_LABEL[f.party]}</span>
+              <span class="requirements__party">{PARTY_LABEL[f.party]}</span>
             </li>
           ))
         }
       </ul>
+      <p class="data-links">
+        <a href="/explorer/data.json">All scenarios as JSON</a>
+        <a href={`${repo}/blob/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Data file</a>
+        <a href={`${repo}/edit/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Propose a change</a>
+      </p>
     </section>
-
-    <p class="data-links">
-      <a class="button small" href="/explorer/data.json">All scenarios (JSON)</a>
-      <a class="button small" href={`${repo}/blob/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Data file</a>
-      <a class="button small" href={`${repo}/edit/main/data/scenarios/${scenario.id}.yaml`} rel="noopener">Propose a change</a>
-    </p>
   </div>
 </Base>
 
 <style>
   .head {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
-  .actors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-3) 0 0;
-    max-width: none;
-  }
-  .actors .pill {
-    text-transform: none;
-    letter-spacing: 0;
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    color: var(--ink);
-  }
-  .actors__kind {
-    color: var(--ink-faint);
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
+
+  /* toggles: one row of links, the current one filled */
   .toggles {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-4);
-  }
-  .toggles__label {
-    margin: 0;
-    font-size: var(--text-sm);
-    color: var(--ink-muted);
-  }
-  .toggles__list {
-    display: flex;
-    flex-wrap: wrap;
     gap: var(--space-2);
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    margin-bottom: var(--space-5);
   }
   .toggle {
     display: inline-flex;
@@ -245,45 +226,63 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
     border: 1px solid var(--line);
     border-radius: 999px;
     background: var(--bg-elevated);
-    color: var(--ink);
+    color: var(--ink-muted);
     text-decoration: none;
     font-size: var(--text-sm);
-    font-weight: 500;
     transition:
       border-color var(--dur-fast) var(--ease),
-      background var(--dur-fast) var(--ease);
+      color var(--dur-fast) var(--ease);
   }
   .toggle:hover {
+    color: var(--ink);
     border-color: var(--line-strong);
   }
   .toggle.current {
+    color: var(--ink);
     border-color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 8%, transparent);
+    font-weight: 500;
   }
-  .toggle.kind-attack.current {
-    border-color: var(--status-unsupported);
-    background: var(--status-unsupported-soft);
+  .toggle__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--status-partial);
   }
-  .toggle.kind-misconfiguration.current {
-    border-color: var(--status-partial);
-    background: var(--status-partial-soft);
+  .kind-attack .toggle__dot {
+    background: var(--status-unsupported);
   }
-  .toggle__kind {
-    font-family: var(--font-mono);
-    font-size: var(--text-2xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--ink-faint);
-  }
+
   .notice {
     margin-bottom: var(--space-5);
-    border-left: 4px solid var(--status-partial);
+    padding: var(--space-4) var(--space-5);
+    border-left: 3px solid var(--status-partial);
+    background: var(--bg-sunken);
+    border-radius: 0 var(--radius) var(--radius) 0;
   }
   .notice.kind-attack {
     border-left-color: var(--status-unsupported);
   }
   .notice h2 {
-    margin: var(--space-1) 0 var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-lg);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .notice__kind {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--status-partial);
+  }
+  .kind-attack .notice__kind {
+    color: var(--status-unsupported);
+  }
+  .notice p {
+    margin: 0 0 var(--space-2);
   }
   .notice__meta {
     display: flex;
@@ -293,86 +292,200 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
     color: var(--ink-muted);
     max-width: none;
   }
-  .violates h3 {
-    font-size: var(--text-md);
-    margin: var(--space-4) 0 var(--space-2);
-  }
-  .violates ul {
-    margin: 0;
+  .violates {
+    margin: var(--space-3) 0 0;
     padding: 0;
     display: grid;
     gap: var(--space-2);
+    font-size: var(--text-sm);
   }
   .violates li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
+    display: grid;
+    gap: 2px;
+  }
+  .violates__party,
+  .requirements__party,
+  .actor__kind {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .violates__party {
+    margin-left: var(--space-2);
   }
   .violates__counts {
     color: var(--ink-muted);
-    flex-basis: 100%;
   }
-  .steps-section h2,
-  .requirements h2 {
-    margin-bottom: var(--space-3);
+
+  /* the chain: lanes on the left carry the lifelines and arrows, the body on the right the text */
+  .chain {
+    --lanes-w: minmax(0, 5fr);
+    --body-w: minmax(0, 6fr);
+    --row-top: 1.15rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow), var(--inset-highlight);
+    overflow: clip;
+  }
+  .chain__head {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: var(--lanes-w) var(--body-w);
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .chain__actors {
+    display: grid;
+    grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
+  }
+  .actor {
+    display: grid;
+    gap: 2px;
+    justify-items: center;
+    text-align: center;
+    padding: var(--space-3) var(--space-1);
+    min-width: 0;
+  }
+  .actor__name {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+  .chain__controls {
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    min-height: 2.5rem;
   }
   .steps {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: var(--space-3);
   }
   .step {
-    scroll-margin-top: calc(var(--header-h) + var(--space-4));
-    transition: border-color var(--dur-fast) var(--ease);
+    display: grid;
+    grid-template-columns: var(--lanes-w) var(--body-w);
+    border-top: 1px solid var(--line-soft);
+    scroll-margin-top: calc(var(--header-h) + 5rem);
   }
-  .step.is-toggled {
-    border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
+  .step:first-child {
+    border-top: 0;
   }
-  .step.is-removed {
-    color: var(--ink-muted);
-    border-style: dashed;
+  .step__lanes {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
   }
-  .step[aria-current="step"] {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+  .lane {
+    position: relative;
   }
-  .step__who {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-    margin: 0 0 var(--space-2);
-    font-size: var(--text-sm);
-    max-width: none;
+  .lane::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 50%;
+    border-left: 1px dashed var(--line-strong);
   }
-  .step__num {
+  /* the arrow sits at the row's top, between the centres of the lanes it joins */
+  .arrow {
+    position: absolute;
+    top: var(--row-top);
+    left: calc((var(--start) + 0.5) * 100% / var(--lanes));
+    width: calc(var(--span) * 100% / var(--lanes));
+    height: 2px;
+    background: var(--ink);
+    color: var(--ink);
+  }
+  .arrow::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    border: 5px solid transparent;
+  }
+  .arrow-right::after {
+    right: -2px;
+    border-left: 7px solid currentColor;
+    border-right: 0;
+  }
+  .arrow-left::after {
+    left: -2px;
+    border-right: 7px solid currentColor;
+    border-left: 0;
+  }
+  .arrow-self {
+    width: 1.5rem;
+    height: 1rem;
+    background: none;
+    border: 2px solid currentColor;
+    border-left: 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .arrow-self::after {
+    top: auto;
+    bottom: -6px;
+    left: -3px;
+    border-right: 7px solid currentColor;
+    border-left: 0;
+  }
+  .arrow__num {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: inline-grid;
     place-items: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 50%;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.3em;
+    border-radius: 999px;
     background: var(--ink);
     color: var(--bg-elevated);
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-size: var(--text-2xs);
     font-weight: 600;
+    line-height: 1;
   }
-  .is-toggled .step__num {
-    background: var(--accent-2);
-    color: var(--accent-ink);
+  .arrow-self .arrow__num {
+    left: auto;
+    right: -0.9rem;
+    transform: translate(100%, -50%);
   }
-  .is-removed .step__num {
-    background: var(--ink-faint);
+  .step__body {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    min-width: 0;
+    border-left: 1px solid var(--line-soft);
   }
-  .step__arrow {
-    color: var(--ink-faint);
+  .step__who {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    max-width: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    line-height: 1.3;
   }
-  .pill.removed {
-    border-color: color-mix(in oklch, var(--status-unsupported) 40%, transparent);
+  .tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.03em;
+    padding: 0.05em 0.5em;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .tag-toggled {
+    color: var(--accent-2);
+  }
+  .tag-removed {
     color: var(--status-unsupported);
   }
   .step__message {
@@ -382,6 +495,7 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
     color: var(--ink);
     overflow-wrap: anywhere;
     max-width: none;
+    line-height: 1.5;
   }
   .step__note {
     margin: 0 0 var(--space-2);
@@ -390,30 +504,124 @@ const toggledCount = chain.steps.filter((s) => s.toggled && !s.removed).length;
   }
   .step__cite {
     margin: 0;
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     color: var(--ink-muted);
   }
+
+  /* toggled and removed rows */
+  .is-toggled .arrow {
+    background: var(--accent-2);
+    color: var(--accent-2);
+  }
+  .is-toggled .arrow-self {
+    background: none;
+  }
+  .is-toggled .arrow__num {
+    background: var(--accent-2);
+    color: var(--accent-ink);
+  }
+  .is-removed {
+    color: var(--ink-muted);
+  }
+  .is-removed .arrow {
+    background: none;
+    border-top: 2px dashed var(--ink-faint);
+    color: var(--ink-faint);
+  }
+  .is-removed .arrow-self {
+    border-style: dashed;
+    border-top-width: 2px;
+  }
+  .is-removed .arrow__num {
+    background: var(--ink-faint);
+  }
+  .is-removed .step__message {
+    color: var(--ink-muted);
+  }
+
+  /* step-through: driven by the island */
+  .step[aria-current="step"] {
+    background: var(--accent-soft);
+  }
+  .step[aria-current="step"] .step__body {
+    border-left-color: var(--accent);
+  }
+  :global(#chain-steps .step.is-future) {
+    opacity: 0.45;
+  }
+
   .requirements {
     margin-top: var(--space-7);
   }
+  .requirements h2 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-3);
+  }
   .requirements__list {
     list-style: none;
-    margin: 0;
+    margin: 0 0 var(--space-4);
     padding: 0;
     display: grid;
-    gap: var(--space-2);
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: var(--space-1) var(--space-4);
+    font-size: var(--text-sm);
   }
-  .requirements__list li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
+  .requirements__party {
+    margin-left: var(--space-2);
   }
   .data-links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-top: var(--space-6);
+    gap: var(--space-4);
+    margin: 0;
+    font-size: var(--text-sm);
     max-width: none;
+  }
+
+  @media (max-width: 56rem) {
+    .chain {
+      --lanes-w: minmax(0, 1fr);
+      --body-w: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 40rem) {
+    .chain__head,
+    .step {
+      grid-template-columns: 1fr;
+    }
+    .chain__head {
+      top: 0;
+    }
+    .chain__controls {
+      border-top: 1px solid var(--line-soft);
+      min-height: 0;
+    }
+    .chain__controls:empty {
+      display: none;
+    }
+    .step__lanes {
+      height: 2.6rem;
+    }
+    .step__body {
+      border-left: 0;
+      padding-top: 0;
+    }
+    .actor {
+      padding: var(--space-2) 2px;
+    }
+    .actor__name {
+      font-size: var(--text-xs);
+    }
+    .actor__kind {
+      display: none;
+    }
+    .step {
+      scroll-margin-top: 4.5rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toggle {
+      transition: none;
+    }
   }
 </style>

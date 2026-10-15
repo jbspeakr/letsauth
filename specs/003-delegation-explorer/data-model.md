@@ -57,7 +57,7 @@ page renders it in this feature (005).
 The per-file schema already enforces kebab ids, unique actor and step ids within a scenario,
 unique toggle ids, non-empty strings and the enums.
 
-## Derivations (`src/lib/explorer.ts`, `src/lib/sequence.ts`)
+## Derivations (`src/lib/explorer.ts`)
 
 - **resolveChain(scenario, toggleId?)** → `{ scenario, toggle?, steps: ResolvedStep[] }`. A
   `ResolvedStep` is a Step plus `index` (1-based position in the rendered chain), `toggled`
@@ -73,6 +73,4 @@ unique toggle ids, non-empty strings and the enums.
   unsupported, unknown, "not-applicable" } }` from the current revision's matrix, or
   `{ observed: false, reason }` for a client-side feature or one the current revision does not
   define.
-- **layoutSequence(actors, steps)** → `{ width, height, lanes: [{ actor, x }], rows: [{ step,
-  y, x1, x2, self, toggled, removed }] }`.
 - **buildExplorerExport(data)** → the export (contracts/data-export.md).

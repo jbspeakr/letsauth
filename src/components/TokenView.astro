@@ -17,28 +17,18 @@ const isBlock = (v: TokenValue) => typeof v === "object" && !Array.isArray(v);
 const show = (v: TokenValue) =>
   Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v, null, 2) : String(v);
 const marks = token.diff.added.length + token.diff.changed.length + token.diff.removed.length;
+const headerLine = token.header
+  ? Object.entries(token.header)
+      .map(([k, v]) => `${k} ${String(v)}`)
+      .join(" · ")
+  : undefined;
 ---
 
 <div class="token" data-token>
   <p class="token__name">
-    <span class="token__eyebrow">Token</span>
     {token.name}
+    {headerLine && <span class="token__header">{headerLine}</span>}
   </p>
-  {
-    token.header && (
-      <p class="token__header">
-        <span class="token__eyebrow">Header</span>
-        {Object.entries(token.header).map(([k, v]) => (
-          <code
-            data-header={k}
-            data-change={token.headerDiff.added.includes(k) ? "added" : token.headerDiff.changed.includes(k) ? "changed" : "same"}
-          >
-            {k}: {String(v)}
-          </code>
-        ))}
-      </p>
-    )
-  }
   <dl class="claims">
     {
       Object.entries(token.claims).map(([name, value]) => {
@@ -46,10 +36,10 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
         return (
           <div data-claim={name} data-change={change}>
             <dt>
-              <code>{name}</code>
+              {name}
               {change !== "same" && <span class:list={["mark", change]}>{change}</span>}
             </dt>
-            <dd>{isBlock(value) ? <pre>{show(value)}</pre> : <code>{show(value)}</code>}</dd>
+            <dd>{isBlock(value) ? <pre>{show(value)}</pre> : show(value)}</dd>
           </div>
         );
       })
@@ -58,9 +48,7 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
       token.diff.removed.map((name) => (
         <div data-removed-claim={name} class="removed">
           <dt>
-            <code>
-              <s>{name}</s>
-            </code>
+            <s>{name}</s>
             <span class="mark removed">removed</span>
           </dt>
           <dd>no longer in the token</dd>
@@ -69,8 +57,8 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
     }
   </dl>
   <p class="token__foot">
-    {marks === 0 ? "No claim changed since the previous token in this chain." : `${marks} claim${marks === 1 ? "" : "s"} differ from the previous token in this chain.`}
-    {token.note && <span class="token__note"> {token.note}</span>}
+    {marks === 0 ? "Unchanged since the previous token in this chain." : `${marks} claim${marks === 1 ? "" : "s"} differ from the previous token in this chain.`}
+    {token.note && <span> {token.note}</span>}
   </p>
 </div>
 
@@ -78,58 +66,38 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
   .token {
     margin-top: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--bg-sunken);
     font-size: var(--text-sm);
   }
-  .token__eyebrow {
-    display: inline-block;
-    margin-right: var(--space-2);
-    font-family: var(--font-body);
-    font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
   .token__name {
-    margin: 0 0 var(--space-2);
-    font-weight: 600;
-    color: var(--ink);
-    max-width: none;
-  }
-  .token__header {
     margin: 0 0 var(--space-2);
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
-    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    align-items: baseline;
+    color: var(--ink);
+    font-weight: 500;
     max-width: none;
   }
-  .token__header code,
-  .claims code,
-  .claims pre {
+  .token__header {
     font-family: var(--font-mono);
-    font-size: var(--text-xs);
-  }
-  .token__header code {
-    padding: 0.1em 0.45em;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--bg-elevated);
-    color: var(--ink-muted);
+    font-size: var(--text-2xs);
+    font-weight: 400;
+    color: var(--ink-faint);
   }
   .claims {
     margin: 0;
     display: grid;
-    gap: 2px;
+    gap: 1px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
   .claims > div {
     display: grid;
-    grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr);
+    grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
     gap: var(--space-3);
-    padding: 0.3em 0.5em;
+    padding: 0.25em 0.5em;
     border-radius: var(--radius-sm);
     align-items: start;
   }
@@ -148,24 +116,24 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
     flex-wrap: wrap;
     gap: var(--space-2);
     align-items: baseline;
-    color: var(--ink);
+    color: var(--ink-muted);
   }
   .claims dd {
     margin: 0;
     min-width: 0;
     overflow-wrap: anywhere;
+    color: var(--ink);
   }
   .claims pre {
     margin: 0;
     white-space: pre-wrap;
+    font: inherit;
   }
   .mark {
     font-family: var(--font-body);
     font-size: var(--text-2xs);
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 0.05em 0.5em;
+    letter-spacing: 0.03em;
+    padding: 0 0.45em;
     border-radius: 999px;
     border: 1px solid currentColor;
   }
@@ -180,14 +148,14 @@ const marks = token.diff.added.length + token.diff.changed.length + token.diff.r
   }
   .token__foot {
     margin: var(--space-2) 0 0;
-    color: var(--ink-muted);
+    color: var(--ink-faint);
     font-size: var(--text-xs);
     max-width: none;
   }
   @media (max-width: 40rem) {
     .claims > div {
       grid-template-columns: 1fr;
-      gap: var(--space-1);
+      gap: 2px;
     }
   }
 </style>

@@ -11,8 +11,8 @@ schema so toggles can reference one), load `data/scenarios/` and `data/vulnerabi
 the one dataset loader with cross-reference checks, and render three pages from it: the explorer
 index, one page per scenario and one page per toggle. A pure library (`src/lib/explorer.ts`)
 resolves a chain (scenario plus at most one toggle) into ordered steps with derived claim marks;
-`src/lib/sequence.ts` lays the chain out as a sequence diagram that an Astro component draws as
-SVG, from the same resolved steps the step list and token views use. One small Svelte island adds
+the page renders those steps once, each as a row of actor lanes with its arrow beside the step's
+text and token, so the diagram and the step list are one element (research R3). One small Svelte island adds
 step-through on top of the complete server-rendered page. Three scenario files ship: the MCP
 authorization flow against revision 2026-07-28, the enterprise identity provider flow (ID-JAG
 draft-04 with the MCP enterprise-managed authorization extension), and token-exchange delegation
@@ -54,7 +54,7 @@ routes, 1 island; about a dozen touched files beyond that
 | II. Every Claim Cites a Revision | PASS | Each step and each toggle carries `cites: { spec, revision, section }`; `crossCheck` fails the build when the revision does not exist in `data/specs`. The page links every citation to the revision's document and shows the section. Scenarios keep citing the revision they were written against when a newer one arrives. |
 | III. Neutral and Passive by Default | PASS | No server is contacted; scenarios use example domains and generic actors; the server counts a toggle shows come from observations the atlas already has, with `unknown` rendered as unknown. |
 | IV. Static First, Open Data | PASS | Every scenario and toggle is a pre-rendered page; `/explorer/data.json` publishes the scenarios under CC BY 4.0. |
-| V. Craft and Budgets | PASS | Server-rendered SVG and HTML; the island only highlights and scrolls. Tokens, no literal colours; status glyphs unchanged; reduced motion honoured; diagram scrolls in its own frame at phone width. Lighthouse adds the index and one scenario page. |
+| V. Craft and Budgets | PASS | Server-rendered HTML; the chain is a CSS grid, no diagram library; the island only highlights and scrolls. Tokens, no literal colours; status glyphs unchanged; reduced motion honoured; the chain reflows to one column at phone width. Lighthouse adds the index and one scenario page. |
 | VI. Agent-Legible Repository | PASS | The schema is the readable contract for a scenario; the validator names file and field; `docs/atlas-maintenance.md` gains "Add a scenario"; unit tests cover the resolver and the diff; e2e covers counts and no-JS. |
 | VII. European by Default | PASS | Nothing new is hosted or collected. The enterprise scenario is the hook for 006's EUDI and AI Act scenarios on the same entity. |
 | Honesty tests | PASS | See the spec's section; summarised: claim-level cross-checks of revisions as validated data, on the same features and revisions as the atlases, maintained as YAML files. |
@@ -97,13 +97,11 @@ src/lib/
 ├── data.ts                             # loads scenarios and vulnerabilities; cross-checks (data-model.md)
 ├── citations.ts                        # resolveCitation accepts { spec, revision, section }
 ├── explorer.ts                         # NEW: resolveChain, diffClaims, scenarioList, featureSupport, export
-├── sequence.ts                         # NEW: layoutSequence (lanes, rows, self-messages)
 └── labels.ts                           # ACTOR_KIND_LABEL, TOGGLE_KIND_LABEL
 src/components/
 ├── Citation.astro                      # accepts a plain citation
-├── SequenceDiagram.astro               # NEW: SVG from the resolved chain
 ├── TokenView.astro                     # NEW: decoded token with change marks
-├── ChainPage.astro                     # NEW: the scenario/toggle page body (shared by both routes)
+├── ChainPage.astro                     # NEW: the scenario/toggle page body: lanes and steps as one chain
 └── Explorer.svelte                     # NEW: step-through island (client:idle)
 src/pages/explorer/
 ├── index.astro                         # NEW
@@ -119,7 +117,6 @@ README.md, CLAUDE.md, docs/roadmap.md, docs/atlas-maintenance.md
 tests/
 ├── fixtures/bad-data/scenarios/broken.yaml   # NEW: dangling cite, unknown actor, unknown step, unknown feature
 ├── unit/explorer.test.ts                     # NEW: resolveChain, diffClaims, export, featureSupport
-├── unit/sequence.test.ts                     # NEW: layout
 ├── unit/validate-data.test.ts                # the scenario messages
 └── e2e/explorer.spec.ts                      # NEW: index, scenario, toggle, no-JS, step-through, axe, screenshots
 ```

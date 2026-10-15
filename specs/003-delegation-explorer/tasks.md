@@ -21,14 +21,14 @@ extended before the cross-checks; e2e over the built site.
 
 - [x] T005 [P] Unit test `tests/unit/explorer.test.ts` before T006: `resolveChain` baseline order and indexes; a toggle replacing one step with two (position, `toggled`, `replaces` on the first); a toggle mapping to `[]` (step kept with `removed`, skipped by the diff); `diffClaims` added/changed/removed with nested values; the first token marks nothing; `featureSupport` counts from a small dataset and the client-side case; `buildExplorerExport` envelope
 - [x] T006 Implement `src/lib/explorer.ts` per data-model.md
-- [x] T007 [P] Unit test `tests/unit/sequence.test.ts` before T008: one lane per actor in order, one row per step, `self` when from equals to, x1/x2 follow the lanes, height grows with rows
-- [x] T008 Implement `src/lib/sequence.ts`
+- [x] T007 [P] ~~Unit test `tests/unit/sequence.test.ts`~~ dropped with T008: the chain is laid out in CSS from the actor index (research R3)
+- [x] T008 ~~Implement `src/lib/sequence.ts`~~ dropped: no layout library, lanes are CSS grid columns
 - [x] T009 [P] `src/lib/labels.ts`: `ACTOR_KIND_LABEL`, `TOGGLE_KIND_LABEL`; `src/lib/citations.ts` and `src/components/Citation.astro` accept a plain `{ spec, revision, section }`
 
 ## Phase 3: User Story 1 - Read a delegation chain hop by hop (Priority: P1) 🎯 MVP
 
 - [x] T010 [US1] `data/scenarios/mcp-authorization.yaml`: the MCP flow against 2026-07-28 with tokens at the token response, the bearer call and the upstream call (research R7); `pnpm validate:data`
-- [x] T011 [US1] `src/components/SequenceDiagram.astro`: SVG from `layoutSequence` (lifelines, arrows, wrapped labels, self-message loops, `data-step` rows, `is-toggled`/`is-removed`), tokens only, scrolls in its own frame
+- [x] T011 [US1] The chain rows in `src/components/ChainPage.astro`: one lane per actor with a dashed lifeline, one numbered arrow per step from sender to receiver (a loop for self-messages), `is-toggled`/`is-removed`, full width, one column on a phone
 - [x] T012 [US1] `src/components/TokenView.astro`: name, header and claims as a definition list with `data-claim`/`data-change`, removed claims struck, nested values as formatted JSON in mono
 - [x] T013 [US1] `src/components/ChainPage.astro` and `src/pages/explorer/[scenario]/index.astro`: the anatomy in contracts/routes.md (toggle bar, diagram, step list with sender, receiver, message, note, citation, token; requirements section; data links)
 - [x] T014 [US1] `src/components/Explorer.svelte` mounted `client:idle`: control bar, current step, classes on diagram rows, scroll with reduced-motion respected, URL fragment, arrow keys (research R6)

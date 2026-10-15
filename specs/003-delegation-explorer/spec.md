@@ -150,12 +150,11 @@ unchanged; confirm the explorer is in the primary navigation.
 - A scenario with no toggles: the toggle bar shows the baseline only.
 - A toggle names a vulnerability: the data allows it for 005; this feature renders nothing for it
   beyond validating that the id resolves.
-- Long messages in the diagram: wrapped to two lines and cut with an ellipsis; the list carries
-  the full text, so nothing is lost.
+- Long messages: the step's text wraps beside its lanes; nothing is cut.
 - A scenario cites a revision that is later superseded: the citation keeps naming the revision it
   was written against (constitution II); the spec page shows the newer revision as current.
-- The page at phone width: the diagram scrolls horizontally inside its own frame; the page does
-  not.
+- The page at phone width: each step's lanes sit above its text in one column; the page does not
+  scroll horizontally.
 
 ## Requirements *(mandatory)*
 

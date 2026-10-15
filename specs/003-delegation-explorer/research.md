@@ -32,12 +32,16 @@ it first differs.
 
 ## R3. The diagram is rendered from the chain
 
-**Decision**: `layoutSequence(actors, steps)` in `src/lib/sequence.ts` returns lanes (one per
-actor, in the scenario's order) and rows (one per resolved step, with the x of sender and
-receiver, direction, and a `self` flag when they coincide). `SequenceDiagram.astro` draws it as
-SVG with a lifeline per lane, an arrow per row, the message wrapped to two lines, and
-`data-step` on each row so the island and the tests can address it. Replaced steps carry
-`is-toggled`, removed steps `is-removed` (dashed, struck label).
+**Decision**: the diagram and the step list are one element. `ChainPage.astro` renders each
+resolved step as a row: a lanes cell (one CSS grid column per actor, in the scenario's order,
+dashed lifelines, one arrow placed from sender to receiver by `--start`/`--span`, a loop when
+they coincide, the step number on the arrow) beside the step's body (sender, receiver, message,
+note, citation, token). A sticky head names the actors over the lanes and carries the island's
+controls. No layout library and no SVG: positions come from the actor index, so the chain takes
+the page's full width and reflows to one column on a phone. Replaced steps carry `is-toggled`,
+removed steps `is-removed` (dashed arrow, struck message). An earlier draft drew a separate
+SVG (`src/lib/sequence.ts`); it was dropped because a diagram above a list read as two views of
+the same thing and could not take the full width.
 
 **Rationale**: Constitution's technology constraints: "sequence diagrams are rendered from the
 machine definition so diagram and behaviour cannot drift". Server-rendered SVG, as the standards
@@ -77,10 +81,10 @@ constitution III). A separate "which servers are vulnerable" page (same problem)
 
 ## R6. The island
 
-**Decision**: `Explorer.svelte`, mounted with `client:idle`, reads `[data-step]` entries from
-the list and rows from the diagram, inserts a control bar (Previous, Next, "step i of n") marked
-`data-enhanced`, sets `aria-current="step"` on the current entry, adds `is-current`/`is-past`
-classes to diagram rows, scrolls the entry into view (respecting reduced motion), and reflects
+**Decision**: `Explorer.svelte`, mounted with `client:idle`, reads the `[data-step]` rows of the
+chain, inserts a stepper (Previous, Next, "step i of n") marked `data-enhanced` into the chain's
+head, sets `aria-current="step"` on the current row, dims the rows after it once the reader has
+started stepping (`is-future`), scrolls the row into view (respecting reduced motion), and reflects
 the step in the URL fragment (`#step-<id>`); loading with a fragment starts there. Arrow keys
 work when focus is on the page, not inside a form control. Without JavaScript there is no bar and
 nothing is hidden.

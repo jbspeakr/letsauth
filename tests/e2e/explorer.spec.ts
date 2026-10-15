@@ -59,19 +59,19 @@ test.describe("scenario page (US1)", () => {
     page,
   }) => {
     await page.goto(`/explorer/${scenario.id}/`);
-    await expect(page.locator("#chain-diagram g[data-actor]")).toHaveCount(scenario.actors.length);
-    await expect(page.locator("#chain-diagram svg")).toHaveAttribute(
+    await expect(page.locator("#chain .actor[data-actor]")).toHaveCount(scenario.actors.length);
+    await expect(page.locator("#chain-steps")).toHaveAttribute(
       "data-steps",
       String(chain.steps.length),
     );
-    const rowIds = await page
-      .locator("#chain-diagram g[data-step]")
-      .evaluateAll((els) => els.map((e) => e.getAttribute("data-step")));
     const listIds = await page
       .locator("#chain-steps li[data-step]")
       .evaluateAll((els) => els.map((e) => e.getAttribute("data-step")));
-    expect(rowIds).toEqual(chain.steps.map((s) => s.id));
-    expect(listIds).toEqual(rowIds);
+    expect(listIds).toEqual(chain.steps.map((s) => s.id));
+    await expect(page.locator("#chain-steps li[data-step] .step__lanes .lane")).toHaveCount(
+      chain.steps.length * scenario.actors.length,
+    );
+    await expect(page.locator("#chain-steps li[data-step] .arrow")).toHaveCount(chain.steps.length);
     await expect(
       page.locator("#chain-steps li[data-toggled], #chain-steps li[data-removed]"),
     ).toHaveCount(0);
@@ -106,7 +106,7 @@ test.describe("scenario page (US1)", () => {
     const page = await context.newPage();
     await page.goto(`/explorer/${scenario.id}/`);
     await expect(page.locator("#chain-steps li[data-step]")).toHaveCount(chain.steps.length);
-    await expect(page.locator("#chain-diagram g[data-step]")).toHaveCount(chain.steps.length);
+    await expect(page.locator("#chain-steps li[data-step] .arrow")).toHaveCount(chain.steps.length);
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
     await expect(page.locator('nav[aria-label="Toggles"] a')).toHaveCount(
       scenario.toggles.length + 1,
@@ -130,9 +130,6 @@ test.describe("scenario page (US1)", () => {
     await expect(page.locator(`#chain-steps li[data-step="${secondId}"]`)).toHaveAttribute(
       "aria-current",
       "step",
-    );
-    await expect(page.locator(`#chain-diagram g[data-step="${secondId}"]`)).toHaveClass(
-      /is-current/,
     );
     expect(new URL(page.url()).hash).toBe(`#step-${secondId}`);
     await page.keyboard.press("ArrowRight");
@@ -173,7 +170,7 @@ test.describe("toggle page (US2)", () => {
     page,
   }) => {
     await page.goto(`/explorer/${scenario.id}/${passthrough.id}/`);
-    await expect(page.locator("#chain-diagram svg")).toHaveAttribute(
+    await expect(page.locator("#chain-steps")).toHaveAttribute(
       "data-steps",
       String(chain.steps.length),
     );
@@ -188,9 +185,6 @@ test.describe("toggle page (US2)", () => {
     await expect(
       page.locator(`#chain-steps li[data-step="${firstReplacement?.id}"]`),
     ).toHaveAttribute("data-replaces", firstReplacement?.replaces ?? "");
-    await expect(page.locator(`#chain-diagram g[data-step="${firstReplacement?.id}"]`)).toHaveClass(
-      /is-toggled/,
-    );
     await expect(
       page.locator(`nav[aria-label="Toggles"] a[data-toggle="${passthrough.id}"]`),
     ).toHaveAttribute("aria-current", "page");
@@ -220,7 +214,7 @@ test.describe("toggle page (US2)", () => {
       (s) => s.removed,
     );
     await expect(page.locator("#chain-steps li[data-removed]")).toHaveCount(removed.length);
-    await expect(page.locator("#chain-diagram g.is-removed")).toHaveCount(removed.length);
+    await expect(page.locator("#chain-steps li.is-removed")).toHaveCount(removed.length);
     await expect(page.locator(`#chain-steps li[data-step="${removed[0]?.id}"] s`)).toHaveCount(1);
   });
 
