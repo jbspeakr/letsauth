@@ -144,3 +144,7 @@ locally with that pinned build, or add the `refresh-screenshots` label to the pu
 the screenshots workflow regenerates the baselines with CI's browser, commits them to the
 branch and removes the label. A push made by that workflow does not start CI, so push any
 further commit (or merge the base branch) to get a green run.
+
+Scanner pull requests must not need new baselines. The scanner screenshots set every
+`[data-nightly]` element (counts and dates the nightly run changes) to a fixed value and mask the
+grades and report rows, so mark any new nightly-changing text on those pages with `data-nightly`.
