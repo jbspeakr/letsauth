@@ -46,8 +46,9 @@ the command line and in CI. A product that needs a field the model lacks amends 
 ```
 data/            the dataset: specs, features, servers, observations, relations (YAML)
 docs/            this documentation, the roadmap and the research notes
-public/          static assets copied as is (favicon, OpenGraph image, robots.txt)
-scripts/         command-line entry points: validate-data, scan, scan-nightly, append-only check
+public/          static assets copied as is: brand SVGs, favicon, social card, robots.txt
+scripts/         command-line entry points: validate-data, scan, scan-nightly, append-only check,
+                 and the generators for brand and README assets
 specs/           Spec Kit artifacts per feature: spec, plan, tasks, contracts
 src/
   components/    Astro components and the Svelte islands (matrix, standards map, scan report)
