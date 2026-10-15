@@ -7,6 +7,10 @@ Read first, in this order:
 3. `specs/<feature>/` — the Spec Kit artifacts for the feature you are working on
    (`spec.md`, `plan.md`, `tasks.md`). Mark tasks `[x]` in `tasks.md` as you complete them.
 
+`docs/architecture.md` has the layout and data flow, `docs/development.md` the full command
+reference, `CONTRIBUTING.md` the rules for data and code pull requests. `README.md` is the public
+front page and advertises the lab; keep working notes out of it.
+
 ## Commands
 
 - `pnpm install` — Node 22, pnpm 10.

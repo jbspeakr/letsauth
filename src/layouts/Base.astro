@@ -5,6 +5,7 @@ import "@/styles/global.css";
 import fontDisplay from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import fontBody from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import BrandLogo from "@/components/BrandLogo.astro";
 import { LAB, LEGAL_LINKS, OPERATOR, REPO } from "@/lib/site";
 
 interface Props {
@@ -143,25 +144,7 @@ const nav = [
     <header class="site-header">
       <div class="wrap site-header__row">
         <a class="brand" href="/" aria-label="letsauth home">
-          <svg class="brand__mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-            <defs>
-              <linearGradient id="brand-g" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="var(--accent)" />
-                <stop offset="1" stop-color="var(--accent-2)" />
-              </linearGradient>
-            </defs>
-            <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#brand-g)" />
-            <path
-              d="M11 15.5v-3a5 5 0 0 1 10 0v3"
-              fill="none"
-              stroke="var(--bg-elevated)"
-              stroke-width="2.4"
-              stroke-linecap="round"
-            />
-            <rect x="9" y="14.5" width="14" height="10" rx="3" fill="var(--bg-elevated)" />
-            <circle cx="16" cy="19.5" r="1.6" fill="var(--accent-strong)" />
-          </svg>
-          <span class="brand__name">letsauth</span>
+          <BrandLogo />
         </a>
         <nav class="site-nav" aria-label="Primary">
           {
@@ -209,24 +192,7 @@ const nav = [
       <div class="wrap site-footer__top">
         <div class="site-footer__about">
           <a class="site-footer__brand" href="/" aria-label="letsauth home">
-            <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
-              <defs>
-                <linearGradient id="brand-g-footer" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="var(--accent)" />
-                  <stop offset="1" stop-color="var(--accent-2)" />
-                </linearGradient>
-              </defs>
-              <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#brand-g-footer)" />
-              <path
-                d="M11 15.5v-3a5 5 0 0 1 10 0v3"
-                fill="none"
-                stroke="var(--bg-elevated)"
-                stroke-width="2.4"
-                stroke-linecap="round"
-              />
-              <rect x="9" y="14.5" width="14" height="10" rx="3" fill="var(--bg-elevated)" />
-            </svg>
-            letsauth
+            <BrandLogo />
           </a>
           <p>
             An independent lab for authentication in the agent era, by {LAB}. Every cell cites its
@@ -419,19 +385,10 @@ const nav = [
   }
   .brand {
     display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    text-decoration: none;
-    color: var(--ink);
-    font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    font-size: 1.2rem;
-    line-height: 1;
-  }
-  .brand__mark {
     flex: none;
-    filter: drop-shadow(0 1px 2px color-mix(in oklch, var(--accent) 30%, transparent));
+    align-items: center;
+    min-height: 2.75rem;
+    text-decoration: none;
   }
   .site-nav {
     display: flex;
@@ -469,6 +426,7 @@ const nav = [
     display: none;
   }
   .theme-toggle {
+    flex: none;
     display: inline-grid;
     place-items: center;
     width: 2.25rem;
@@ -528,12 +486,6 @@ const nav = [
   .site-footer__brand {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    font-family: var(--font-display);
-    font-weight: 700;
-    color: var(--ink);
-    font-size: 1.1rem;
-    letter-spacing: -0.02em;
     text-decoration: none;
     margin-bottom: var(--space-3);
   }
@@ -629,27 +581,8 @@ const nav = [
       grid-template-columns: 1fr;
       gap: var(--space-6);
     }
-  }
-  @media (max-width: 40rem) {
     .site-header__row {
       gap: var(--space-3);
-    }
-    .site-nav {
-      gap: 0;
-      font-size: var(--text-xs);
-      /* four items no longer fit beside the brand and the toggle on the narrowest phones:
-         the nav scrolls in its own box instead of pushing the page wider */
-      min-width: 0;
-      flex: 0 1 auto;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .brand,
-    .theme-toggle {
-      flex: none;
-    }
-    .site-nav a {
-      padding: 0.45em 0.55em;
     }
     .site-nav .external,
     .nav-long {
@@ -657,6 +590,29 @@ const nav = [
     }
     .nav-short {
       display: inline;
+    }
+  }
+  @media (max-width: 40rem) {
+    .site-header__row {
+      flex-wrap: wrap;
+      align-content: center;
+      gap: var(--space-1) var(--space-3);
+      padding-block: var(--space-2);
+    }
+    .theme-toggle {
+      margin-left: auto;
+    }
+    .site-nav {
+      /* Keep the complete wordmark and every destination visible on narrow phones. */
+      order: 1;
+      flex: 1 0 100%;
+      justify-content: space-between;
+      gap: 0;
+      margin-left: 0;
+      font-size: var(--text-xs);
+    }
+    .site-nav a {
+      padding: 0.45em 0.55em;
     }
     .site-main {
       padding-block: var(--space-6) var(--space-8);
