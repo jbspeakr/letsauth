@@ -192,8 +192,8 @@ append-only check passes.
 - **FR-005**: The scanner MUST append an observation for a cell only when the cell's current
   observation is not from the same scanner version or differs in status or evidence; it MUST
   never edit or remove an existing observation.
-- **FR-006**: The nightly run MUST scan every listed server that is not withdrawn and has an HTTP
-  transport, MUST open at most one pull request per run, MUST open none when nothing was
+- **FR-006**: The nightly run MUST scan every listed server that is not withdrawn, has an HTTP
+  transport and is not listed as open or API-key (those have no OAuth to judge), MUST open at most one pull request per run, MUST open none when nothing was
   appended, and the pull request description MUST list the servers scanned, the cells appended
   and the checks that could not be judged.
 - **FR-007**: Each listed server MUST have a report page at a stable address showing, for the
@@ -205,7 +205,10 @@ append-only check passes.
   the rule MUST be published next to every grade: a MUST-level check that is unsupported or partial
   gives F; otherwise a MUST-level check that is unknown withholds the grade; otherwise a
   SHOULD-level check that is unsupported or partial gives C; otherwise a SHOULD-level check that is
-  unknown gives B; otherwise A. MAY-level and deprecated requirements never affect the grade.
+  unknown gives B; otherwise A. MAY-level and deprecated requirements never affect the grade. A
+  MUST the server may meet in either of two ways (protected resource metadata at a well-known
+  location or in a `WWW-Authenticate` challenge) counts as unknown while the other way is unknown.
+  A server listed as open or API-key is not graded ("No OAuth").
 - **FR-009**: The scanner index MUST list every listed server alphabetically with its latest grade
   (or that it is not scanned or not graded) and the date of its newest scanner observation, MUST
   link each to its report, and MUST NOT order or rank servers by grade anywhere on the site.
@@ -248,7 +251,7 @@ computed from them at render time.
 
 ### Measurable Outcomes
 
-- **SC-001**: After the first nightly run, every listed server with an HTTP transport has a
+- **SC-001**: After the first nightly run, every listed OAuth server with an HTTP transport has a
   scanner observation for each of the 12 passively observable requirements of the current
   revision, each with a URL as evidence, and `pnpm validate:data` and the append-only check pass
   on the pull request.

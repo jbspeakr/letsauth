@@ -35,9 +35,9 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
       <p class="lede">
         <code>{server.url}</code> against MCP Authorization {view.revisionId}
         {view.scannedAt && (
-          <>
+          <span data-nightly>
             {" "}· newest scanner observation <time datetime={view.scannedAt}>{view.scannedAt.slice(0, 10)}</time>
-          </>
+          </span>
         )}
       </p>
       <p class="links">

@@ -57,8 +57,36 @@ describe("grade rule (FR-008, SC-004)", () => {
     expect(g.reasons).toEqual(["MUST-level check unknown: a"]);
   });
 
-  it("publishes six rule lines", () => {
-    expect(GRADE_RULE).toHaveLength(6);
+  it("does not fail a server on one of two discovery mechanisms while the other is unknown", () => {
+    const wellKnown = {
+      feature: "mcp.prm.well-known",
+      name: "PRM well-known",
+      level: "MUST" as const,
+    };
+    const header = {
+      feature: "mcp.prm.www-authenticate",
+      name: "PRM header",
+      level: "MUST" as const,
+    };
+    const missing = grade([{ ...wellKnown, status: "unsupported" }]);
+    expect(missing.letter).toBeNull();
+    expect(missing.label).toBe("Withheld");
+    expect(
+      grade([
+        { ...wellKnown, status: "unsupported" },
+        { ...header, status: "supported" },
+      ]).letter,
+    ).toBe("A");
+    expect(
+      grade([
+        { ...wellKnown, status: "unsupported" },
+        { ...header, status: "unsupported" },
+      ]).letter,
+    ).toBe("F");
+  });
+
+  it("publishes its rule lines", () => {
+    expect(GRADE_RULE).toHaveLength(8);
     const levels: FeatureLevel[] = ["MUST", "SHOULD", "MAY"];
     for (const l of levels) expect(GRADE_RULE.join(" ")).toContain(l);
   });

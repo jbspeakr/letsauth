@@ -52,7 +52,8 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 
 1. shallow-clones `main` with the job's GitHub token and installs dependencies;
 2. runs `pnpm scan --all --write --summary scan-summary.md` over every listed server that is not
-   withdrawn and has an HTTP transport (a server that fails is recorded as `unknown`);
+   withdrawn, has an HTTP transport and is not listed as open or API-key (a server that fails is
+   recorded as `unknown`);
 3. runs `pnpm validate:data` and `pnpm check:append-only`; a failure aborts the run and nothing
    is pushed;
 4. when nothing under `data/observations/` changed, logs "nothing to append" and stops;
@@ -125,7 +126,11 @@ Shown on report pages and the scanner index, never used to sort or rank:
    check is unknown.
 5. A when every MUST-level and SHOULD-level check is supported.
 
-MAY-level and deprecated requirements are listed and never change the grade.
+A MUST the server may meet in either of two ways counts as unknown while the other way is
+unknown. Protected resource metadata missing from both well-known locations may still be
+announced in a `WWW-Authenticate` challenge, which a passive scan does not provoke, so such a
+server is withheld, not failed. MAY-level and deprecated requirements are listed and never change
+the grade. Servers listed as open or API-key are neither scanned nor graded ("No OAuth").
 
 ## What there is not
 

@@ -21,7 +21,7 @@ What one run does, in order:
 1. Shallow-clones the base branch of `SCANNER_REPO` with the token (sent as an `Authorization`
    header, never placed in a remote URL) and installs dependencies.
 2. Runs `pnpm scan --all --write --summary scan-summary.md`: every listed server that is not
-   withdrawn and has an HTTP transport, sequentially, at most five `GET` requests each to the
+   withdrawn, has an HTTP transport and is not listed as open or API-key, sequentially, at most five `GET` requests each to the
    well-known metadata locations, the authorization server metadata cached per issuer. A server
    that fails is recorded as `unknown` and does not stop the run.
 3. Runs `pnpm validate:data` and `pnpm check:append-only HEAD`; a failure aborts the run with

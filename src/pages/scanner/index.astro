@@ -41,7 +41,7 @@ const issue = `${repo}/issues/new?template=observation.yml`;
         </div>
         <div>
           <dt>Scanned</dt>
-          <dd class="num">{facts.scanned}</dd>
+          <dd class="num" data-nightly>{facts.scanned}</dd>
         </div>
         <div>
           <dt>Checks per server</dt>
@@ -49,7 +49,7 @@ const issue = `${repo}/issues/new?template=observation.yml`;
         </div>
         <div>
           <dt>Newest scan</dt>
-          <dd class:list={["num", { muted: !facts.newest }]}>
+          <dd class:list={["num", { muted: !facts.newest }]} data-nightly>
             {facts.newest ? <time datetime={facts.newest}>{facts.newest.slice(0, 10)}</time> : "none yet"}
           </dd>
         </div>

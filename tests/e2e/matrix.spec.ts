@@ -137,6 +137,7 @@ test.describe("matrix page without JavaScript", () => {
     );
     await details.locator("summary").click();
     await expect(details).toHaveAttribute("open", "");
-    await expect(details.locator("[data-detail]")).toContainText("vendor-claim");
+    const winning = matrix.cells.get(`${withUnsupported?.id}|mcp.as.dcr`)?.observation;
+    await expect(details.locator("[data-detail]")).toContainText(winning?.method ?? "vendor-claim");
   });
 });

@@ -10,12 +10,14 @@ export type GradeLetter = "A" | "B" | "C" | "F";
 
 export interface Grade {
   letter: GradeLetter | null;
-  /** "A" … "F", "Withheld" or "Not scanned". */
+  /** "A" … "F", "Withheld", "Not scanned" or "No OAuth". */
   label: string;
   reasons: string[];
 }
 
 export interface Gradable {
+  /** The feature id; needed for the either-or rule below. */
+  feature?: string;
   name: string;
   level: FeatureLevel;
   status: ObservationStatus;
@@ -27,12 +29,32 @@ export const GRADE_RULE: readonly string[] = [
   "C when every MUST-level check is supported and a SHOULD-level check is unsupported or partial.",
   "B when every MUST-level check is supported, no SHOULD-level check fails, and a SHOULD-level check is unknown.",
   "A when every MUST-level and SHOULD-level check is supported.",
+  "A MUST the server may meet in either of two ways counts as unknown, not unsupported, while the other way is unknown: protected resource metadata missing from both well-known locations may still be announced in a WWW-Authenticate challenge, which a passive scan does not provoke.",
   "MAY-level and deprecated requirements are listed and never change the grade.",
+  "Servers listed as open or API-key are not graded: there is no OAuth authorization to check.",
 ];
+
+/**
+ * MUST-level requirements a server meets through either of two mechanisms (feature → its
+ * alternative). The specification asks for one of them, so one failing alone fails nothing.
+ */
+export const EITHER_OR: Readonly<Record<string, string>> = {
+  "mcp.prm.well-known": "mcp.prm.www-authenticate",
+};
 
 const failing = (s: ObservationStatus) => s === "unsupported" || s === "partial";
 
-export function grade(checks: readonly Gradable[]): Grade {
+/** The status a check counts with under the either-or rule; the alternative may be absent. */
+function effective(c: Gradable, checks: readonly Gradable[]): ObservationStatus {
+  const other = c.feature ? EITHER_OR[c.feature] : undefined;
+  if (!other || !failing(c.status)) return c.status;
+  const alt = checks.find((x) => x.feature === other)?.status ?? "unknown";
+  if (alt === "supported") return "supported";
+  return failing(alt) ? c.status : "unknown";
+}
+
+export function grade(input: readonly Gradable[]): Grade {
+  const checks = input.map((c) => ({ ...c, status: effective(c, input) }));
   const must = checks.filter((c) => c.level === "MUST");
   const should = checks.filter((c) => c.level === "SHOULD");
   const mustFail = must.filter((c) => failing(c.status));
@@ -76,3 +98,15 @@ export function grade(checks: readonly Gradable[]): Grade {
 
 /** The grade shown for a server that has no scanner observation at all. */
 export const NOT_SCANNED: Grade = { letter: null, label: "Not scanned", reasons: [] };
+
+/** The grade shown for a server whose listing says it uses no OAuth; such servers are not scanned. */
+export const NO_OAUTH: Grade = {
+  letter: null,
+  label: "No OAuth",
+  reasons: ["Listed as open or API-key: there is no OAuth authorization to grade."],
+};
+
+/** True when the listing says the server uses no OAuth, so a scan has nothing to judge. */
+export function claimsNoOAuth(authClaimed: string | undefined): boolean {
+  return authClaimed === "open" || authClaimed === "api-key";
+}
