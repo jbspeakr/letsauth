@@ -18,3 +18,133 @@
   observedAt: '2026-10-14T00:00:00Z'
   observedBy: jbspeakr (documentation pass with Claude Code)
   evidence: https://plaid.com/docs/resources/mcp/ — "Access tokens for the MCP server expire after 15 minutes." (Docs say expired tokens make MCP requests 'fail with a `401` status code or a provider-specific authentication error'; the 401 is stated for direct calls, missing/invalid tokens are not addressed.)
+- server: plaid
+  feature: mcp.prm
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.prm.authorization-servers
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.prm.scopes-supported
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.prm.well-known
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; not at either well-known location (path-aware HTTP 404, root HTTP 404)
+- server: plaid
+  feature: mcp.prm.www-authenticate
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unsupported
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: "https://api.dashboard.plaid.com/mcp/sse — HTTP 401; WWW-Authenticate: absent, no resource_metadata parameter"
+- server: plaid
+  feature: mcp.prm.no-offline-access
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.issuer-match
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.metadata
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.cimd
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.iss-param
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.pkce-s256
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
+- server: plaid
+  feature: mcp.as.https
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: unknown
+  method: passive-scan
+  observedAt: 2026-10-16T01:18:16Z
+  observedBy: scanner@0.2.0
+  evidence: https://api.dashboard.plaid.com/.well-known/oauth-protected-resource — HTTP 404; no protected resource metadata at a well-known location (HTTP 404, HTTP 404) and none reached through the challenge (challenge without resource_metadata)
