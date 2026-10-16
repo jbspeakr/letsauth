@@ -4,6 +4,7 @@ import Base from "@/layouts/Base.astro";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
 import { passiveChecks, scannerFacts, scannerIndex, unscannedFeatures } from "@/lib/scanner";
+import { MAX_REQUESTS } from "@/scanner/discovery";
 import { GRADE_RULE } from "@/scanner/grade";
 import { SCANNER_ID, USER_AGENT } from "@/scanner/version";
 
@@ -68,11 +69,15 @@ const issue = `${repo}/issues/new?template=observation.yml`;
               derived from the server URL, then at the root.
             </li>
             <li>
-              The challenge the endpoint returns to one unauthenticated <code>GET</code>: the
-              status and the <code>WWW-Authenticate</code> header, which RFC 9728 and the MCP
-              specification define as the other way to announce that metadata. The response body
-              is never read. When the well-known locations had nothing and the challenge names a
-              <code>resource_metadata</code> URL, that document is fetched.
+              The challenge the endpoint returns to an unauthenticated request: the status and
+              the <code>WWW-Authenticate</code> header, which RFC 9728 and the MCP specification
+              define as the other way to announce that metadata, and whose <code>scope</code>
+              parameter names the scopes to ask for. First one <code>GET</code>; when that is
+              routed elsewhere (a streamable HTTP server may answer <code>GET</code> with 405, a
+              landing page with a redirect), one <code>POST</code> with an empty body, which
+              carries no JSON-RPC message. The response body is never read. When the well-known
+              locations had nothing and the challenge names a <code>resource_metadata</code> URL,
+              that document is fetched.
             </li>
             <li>
               For the first authorization server the metadata names: its metadata at the three
@@ -81,11 +86,14 @@ const issue = `${repo}/issues/new?template=observation.yml`;
             </li>
           </ol>
           <p>
-            At most seven <code>GET</code> requests over HTTPS, no credentials, no body sent,
-            redirects followed only on the same host. It identifies itself as{" "}
-            <code>{USER_AGENT}</code>. The challenge is the only thing read from the endpoint, and
-            it is what every anonymous client receives; that is why it still counts as a passive
-            scan (<a href={`${repo}/blob/main/specs/008-discovery-challenge/spec.md`} rel="noopener">why</a>).
+            At most {MAX_REQUESTS} requests over HTTPS, no credentials, no body sent, redirects
+            followed only on the same host. It identifies itself as <code>{USER_AGENT}</code>.
+            The challenge is the only thing read from the endpoint, and it is what every
+            anonymous client receives; that is why it still counts as a passive scan (<a
+              href={`${repo}/blob/main/specs/008-discovery-challenge/spec.md`}
+              rel="noopener">why</a>, and <a
+              href={`${repo}/blob/main/specs/010-discovery-strategies/spec.md`}
+              rel="noopener">why the empty POST is too</a>).
           </p>
         </article>
         <article class="card">
@@ -96,6 +104,11 @@ const issue = `${repo}/issues/new?template=observation.yml`;
             <strong>Unknown</strong> means the scanner could not tell: the document could not be
             fetched, no authorization server was named, or nothing was advertised to judge. A
             fetch failure is never written as a failure of the server.
+          </p>
+          <p>
+            A requirement a server can announce in more than one place is read from each in turn,
+            the server's own metadata first, then its challenge, then its authorization server,
+            and the evidence names the one that decided.
           </p>
           <p>
             Every observation starts with the URL that decided it and names the field and

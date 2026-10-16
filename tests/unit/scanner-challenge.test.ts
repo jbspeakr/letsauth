@@ -43,6 +43,18 @@ describe("parseChallenge (research R5)", () => {
     expect(parseChallenge("Bearer")).toEqual({ schemes: ["Bearer"] });
   });
 
+  it("reads the scope parameter as a list, quoted or not, and leaves it absent without one (010)", () => {
+    expect(parseChallenge(`Bearer realm="mcp", scope="read write"`).scope).toEqual([
+      "read",
+      "write",
+    ]);
+    expect(parseChallenge(`Bearer scope=read, resource_metadata="${PRM}"`).scope).toEqual(["read"]);
+    expect(parseChallenge(`Bearer realm="mcp", scope=""`).scope).toEqual([]);
+    expect(parseChallenge(`Bearer realm="mcp"`).scope).toBeUndefined();
+    // a parameter whose name merely ends in "scope" is not the scope parameter
+    expect(parseChallenge(`Bearer myscope="x"`).scope).toBeUndefined();
+  });
+
   it("does not take a parameter name for a scheme", () => {
     const c = parseChallenge(`Bearer realm="a, b", resource_metadata="${PRM}"`);
     expect(c.schemes).toEqual(["Bearer"]);

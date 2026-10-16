@@ -1,8 +1,8 @@
 id: plaid
 name: "Plaid"
-url: https://api.dashboard.plaid.com/mcp/sse
+url: https://api.dashboard.plaid.com/mcp/
 homepage: https://plaid.com
-transport: sse
+transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
 authClaimed: oauth2.1-no-dcr

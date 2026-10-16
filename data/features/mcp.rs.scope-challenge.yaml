@@ -4,7 +4,7 @@ description: >
   The 401 challenge includes a scope parameter naming the scopes a client should request.
 category: authorization
 party: mcp-server
-observable: active
+observable: passive
 revisions:
   - spec: mcp-authorization
     revision: "2025-11-25"

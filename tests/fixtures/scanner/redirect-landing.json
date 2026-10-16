@@ -1,0 +1,17 @@
+{
+  "target": "https://mcp.example.com",
+  "responses": {
+    "https://mcp.example.com": {
+      "status": 302,
+      "headers": {
+        "location": "https://docs.example.net/mcp"
+      }
+    },
+    "POST https://mcp.example.com": {
+      "status": 401,
+      "headers": {
+        "www-authenticate": "Bearer"
+      }
+    }
+  }
+}

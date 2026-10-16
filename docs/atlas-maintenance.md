@@ -38,7 +38,8 @@ pnpm build && pnpm test:e2e
   the specification says about the party named in `party`; `levelNote` carries qualifiers such
   as "one of two" or "deprecated".
 - `observable` is `passive` when published metadata shows it (the well-known documents, and the
-  `WWW-Authenticate` challenge the endpoint returns to a request without a token), `active` when a
+  `WWW-Authenticate` challenge, pointer and scope included, that the endpoint returns to a
+  request without a token), `active` when a
   token, a scope or a protocol message is needed, `manual` when only documentation or source can
   show it. The atlas itself never sends requests (constitution III); `observable` tells the
   scanner what it may do.
