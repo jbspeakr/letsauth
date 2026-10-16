@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { currentCell, currentRevision, matrixFor } from "../../src/lib/atlas";
 import { getDataset } from "../../src/lib/data";
+import { latestScan } from "../../src/lib/scanner";
 import { expectNoSeriousA11yViolations } from "./helpers";
 
 const data = getDataset();
@@ -86,11 +87,29 @@ test.describe("matrix page (US1)", () => {
 
   test("rows are alphabetical and nothing sorts or scores servers (FR-014)", async ({ page }) => {
     await page.goto("/atlas/mcp/");
-    const names = await page.locator("#matrix tbody th[scope='row'] a").allTextContents();
+    const names = await page
+      .locator("#matrix tbody th[scope='row'] a.server-link")
+      .allTextContents();
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
     await expect(page.locator("#matrix [aria-sort]")).toHaveCount(0);
     await expect(page.locator("#matrix thead button")).toHaveCount(0);
-    await expect(page.locator("#matrix")).not.toContainText(/score|rank|grade/i);
+    await expect(page.locator("#matrix")).not.toContainText(/score|rank/i);
+  });
+
+  test("each server carries its latest scan grade, linked to the report (004 FR-010)", async ({
+    page,
+  }) => {
+    await page.goto("/atlas/mcp/");
+    const links = page.locator("#matrix tbody th[scope='row'] a.grade-link");
+    await expect(links).toHaveCount(matrix.rows.length);
+    for (const server of matrix.rows.slice(0, 5)) {
+      const scan = latestScan(data, server, revision.id);
+      const link = page.locator(`#matrix tbody tr[data-server="${server.id}"] a.grade-link`);
+      await expect(link).toHaveAttribute("href", `/scanner/${server.id}/`);
+      await expect(link).toHaveAttribute("data-grade", scan.grade.letter ?? scan.grade.label);
+      // the badge's word, not its decorative letter, carries the grade for every reader
+      await expect(link.locator(".word")).toHaveText(scan.grade.letter ?? scan.grade.label);
+    }
   });
 
   test("keyboard-only walkthrough opens and closes a cell", async ({ page }) => {
@@ -118,7 +137,9 @@ test.describe("matrix page (US1)", () => {
   test("looks right", async ({ page }) => {
     await page.goto("/atlas/mcp/");
     await expect(page.locator("#matrix[data-enhanced]")).toBeAttached();
-    await expect(page).toHaveScreenshot("matrix.png");
+    await expect(page).toHaveScreenshot("matrix.png", {
+      mask: [page.locator("#matrix a.grade-link")],
+    });
   });
 });
 

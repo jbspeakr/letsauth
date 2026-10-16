@@ -161,3 +161,4 @@ constitution's technology constraints say, and it opens its pull request with a 
 | 2026-10-14 | Deployment to Scaleway through a dedicated workflow (`scanner-deploy.yml`) | owner |
 | 2026-10-15 | After the first run: open and API-key servers skipped and shown as "No OAuth"; a missing well-known PRM withholds the grade instead of failing it (either-or MUST) | owner |
 | 2026-10-15 | A branch per run (`scanner/<date>-<hhmm>`), older scanner pull requests closed as superseded; the token moved out of git's arguments after a failed push printed it | owner |
+| 2026-10-15 | The scanner index folded into the atlas: the grade shows next to each server in the matrix and on server pages; `/scanner/` keeps the method only and leaves the main navigation, since two pages listing the same servers read as two products | owner |

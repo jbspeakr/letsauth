@@ -66,8 +66,9 @@ scanner can judge from public metadata: what was checked, which document and fie
 the status, when it was last confirmed, and the requirement's level and citation. The report
 carries a grade computed from those results by a published rule, with the reasons listed under
 it. A requirement the scanner could not judge is shown as unknown and never counts against the
-server. A server that has not been scanned yet says so. An index lists every listed server with
-its latest grade and the date of its newest scan.
+server. A server that has not been scanned yet says so. The grade shows where the server already is:
+next to its name in the atlas matrix and on its atlas page, each linked to the report. The
+scanner page itself keeps no list of servers.
 
 **Why this priority**: The roadmap asks for a graded report; the positioning research calls the
 product "SSL Labs for MCP auth". The report is where measured data becomes legible for the
@@ -75,8 +76,8 @@ engineer who runs a server, and the grade is what gets fixed.
 
 **Independent Test**: With a server that has scanner observations for every passively observable
 requirement, open its report and confirm the grade matches the published rule applied to those
-statuses, every check shows status, evidence link, date, level and citation, and the index lists
-the server with the same grade; with a server without scanner observations, confirm the report
+statuses, every check shows status, evidence link, date, level and citation, and the atlas matrix
+shows the server with the same grade; with a server without scanner observations, confirm the report
 says no scan has been recorded and shows no grade; with a server whose MUST-level cell is
 unknown, confirm no letter grade is shown and the reason is named.
 
@@ -94,9 +95,9 @@ unknown, confirm no letter grade is shown and the reason is named.
 4. **Given** a server without any scanner observation, **When** the visitor opens its report,
    **Then** the report says no scan has been recorded, shows no grade, and links to the
    documentation-based cells on the server's atlas page.
-5. **Given** the index, **When** it renders, **Then** every listed server appears in alphabetical
-   order with its latest grade (or "not scanned" / "not graded") and newest scan date, and nothing
-   is sorted or ranked by grade.
+5. **Given** the atlas matrix, **When** it renders, **Then** every listed server carries its latest
+   grade (or "not scanned" / "no OAuth") next to its name, linked to its report, the rows stay
+   alphabetical, and nothing is sorted or ranked by grade.
 6. **Given** JavaScript is disabled, **When** either page renders, **Then** every report, grade,
    rule and link is present.
 
@@ -209,9 +210,10 @@ append-only check passes.
   MUST the server may meet in either of two ways (protected resource metadata at a well-known
   location or in a `WWW-Authenticate` challenge) counts as unknown while the other way is unknown.
   A server listed as open or API-key is not graded ("No OAuth").
-- **FR-009**: The scanner index MUST list every listed server alphabetically with its latest grade
-  (or that it is not scanned or not graded) and the date of its newest scanner observation, MUST
-  link each to its report, and MUST NOT order or rank servers by grade anywhere on the site.
+- **FR-009**: The atlas matrix MUST show each listed server's latest grade (or that it is not
+  scanned or not graded) next to its name, linked to its report, and the site MUST NOT order or
+  rank servers by grade anywhere. The scanner page MUST NOT carry a second list of servers; it
+  describes the method and points at the atlas.
 - **FR-010**: All scanning MUST run in a scheduled job on the project's own backend (Scaleway, EU
   region) under the maintainer's control. The site MUST NOT offer visitors any way to trigger a
   scan, no HTTP endpoint MUST accept URLs from outside, and the only output of a run MUST be data
@@ -268,7 +270,7 @@ computed from them at render time.
 - **SC-006**: The scanner sends requests only to HTTPS well-known metadata URLs on public hosts
   (verified by unit tests that record every request made for fixture servers, private addresses
   and redirecting responses).
-- **SC-007**: Report pages and the index meet the site's budgets: Lighthouse performance and
+- **SC-007**: Report pages and the scanner page meet the site's budgets: Lighthouse performance and
   accessibility at or above 95, no horizontal scroll at phone width, no serious accessibility
   violation.
 - **SC-008**: Every cell the scanner wrote is reproducible by one command from the repository
@@ -293,8 +295,8 @@ computed from them at render time.
 - Active probes and owner verification (proving control of a server to run requests against its
   endpoint) are out of scope for this feature.
 - The grade is a property of one report at one time, computed from data in the model by a
-  published rule; it is shown on report pages and in the scanner index, never used to sort or
-  rank servers, and never shown in the atlas matrix.
+  published rule; it is shown on report pages, on atlas server pages and next to the server name
+  in the atlas matrix, never used to sort or rank servers.
 - The scanner judges against the current revision only. Older revisions are not re-scanned.
 - When the metadata lists several authorization servers, the first is judged in this revision of
   the scanner.
