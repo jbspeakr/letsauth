@@ -5,9 +5,12 @@ on:
   push:
     branches: [main]
 
+# Superseded pull request runs are cancelled. Runs on main never are: the scanner and site deploys
+# follow each green CI run on main, and a cancelled (or queued-then-dropped) run skips its deploy,
+# so on main every commit gets its own group.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
