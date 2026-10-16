@@ -6,7 +6,7 @@ import { parse } from "yaml";
 import { currentRevision } from "@/lib/atlas";
 import { type Dataset, getDataset } from "@/lib/data";
 import { type Fixture, recordingFetcher } from "@/scanner/fetch";
-import { appendObservations, summarise, toAppend } from "@/scanner/observations";
+import { appendObservations, heldCells, summarise, toAppend } from "@/scanner/observations";
 import { type Report, scan } from "@/scanner/report";
 import { type Observation, observationFileSchema } from "@/schema";
 
@@ -75,7 +75,48 @@ describe("append rule (FR-005, SC-003)", () => {
     );
   });
 
-  it("judges against the current cell, not an older scanner entry behind a newer manual one", async () => {
+  it("leaves a newer manual observation standing while its own view is unchanged", async () => {
+    const r = await report();
+    const manual: Observation = {
+      ...(r.observations[0] as Observation),
+      method: "manual",
+      observedBy: "jbspeakr",
+      observedAt: "2026-10-16T00:00:00Z",
+      status: "partial",
+      evidence: "https://docs.example/ limits registration to allowlisted clients",
+    };
+    const data = withObservations([...r.observations, manual]);
+    const again = await report("2026-10-17T03:17:04Z");
+    expect(toAppend(again, data)).toEqual([]);
+    expect(heldCells(again, data)).toEqual([
+      {
+        feature: manual.feature,
+        status: "partial",
+        method: "manual",
+        observedBy: "jbspeakr",
+        scanStatus: (r.observations[0] as Observation).status,
+      },
+    ]);
+  });
+
+  it("writes over a newer manual observation once its own view changes, and holds nothing then", async () => {
+    const r = await report();
+    const manual: Observation = {
+      ...(r.observations[0] as Observation),
+      method: "manual",
+      observedBy: "jbspeakr",
+      observedAt: "2026-10-16T00:00:00Z",
+      status: "partial",
+      evidence: "https://docs.example/ limits registration to allowlisted clients",
+    };
+    const old = r.observations.map((o) => ({ ...o, observedBy: "scanner@0.0.9" }));
+    const data = withObservations([...old, manual]);
+    const again = await report("2026-10-17T03:17:04Z");
+    expect(toAppend(again, data)).toHaveLength(r.checks.length);
+    expect(heldCells(again, data)).toEqual([]);
+  });
+
+  it("holds nothing when the manual observation agrees with the scan", async () => {
     const r = await report();
     const manual: Observation = {
       ...(r.observations[0] as Observation),
@@ -84,11 +125,10 @@ describe("append rule (FR-005, SC-003)", () => {
       observedAt: "2026-10-16T00:00:00Z",
       evidence: "checked by hand",
     };
-    const out = toAppend(
-      await report("2026-10-17T03:17:04Z"),
-      withObservations([...r.observations, manual]),
-    );
-    expect(out.map((o) => o.feature)).toEqual([manual.feature]);
+    const data = withObservations([...r.observations, manual]);
+    const again = await report("2026-10-17T03:17:04Z");
+    expect(toAppend(again, data)).toEqual([]);
+    expect(heldCells(again, data)).toEqual([]);
   });
 
   it("returns nothing for a target that is not a listed server", async () => {
@@ -137,6 +177,15 @@ describe("summarise", () => {
           server: { id: server?.id ?? "", name: server?.name ?? "", url: fixture.target },
           report: r,
           appended: r.observations.slice(0, 1),
+          held: [
+            {
+              feature: "mcp.as.dcr",
+              status: "partial",
+              method: "manual",
+              observedBy: "jbspeakr",
+              scanStatus: "supported",
+            },
+          ],
         },
         {
           server: { id: "down", name: "Down", url: "https://down.example/" },
@@ -149,7 +198,7 @@ describe("summarise", () => {
     );
     expect(md).toContain("1 observation appended");
     expect(md).toContain(
-      `| ${server?.name} (\`${server?.id}\`) | A | 1: \`${r.observations[0]?.feature}\` supported | 0 |`,
+      `| ${server?.name} (\`${server?.id}\`) | A | 1: \`${r.observations[0]?.feature}\` supported | 0 | held by hand: \`mcp.as.dcr\` partial (manual, jbspeakr) over scan supported |`,
     );
     expect(md).toContain("| Down (`down`) | – | 0 | 0 | error: refused |");
   });

@@ -141,6 +141,7 @@ job step), `src/lib/scanner.ts` (page derivations), `scripts/`, `tests/`, `docs/
 - [x] T036 [P] Confirm Biome, typecheck and the build include `src/scanner/` and `scripts/scan.ts` without pulling the scanner into any page bundle (`pnpm build` output lists no `scanner` or `ScanForm` chunk; the scanner pages ship no JavaScript)
 - [x] T038 Fold the scanner index into the atlas: the matrix server cell carries the latest grade (`GradeBadge` variant `cell`, linked to the report, masked in the matrix screenshot), `/scanner/` loses its server table and gains "Where the results show", report breadcrumbs lead through the atlas, "Scanner" leaves the main navigation; e2e and spec updated (FR-009, scenario 5)
 - [x] T037 Run every quickstart.md scenario (1 to 12) and record results in `specs/004-scanner/checklists/quickstart-run.md`; scenarios 10 and the live part of 6 are recorded as "run from GitHub / by the maintainer" when the environment has no network; refresh screenshot baselines through the `refresh-screenshots` label on the pull request
+- [x] T039 Append rule against the scanner's own last observation (FR-005 as amended 2026-10-16): `toAppend` reads `newestScannerObservation`, `heldCells` names the cells a newer human observation holds against the scan, the run summary lists them under Notes; `pnpm observe` appends one validated manual observation; Figma's DCR recorded as `partial` (`tests/unit/scanner-append.test.ts`, quickstart scenario 13)
 
 ---
 

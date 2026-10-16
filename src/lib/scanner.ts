@@ -45,8 +45,10 @@ export interface ScanView {
   grade: Grade;
 }
 
-const isScanner = (o: Observation) =>
+/** True for an observation the scanner wrote (any version). */
+export const isScannerObservation = (o: Observation) =>
   o.method === "passive-scan" && o.observedBy.startsWith("scanner@");
+const isScanner = isScannerObservation;
 
 /** The newest scanner observation for a cell, ignoring manual and documentation entries. */
 export function newestScannerObservation(

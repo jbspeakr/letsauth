@@ -9,7 +9,6 @@ import { type Guard, guardUrl } from "@/scanner/guard";
 import { probe } from "@/scanner/probe";
 import { passiveFeatures, scan } from "@/scanner/report";
 import { OBSERVER } from "@/scanner/version";
-import type { ObservationStatus } from "@/schema";
 
 const data = getDataset();
 const revision = currentRevision(data).id;

@@ -158,6 +158,7 @@ constitution's technology constraints say, and it opens its pull request with a 
 | 2026-10-14 | Plan written: library, command, nightly workflow on GitHub Actions, on-demand service as a Scaleway container, report pages | plan |
 | 2026-10-14 | On-demand scanning removed entirely (no service, no form, no endpoint): all scanning in scheduled backend jobs, feeding the repository only | owner |
 | 2026-10-14 | Nightly run moved to a Scaleway Serverless Job from the repository's image; the GitHub schedule deleted | owner |
+| 2026-10-16 | Append rule compares with the scanner's own last observation, so a newer manual entry stands until the scan sees something new; held cells named in the summary. `pnpm observe` added for manual entries | owner |
 | 2026-10-14 | Deployment to Scaleway through a dedicated workflow (`scanner-deploy.yml`) | owner |
 | 2026-10-15 | After the first run: open and API-key servers skipped and shown as "No OAuth"; a missing well-known PRM withholds the grade instead of failing it (either-or MUST) | owner |
 | 2026-10-15 | A branch per run (`scanner/<date>-<hhmm>`), older scanner pull requests closed as superseded; the token moved out of git's arguments after a failed push printed it | owner |

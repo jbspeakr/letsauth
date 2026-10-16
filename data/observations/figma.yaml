@@ -148,3 +148,13 @@
   observedAt: 2026-10-16T01:18:16Z
   observedBy: scanner@0.2.0
   evidence: https://api.figma.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: figma
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: partial
+  method: manual
+  observedAt: 2026-10-16T19:42:46Z
+  observedBy: jbspeakr
+  evidence: "https://forum.figma.com/ask-the-community-7/how-to-access-mcp-oauth-scope-mcp-connect-50630 — Figma staff (2026-04-02): the mcp:connect scope is not available to general third-party OAuth apps, MCP access is limited to supported clients and integrations; users in the thread report HTTP 403 from the advertised registration_endpoint"

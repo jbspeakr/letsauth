@@ -21,6 +21,7 @@ import { claimsNoOAuth } from "../src/scanner/grade";
 import { guardUrl } from "../src/scanner/guard";
 import {
   appendObservations,
+  heldCells,
   type RunResult,
   summarise,
   toAppend,
@@ -140,6 +141,7 @@ async function main(): Promise<number> {
         reports.push(report);
         if (target.id) {
           result.appended = toAppend(report, data);
+          result.held = heldCells(report, data);
           if (args.write && result.appended.length > 0) {
             appendObservations(
               join(DATA_ROOT, "observations", `${target.id}.yaml`),
@@ -153,6 +155,11 @@ async function main(): Promise<number> {
             console.log(
               `${args.write ? "appended" : "would append"} ${result.appended.length} observation(s) to data/observations/${target.id}.yaml`,
             );
+            for (const h of result.held ?? []) {
+              console.log(
+                `held by hand: ${h.feature} stays ${h.status} (${h.method}, ${h.observedBy}); the scan saw ${h.scanStatus}`,
+              );
+            }
           }
           console.log("");
         }

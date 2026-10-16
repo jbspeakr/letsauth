@@ -27,6 +27,7 @@ set.
 | `pnpm build` | Validates the data, then builds the site into `dist/`. |
 | `pnpm preview` | Serves `dist/` the way the CDN will. |
 | `pnpm validate:data` | Schema and cross-reference checks over `data/`. Run after every data edit; prints `path[index].field: message`. |
+| `pnpm observe <server> <feature> <status> --by <handle> --evidence <url or note>` | Appends one validated `manual` (or `--method vendor-claim`) observation to `data/observations/<server>.yaml`. See [`atlas-maintenance.md`](atlas-maintenance.md#record-an-observation). |
 | `pnpm check:append-only [ref]` | Fails if an existing observation entry was edited or removed, compared with `origin/main` or the ref given. |
 | `pnpm lint` / `pnpm lint:fix` | Biome: lint and format. |
 | `pnpm typecheck` | `astro sync` and `tsc --noEmit`. |

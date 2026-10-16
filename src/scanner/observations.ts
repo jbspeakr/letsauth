@@ -3,13 +3,17 @@ import { dirname } from "node:path";
 import { stringify } from "yaml";
 import { currentCell } from "../lib/atlas";
 import type { Dataset } from "../lib/data";
-import type { Observation } from "../schema";
+import { isScannerObservation, newestScannerObservation } from "../lib/scanner";
+import type { Observation, ObservationMethod, ObservationStatus } from "../schema";
 import type { Report } from "./report";
 import { OBSERVER } from "./version";
 
 /**
- * The append rule (data-model.md): an observation is appended when the cell has none, when the
- * current one was not written by this scanner version, or when status or evidence differ.
+ * The append rule (data-model.md): the scanner compares with its own last observation of the
+ * cell, never with a person's. It appends when it has none, when its last one came from an
+ * older scanner version, or when status or evidence differ from what it sees now. A newer
+ * manual or vendor-claim observation therefore stands until the scanner sees something new; when
+ * such an observation disagrees with the scan, the cell is reported as held (`heldCells`).
  * Nothing is ever edited or removed; the file is only ever extended at its end.
  */
 
@@ -17,21 +21,65 @@ import { OBSERVER } from "./version";
 export function toAppend(report: Report, data: Dataset): Observation[] {
   const serverId = report.target.server;
   if (!serverId) return [];
-  const server = data.servers.find((s) => s.id === serverId);
-  if (!server) throw new Error(`server "${serverId}" not found`);
+  if (!data.servers.some((s) => s.id === serverId)) {
+    throw new Error(`server "${serverId}" not found`);
+  }
   const out: Observation[] = [];
   for (const obs of report.observations) {
-    const feature = data.features.find((f) => f.id === obs.feature);
-    if (!feature) throw new Error(`feature "${obs.feature}" not found`);
-    const cell = currentCell(data, server, feature, obs.revision.revision, obs.revision.spec);
-    const current = cell.observation;
+    if (!data.features.some((f) => f.id === obs.feature)) {
+      throw new Error(`feature "${obs.feature}" not found`);
+    }
+    const mine = newestScannerObservation(data, serverId, obs.feature, obs.revision.revision);
     if (
-      !current ||
-      current.observedBy !== OBSERVER ||
-      current.status !== obs.status ||
-      current.evidence !== obs.evidence
+      !mine ||
+      mine.observedBy !== OBSERVER ||
+      mine.status !== obs.status ||
+      mine.evidence !== obs.evidence
     ) {
       out.push(obs);
+    }
+  }
+  return out;
+}
+
+/** A cell whose current observation is a person's and disagrees with what the scan sees. */
+export interface HeldCell {
+  feature: string;
+  /** The status that stands in the atlas. */
+  status: ObservationStatus;
+  method: ObservationMethod;
+  observedBy: string;
+  /** What the scanner saw and did not write. */
+  scanStatus: ObservationStatus;
+}
+
+/** The cells a run leaves to a newer human observation that disagrees with the scan. */
+export function heldCells(report: Report, data: Dataset): HeldCell[] {
+  const serverId = report.target.server;
+  if (!serverId) return [];
+  const server = data.servers.find((s) => s.id === serverId);
+  if (!server) throw new Error(`server "${serverId}" not found`);
+  const appended = new Set(toAppend(report, data).map((o) => o.feature));
+  const out: HeldCell[] = [];
+  for (const obs of report.observations) {
+    if (appended.has(obs.feature)) continue;
+    const feature = data.features.find((f) => f.id === obs.feature);
+    if (!feature) throw new Error(`feature "${obs.feature}" not found`);
+    const current = currentCell(
+      data,
+      server,
+      feature,
+      obs.revision.revision,
+      obs.revision.spec,
+    ).observation;
+    if (current && !isScannerObservation(current) && current.status !== obs.status) {
+      out.push({
+        feature: obs.feature,
+        status: current.status,
+        method: current.method,
+        observedBy: current.observedBy,
+        scanStatus: obs.status,
+      });
     }
   }
   return out;
@@ -51,6 +99,8 @@ export interface RunResult {
   server: { id: string; name: string; url: string };
   report?: Report;
   appended: Observation[];
+  /** Cells left to a newer human observation that disagrees with the scan. */
+  held?: HeldCell[];
   /** Set when the scan threw or was refused; the server is reported, not skipped silently. */
   error?: string;
 }
@@ -68,7 +118,7 @@ export function summarise(results: RunResult[], startedAt: string, revisionId: s
   );
   lines.push("");
   lines.push(
-    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public metadata was read: the well-known documents, and the challenge the endpoint returns to an unauthenticated request without a JSON-RPC message (a GET, then an empty POST when the GET was routed elsewhere; status and headers only, no body read); every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`. A note names a listed URL that looks stale; fix the server file, not the observations.`,
+    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public metadata was read: the well-known documents, and the challenge the endpoint returns to an unauthenticated request without a JSON-RPC message (a GET, then an empty POST when the GET was routed elsewhere; status and headers only, no body read); every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`. A note names a listed URL that looks stale; fix the server file, not the observations. A cell whose newest observation is a person's and disagrees with the scan is left as it is and named under Notes: the scanner writes again only when what it sees changes.`,
   );
   lines.push("");
   lines.push("| Server | Grade | Appended | Could not judge | Notes |");
@@ -77,7 +127,15 @@ export function summarise(results: RunResult[], startedAt: string, revisionId: s
     const unknown = r.report ? r.report.checks.filter((c) => c.status === "unknown").length : 0;
     const gradeText = r.report ? r.report.grade.label : "–";
     const changed = r.appended.map((o) => `\`${o.feature}\` ${o.status}`).join(", ");
-    const note = r.error ? `error: ${r.error}` : (r.report?.discovered?.endpointNote ?? "");
+    const notes: string[] = [];
+    if (r.error) notes.push(`error: ${r.error}`);
+    else if (r.report?.discovered?.endpointNote) notes.push(r.report.discovered.endpointNote);
+    for (const h of r.held ?? []) {
+      notes.push(
+        `held by hand: \`${h.feature}\` ${h.status} (${h.method}, ${h.observedBy}) over scan ${h.scanStatus}`,
+      );
+    }
+    const note = notes.join("; ");
     lines.push(
       `| ${r.server.name} (\`${r.server.id}\`) | ${gradeText} | ${r.appended.length}${changed ? `: ${changed}` : ""} | ${unknown} | ${note} |`,
     );
