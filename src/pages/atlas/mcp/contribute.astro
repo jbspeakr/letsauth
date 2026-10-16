@@ -7,7 +7,7 @@ import { passiveChecks } from "@/lib/scanner";
 const data = getDataset();
 const revision = currentRevision(data);
 const scannerChecks = passiveChecks(data).length;
-const repo = "https://github.com/jbspeakr/letsauth";
+const repo = "https://github.com/letsauthlab/letsauth";
 const issue = `${repo}/issues/new?template=observation.yml`;
 const entry = `- server: stripe                     # must equal the file's server id
   feature: mcp.as.cimd               # a feature with party mcp-server or authorization-server

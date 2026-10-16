@@ -57,7 +57,7 @@ describe("installation token", () => {
     };
     const result = await installationToken({
       credentials: { appId: "123", privateKey: pem },
-      repo: "jbspeakr/letsauth",
+      repo: "letsauthlab/letsauth",
       fetch: fetchImpl,
       now,
     });
@@ -69,7 +69,7 @@ describe("installation token", () => {
     });
     expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
       "GET https://api.github.com/app",
-      "GET https://api.github.com/repos/jbspeakr/letsauth/installation",
+      "GET https://api.github.com/repos/letsauthlab/letsauth/installation",
       "POST https://api.github.com/app/installations/99/access_tokens",
       "GET https://api.github.com/users/letsauth-scanner%5Bbot%5D",
     ]);

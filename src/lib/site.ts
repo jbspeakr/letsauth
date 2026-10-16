@@ -14,7 +14,7 @@ export const OPERATOR = {
   site: "https://www.janbrennenstuhl.eu/",
 } as const;
 
-export const REPO = "https://github.com/jbspeakr/letsauth";
+export const REPO = "https://github.com/letsauthlab/letsauth";
 
 /** The pages every page links to from the footer, in the order they appear there. */
 export const LEGAL_LINKS = [

@@ -37,7 +37,7 @@ const TRANSPORT_LABEL: Record<Server["transport"], string> = {
   "stdio-only": "stdio only (no HTTP transport)",
 };
 const evidenceUrl = (s: string) => s.match(/^(https:\/\/\S+)/)?.[1];
-const issueBase = "https://github.com/jbspeakr/letsauth/issues/new?template=observation.yml";
+const issueBase = "https://github.com/letsauthlab/letsauth/issues/new?template=observation.yml";
 const counts = { supported: 0, partial: 0, unsupported: 0, unknown: 0, "not-applicable": 0 };
 for (const f of columns) counts[currentCell(data, server, f, revision.id).status] += 1;
 const STATUSES = ["supported", "partial", "unsupported", "unknown", "not-applicable"] as const;

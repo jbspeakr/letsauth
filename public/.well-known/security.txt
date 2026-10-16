@@ -1,9 +1,9 @@
 # Security contact for letsauth.eu (RFC 9116).
-# Scope: this website and the code in https://github.com/jbspeakr/letsauth.
+# Scope: this website and the code in https://github.com/letsauthlab/letsauth.
 # Problems in the MCP servers or products listed in the atlas belong with their vendors.
 Contact: mailto:letsauth@janbrennenstuhl.eu
-Contact: https://github.com/jbspeakr/letsauth/security/advisories/new
+Contact: https://github.com/letsauthlab/letsauth/security/advisories/new
 Expires: 2027-10-14T00:00:00.000Z
 Preferred-Languages: en, de
 Canonical: https://letsauth.eu/.well-known/security.txt
-Policy: https://github.com/jbspeakr/letsauth/blob/main/SECURITY.md
+Policy: https://github.com/letsauthlab/letsauth/blob/main/SECURITY.md

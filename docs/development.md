@@ -9,7 +9,7 @@ Node 22 (`.nvmrc`) and pnpm 10 (`packageManager` in `package.json`, so `corepack
 enough).
 
 ```sh
-git clone https://github.com/jbspeakr/letsauth.git
+git clone https://github.com/letsauthlab/letsauth.git
 cd letsauth
 pnpm install
 pnpm dev            # http://localhost:4321
