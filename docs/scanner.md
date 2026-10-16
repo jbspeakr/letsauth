@@ -113,16 +113,42 @@ A Scaleway Serverless Job runs `pnpm scan:nightly` (`scripts/scan-nightly.ts`) e
 The token never appears in a command line, a remote URL or a log: git reads the auth header from
 `GIT_CONFIG_*` environment variables, pnpm and the scanner run without it, every child process's
 output is captured rather than inherited, and everything the job prints passes through a redactor
-that removes the token and its basic-auth form. If a token ever does reach a log or a chat, revoke it on GitHub and replace the
-`SCANNER_TOKEN` secret in Scaleway.
+that removes the token, its basic-auth form and the App's private key. If a credential ever does
+reach a log or a chat, revoke it on GitHub (the App's private key, or the personal token) and
+replace the secret in Scaleway.
 
-The pull request is opened with a personal token, so CI runs on it like on any other. Nothing is
-merged without review. `specs/004-scanner/contracts/job.md` is the contract.
+The pull request is opened by the scanner's own identity, so CI runs on it like on any other.
+Nothing is merged without review. `specs/004-scanner/contracts/job.md` is the contract.
 
 **Environment of the job**: `SCANNER_REPO` (`jbspeakr/letsauth`), `SCANNER_BASE` (`main`), and
-the secret `SCANNER_TOKEN`: a fine-grained GitHub personal access token for this repository with
-*Contents: write* and *Pull requests: write*, nothing else. It lives in the job definition on
-Scaleway, never in the image or the repository.
+the scanner's credentials, which live in the job definition on Scaleway, never in the image or
+the repository:
+
+- **GitHub App (preferred)**: `SCANNER_APP_ID` and the secret `SCANNER_APP_PRIVATE_KEY`. Each run
+  signs a JWT with the key and exchanges it for an installation token valid for one hour, limited
+  to this repository and to *Contents: write* and *Pull requests: write*. Commits and pull
+  requests show up as `<app-slug>[bot]`.
+- **Personal token (fallback)**: the secret `SCANNER_TOKEN`, a fine-grained token for this
+  repository with the same two permissions. Used only when no App is configured.
+
+### The scanner's GitHub App
+
+Set up once, by the owner:
+
+1. GitHub → Settings → Developer settings → GitHub Apps → New GitHub App. Name it, for example,
+   `letsauth-scanner` (the name becomes the bot's name). Homepage: `https://letsauth.eu/scanner/`.
+   Untick *Webhook → Active*. Repository permissions: *Contents: Read and write*, *Pull requests:
+   Read and write* (*Metadata: Read-only* is added automatically); nothing else. *Where can this
+   GitHub App be installed?* Only on this account.
+2. On the App's page note the *App ID*, then *Generate a private key*; a `.pem` file downloads.
+3. *Install App* → only `jbspeakr/letsauth`.
+4. In the Scaleway job definition set `SCANNER_APP_ID` to the App ID and the secret
+   `SCANNER_APP_PRIVATE_KEY` to the `.pem` contents (as is, with `\n` escapes, or
+   base64-encoded on one line: all three are accepted).
+5. Run the job once by hand; its log starts with `authenticated as GitHub App <slug>[bot]`. Then
+   delete `SCANNER_TOKEN` from the job and revoke that personal token on GitHub.
+
+To rotate, generate a new private key on the App's page, replace the secret, delete the old key.
 
 **Reviewing a scanner pull request.** Open each evidence URL in the diff; it is the metadata
 document that decided the status. `unknown` means the scanner could not tell (the evidence names
@@ -156,9 +182,9 @@ Set up once, by the owner:
    - cron schedule: `17 3 * * *` (UTC),
    - resources: 1 vCPU, 1 GB memory, timeout 30 minutes, no private network,
    - environment variables: `SCANNER_REPO=jbspeakr/letsauth`, `SCANNER_BASE=main`,
-   - secret: `SCANNER_TOKEN` as a secret reference (Secret Manager) or, where the definition
-     offers no secret field, as an environment variable; the value is the fine-grained GitHub
-     token described above.
+   - secrets: `SCANNER_APP_ID` and `SCANNER_APP_PRIVATE_KEY` (see "The scanner's GitHub App"), or
+     the fallback `SCANNER_TOKEN`, as secret references (Secret Manager) or, where the
+     definition offers no secret field, as environment variables.
 3. In the repository's `production` environment, set the secrets `SCW_ACCESS_KEY`,
    `SCW_SECRET_KEY`, `SCW_DEFAULT_PROJECT_ID`, `SCW_DEFAULT_ORGANIZATION_ID` and the variables
    `SCW_REGION` (if not `fr-par`), `SCW_REGISTRY_NAMESPACE` and `SCW_JOB_DEFINITION_ID` (the id
