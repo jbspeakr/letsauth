@@ -32,12 +32,17 @@ import {
   branchFor,
   closeSuperseded,
   commitMessage,
+  describeError,
   redact,
+  retryingFetch,
   runStamp,
   upsertPullRequest,
 } from "../src/scanner/nightly";
 
 const SECRET_VARS = ["SCANNER_TOKEN", "SCANNER_APP_PRIVATE_KEY"] as const;
+
+// every GitHub API call goes through this: a request dropped before any response is retried
+const github = retryingFetch(fetch);
 
 // everything that must never be printed; filled before the first line is written
 const secrets: string[] = SECRET_VARS.flatMap((name) => {
@@ -69,7 +74,11 @@ async function credentials(): Promise<Credentials> {
   const appId = process.env.SCANNER_APP_ID;
   const privateKey = process.env.SCANNER_APP_PRIVATE_KEY;
   if (appId && privateKey) {
-    const minted = await installationToken({ credentials: { appId, privateKey }, repo });
+    const minted = await installationToken({
+      credentials: { appId, privateKey },
+      repo,
+      fetch: github,
+    });
     secrets.push(minted.token);
     return { ...minted, via: `GitHub App ${minted.name}, token valid until ${minted.expiresAt}` };
   }
@@ -194,13 +203,14 @@ async function main(): Promise<void> {
       title: `Scanner: ${stamp}`,
       body: summary,
       labels: ["data"],
+      fetch: github,
     });
     console.log(`${pr.action} pull request #${pr.number}: ${pr.url}`);
-    const closed = await closeSuperseded({ repo, token, base, keep: pr.number });
+    const closed = await closeSuperseded({ repo, token, base, keep: pr.number, fetch: github });
     if (closed.length > 0)
       console.log(`closed superseded: ${closed.map((n) => `#${n}`).join(", ")}`);
   } catch (error) {
-    console.error(safe(error instanceof Error ? error.message : String(error)));
+    console.error(safe(describeError(error)));
     process.exit(1);
   } finally {
     if (!process.env.SCANNER_WORKDIR) rmSync(workdir, { recursive: true, force: true });
