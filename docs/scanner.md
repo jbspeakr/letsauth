@@ -1,7 +1,8 @@
 # The scanner
 
 The scanner (roadmap 004, `specs/004-scanner/`; the discovery challenge check is roadmap 008,
-`specs/008-discovery-challenge/`) automates what the MCP auth atlas did by hand: it reads the
+`specs/008-discovery-challenge/`; the composable discovery strategies are roadmap 010,
+`specs/010-discovery-strategies/`) automates what the MCP auth atlas did by hand: it reads the
 public authorization metadata of every listed server, judges the passively observable
 requirements of the current MCP Authorization revision, and writes the result as observations,
 each with the URL it read as evidence. It is the one piece of the project
@@ -15,11 +16,17 @@ For a server URL `https://h/p` it fetches, with `GET` over HTTPS and no credenti
 
 1. `https://h/.well-known/oauth-protected-resource/p` (RFC 9728, path-aware), then
    `https://h/.well-known/oauth-protected-resource` (root);
-2. `https://h/p` itself, once, with the `Accept` header an MCP client sends and nothing else:
-   only the status and the `WWW-Authenticate` header are read, and the body is cancelled before
-   a byte of it is consumed. A 401 with a `resource_metadata` parameter is the other discovery
-   mechanism the specification allows (`mcp.prm.www-authenticate`); any other status is
-   `unknown`, never a failure;
+2. `https://h/p` itself, in a ladder of unauthenticated requests that stops at the first 401
+   (`src/scanner/discovery.ts`): a `GET` with the `Accept` header an MCP client sends; then, only
+   when the `GET` got a definite status other than 401 or a redirect off the host, a `POST` with
+   an empty body and the JSON content type, which carries no JSON-RPC message (a streamable HTTP
+   server may answer `GET` with 405 before authenticating, as the transport allows, and
+   authenticates the `POST` like a client's first call). Only the status and the
+   `WWW-Authenticate` header are read, and the body is cancelled before a byte of it is
+   consumed. A 401 with a `resource_metadata` parameter is the other discovery mechanism the
+   specification allows (`mcp.prm.www-authenticate`); its `scope` parameter is the scope
+   challenge (`mcp.rs.scope-challenge`); any other status on every step is `unknown`, never a
+   failure. A failure to connect ends the ladder;
 3. when step 1 found nothing and step 2 named a `resource_metadata` URL: that document, under
    the same rules as every other metadata URL (it is guarded like an issuer, so a non-public
    host or a plain-http pointer is refused and recorded);
@@ -27,8 +34,8 @@ For a server URL `https://h/p` it fetches, with `GET` over HTTPS and no credenti
    `/.well-known/oauth-authorization-server<path>`, `/.well-known/openid-configuration<path>` and
    `<path>/.well-known/openid-configuration` (the three locations the MCP specification names).
 
-That is all: at most seven requests, never with a token, never a body, never a protocol message,
-never an authorization flow. The request to the endpoint reads what the specification requires
+That is all: at most eight requests, never with a token, never a body sent, never a protocol
+message, never an authorization flow. The request to the endpoint reads what the specification requires
 the server to tell every client without a token; `specs/008-discovery-challenge/spec.md` says
 why that is still a passive scan under the constitution. Redirects are followed only to the same
 host over HTTPS. URLs that are not
@@ -42,6 +49,33 @@ not be fetched (timeout, connection, TLS, 5xx, refused redirect) makes every che
 on it `unknown`; `unsupported` is written only when a document was fetched and the field is
 absent or wrong. `partial` is written only when some but not all authorization server endpoints
 use HTTPS.
+
+## Strategies: how a cell is decided
+
+A check is an ordered list of strategies (`src/scanner/strategies.ts`, the lists in
+`src/scanner/checks.ts`). Each strategy reads one source the probe discovered and either decides
+the cell or passes to the next; the last one always decides, usually `unknown` with the reason.
+The report's JSON names the strategy that decided (`via`), and the evidence names its URL. For
+example `mcp.prm.no-offline-access` reads, in order:
+
+1. `scopes_supported` in the protected resource metadata (`prm.scopes`);
+2. the `scope` parameter of the 401 challenge, when the metadata names no scopes
+   (`challenge.scope`);
+3. the authorization server's `scopes_supported`, when neither of the two above names scopes: a
+   server cannot request a scope its authorization server does not issue, so an authorization
+   server without `offline_access` settles the SHOULD as supported; one that offers it leaves the
+   cell `unknown`, because whether this server asks for it is not advertised (`as.scopes`);
+4. otherwise `unknown`, with the reason (`prm.silent`).
+
+Adding a way to judge a requirement is adding a strategy to its list; adding a way to reach a
+source is adding a step to the ladder in `discovery.ts`. Both are tables a reader can check
+against the decision table in `specs/004-scanner/data-model.md`.
+
+When every step of the endpoint ladder answers 404 or 410, or every step is a redirect the
+scanner would not follow, the report carries an `endpointNote` and the run summary shows it in
+the Notes column: the listed URL is probably stale (servers that retired an `/sse` path usually
+answer at `/mcp`). The fix is to the server file, by pull request; nothing is written to the
+observations for it.
 
 ## Running it
 
@@ -123,7 +157,7 @@ entry: fix the check in `src/scanner/checks.ts`, bump `SCANNER_VERSION`, and the
 re-observes every cell.
 
 **When to bump `SCANNER_VERSION`** (`src/scanner/version.ts`): whenever a check's logic or its
-evidence text changes. The append rule treats cells written by an older version as not yet
+evidence text changes (0.3.0: the endpoint ladder, the scope challenge and the scope fallbacks). The append rule treats cells written by an older version as not yet
 measured, so the next run rewrites them all.
 
 ## Deploying to Scaleway
@@ -164,7 +198,8 @@ the image forward, so those settings stay where the owner put them.
 
 ## The grade
 
-Shown on report pages and the scanner index, never used to sort or rank:
+Shown on report pages, on atlas server pages and next to each server name in the atlas matrix,
+never used to sort or rank:
 
 1. F when a MUST-level check is unsupported or partial.
 2. Withheld (no letter) when a MUST-level check is unknown.

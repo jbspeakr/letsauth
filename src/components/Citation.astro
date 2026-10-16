@@ -1,10 +1,10 @@
 ---
 import { resolveCitation } from "@/lib/citations";
 import { getDataset } from "@/lib/data";
-import type { FeatureRevision } from "@/schema";
+import type { Citation } from "@/schema";
 
 interface Props {
-  entry: FeatureRevision;
+  entry: Citation;
   /** Show the revision id after the section. */
   withRevision?: boolean;
 }

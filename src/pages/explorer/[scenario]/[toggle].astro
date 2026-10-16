@@ -1,0 +1,18 @@
+---
+import ChainPage from "@/components/ChainPage.astro";
+import { getDataset } from "@/lib/data";
+import type { Scenario } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().scenarios.flatMap((scenario) =>
+    scenario.toggles.map((toggle) => ({
+      params: { scenario: scenario.id, toggle: toggle.id },
+      props: { scenario, toggleId: toggle.id },
+    })),
+  );
+}
+
+const { scenario, toggleId } = Astro.props as { scenario: Scenario; toggleId: string };
+---
+
+<ChainPage scenario={scenario} toggleId={toggleId} />

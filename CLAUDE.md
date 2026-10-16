@@ -7,6 +7,10 @@ Read first, in this order:
 3. `specs/<feature>/` — the Spec Kit artifacts for the feature you are working on
    (`spec.md`, `plan.md`, `tasks.md`). Mark tasks `[x]` in `tasks.md` as you complete them.
 
+`docs/architecture.md` has the layout and data flow, `docs/development.md` the full command
+reference, `CONTRIBUTING.md` the rules for data and code pull requests. `README.md` is the public
+front page and advertises the lab; keep working notes out of it.
+
 ## Commands
 
 - `pnpm install` — Node 22, pnpm 10.
@@ -26,6 +30,9 @@ Read first, in this order:
 - Data is YAML under `data/`, one entity per file; observations are append-only lists per server.
 - Every feature cites a spec revision and section; the build fails on a dangling citation.
 - `unknown` is a real status. Never render missing data as `unsupported`.
+- Explorer scenarios live in `data/scenarios/`, one file each; every step and toggle cites a
+  revision and section, and the diagram, the step list and the token views are all rendered from
+  the one definition. A toggle is its own static page; one toggle at a time.
 - `src/scanner/` is the only code that may contact a server, and only through `pnpm scan` (run
   by the scheduled job or a contributor); the site build never imports anything that fetches.
   There is no on-demand scanning for visitors. Seed data is `vendor-claim` or `manual`; scanner

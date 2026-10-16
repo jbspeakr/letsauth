@@ -1,0 +1,161 @@
+---
+import type { ResolvedToken } from "@/lib/explorer";
+import type { TokenValue } from "@/schema";
+
+interface Props {
+  token: ResolvedToken;
+}
+
+const { token } = Astro.props;
+const changeOf = (name: string) =>
+  token.diff.added.includes(name)
+    ? "added"
+    : token.diff.changed.includes(name)
+      ? "changed"
+      : "same";
+const isBlock = (v: TokenValue) => typeof v === "object" && !Array.isArray(v);
+const show = (v: TokenValue) =>
+  Array.isArray(v) ? v.join(", ") : typeof v === "object" ? JSON.stringify(v, null, 2) : String(v);
+const marks = token.diff.added.length + token.diff.changed.length + token.diff.removed.length;
+const headerLine = token.header
+  ? Object.entries(token.header)
+      .map(([k, v]) => `${k} ${String(v)}`)
+      .join(" · ")
+  : undefined;
+---
+
+<div class="token" data-token>
+  <p class="token__name">
+    {token.name}
+    {headerLine && <span class="token__header">{headerLine}</span>}
+  </p>
+  <dl class="claims">
+    {
+      Object.entries(token.claims).map(([name, value]) => {
+        const change = changeOf(name);
+        return (
+          <div data-claim={name} data-change={change}>
+            <dt>
+              {name}
+              {change !== "same" && <span class:list={["mark", change]}>{change}</span>}
+            </dt>
+            <dd>{isBlock(value) ? <pre>{show(value)}</pre> : show(value)}</dd>
+          </div>
+        );
+      })
+    }
+    {
+      token.diff.removed.map((name) => (
+        <div data-removed-claim={name} class="removed">
+          <dt>
+            <s>{name}</s>
+            <span class="mark removed">removed</span>
+          </dt>
+          <dd>no longer in the token</dd>
+        </div>
+      ))
+    }
+  </dl>
+  <p class="token__foot">
+    {marks === 0 ? "Unchanged since the previous token in this chain." : `${marks} claim${marks === 1 ? "" : "s"} differ from the previous token in this chain.`}
+    {token.note && <span> {token.note}</span>}
+  </p>
+</div>
+
+<style>
+  .token {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius);
+    background: var(--bg-sunken);
+    font-size: var(--text-sm);
+  }
+  .token__name {
+    margin: 0 0 var(--space-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    align-items: baseline;
+    color: var(--ink);
+    font-weight: 500;
+    max-width: none;
+  }
+  .token__header {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    font-weight: 400;
+    color: var(--ink-faint);
+  }
+  .claims {
+    margin: 0;
+    display: grid;
+    gap: 1px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+  .claims > div {
+    display: grid;
+    grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: 0.25em 0.5em;
+    border-radius: var(--radius-sm);
+    align-items: start;
+  }
+  .claims > div[data-change="added"] {
+    background: var(--status-supported-soft);
+  }
+  .claims > div[data-change="changed"] {
+    background: var(--status-partial-soft);
+  }
+  .claims > div.removed {
+    background: var(--status-unsupported-soft);
+    color: var(--ink-muted);
+  }
+  .claims dt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    color: var(--ink-muted);
+  }
+  .claims dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+  }
+  .claims pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font: inherit;
+  }
+  .mark {
+    font-family: var(--font-body);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.03em;
+    padding: 0 0.45em;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+  }
+  .mark.added {
+    color: var(--status-supported);
+  }
+  .mark.changed {
+    color: var(--status-partial);
+  }
+  .mark.removed {
+    color: var(--status-unsupported);
+  }
+  .token__foot {
+    margin: var(--space-2) 0 0;
+    color: var(--ink-faint);
+    font-size: var(--text-xs);
+    max-width: none;
+  }
+  @media (max-width: 40rem) {
+    .claims > div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+</style>

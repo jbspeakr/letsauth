@@ -1,0 +1,32 @@
+id: broken
+title: A broken scenario
+summary: Exercises every cross-reference rule.
+actors:
+  - { id: client, kind: mcp-client, name: Client }
+  - { id: server, kind: mcp-server, name: Server }
+features:
+  - mcp.as.nope
+steps:
+  - id: ask
+    from: client
+    to: server
+    message: Ask
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: Authorization }
+  - id: answer
+    from: server
+    to: nobody
+    message: Answer
+    cites: { spec: mcp-authorization, revision: "1999-01-01", section: Authorization }
+toggles:
+  - id: broken-toggle
+    name: Broken toggle
+    kind: attack
+    summary: Replaces a step that does not exist.
+    cites: { spec: mcp-authorization, revision: "2026-07-28", section: Authorization }
+    replaces:
+      missing:
+        - id: ask
+          from: client
+          to: server
+          message: Collides with the kept step
+          cites: { spec: mcp-authorization, revision: "2026-07-28", section: Authorization }

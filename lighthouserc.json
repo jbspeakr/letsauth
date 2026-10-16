@@ -8,6 +8,8 @@
         "http://localhost/atlas/mcp/features/mcp.as.cimd/index.html",
         "http://localhost/atlas/standards/index.html",
         "http://localhost/atlas/standards/rfc8693/index.html",
+        "http://localhost/explorer/index.html",
+        "http://localhost/explorer/mcp-authorization/index.html",
         "http://localhost/scanner/index.html",
         "http://localhost/scanner/notion/index.html"
       ],

@@ -6,10 +6,13 @@ import { USER_AGENT } from "./version";
  * cap, redirects followed only to the same host over HTTPS. `Fetcher` is injected so the whole
  * pipeline runs over recorded responses in tests, which must not touch the network.
  *
- * Two modes. "json" (the default) reads a metadata document. "challenge" (008) is the one
- * request to the MCP endpoint itself: the same GET with the Accept header a client sends, no
- * credentials, no body; only the status and the WWW-Authenticate header are read, and the
- * response body is cancelled before a byte of it is consumed.
+ * Three modes. "json" (the default) reads a metadata document. "challenge" (008) is a request to
+ * the MCP endpoint itself: the same GET with the Accept header a client sends, no credentials,
+ * no body; only the status and the WWW-Authenticate header are read, and the response body is
+ * cancelled before a byte of it is consumed. "challenge-post" (010) is the same request as a
+ * POST with an empty body and the JSON content type: it carries no JSON-RPC message, so the
+ * server has nothing to act on, but a streamable HTTP server that answers GET with 405 (as the
+ * transport allows) authenticates it like a client's first call.
  */
 
 export type FetchError =
@@ -30,13 +33,22 @@ export type FetchError =
  */
 export type FetchKind = "found" | "absent" | "error";
 
-export type FetchMode = "json" | "challenge";
+export type FetchMode = "json" | "challenge" | "challenge-post";
+
+export type FetchMethod = "GET" | "POST";
+
+/** The HTTP method a mode sends. */
+export function methodOf(mode: FetchMode): FetchMethod {
+  return mode === "challenge-post" ? "POST" : "GET";
+}
 
 /** What an MCP client sends on its first request; both transports accept it. */
 export const CHALLENGE_ACCEPT = "application/json, text/event-stream";
 
 export interface FetchResult {
   url: string;
+  /** Absent means GET. */
+  method?: FetchMethod;
   kind: FetchKind;
   /** HTTP status, or null when no response arrived. */
   status: number | null;
@@ -106,20 +118,28 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
   const maxRedirects = options.maxRedirects ?? 3;
   return async (start, mode = "json") => {
     let url = start;
+    const method = methodOf(mode);
+    const tag = (r: FetchResult): FetchResult => (method === "POST" ? { ...r, method } : r);
+    const headers: Record<string, string> = {
+      Accept: mode === "json" ? "application/json" : CHALLENGE_ACCEPT,
+      "User-Agent": USER_AGENT,
+    };
+    // an empty body with the JSON content type: not a JSON-RPC message, nothing to act on
+    if (method === "POST") {
+      headers["Content-Type"] = "application/json";
+      headers["Content-Length"] = "0";
+    }
     for (let hop = 0; ; hop += 1) {
       let res: Response;
       try {
         res = await fetch(url, {
-          method: "GET",
+          method,
           redirect: "manual",
-          headers: {
-            Accept: mode === "challenge" ? CHALLENGE_ACCEPT : "application/json",
-            "User-Agent": USER_AGENT,
-          },
+          headers,
           signal: AbortSignal.timeout(timeoutMs),
         });
       } catch (err) {
-        return { url, kind: "error", status: null, ...classify(err) };
+        return tag({ url, kind: "error", status: null, ...classify(err) });
       }
       const status = res.status;
       const contentType = res.headers.get("content-type")?.split(";")[0]?.trim() || undefined;
@@ -127,58 +147,64 @@ export function nodeFetcher(options: NodeFetcherOptions = {}): Fetcher {
         const location = res.headers.get("location");
         await res.body?.cancel().catch(() => {});
         if (!location)
-          return { url, kind: "error", status, error: "redirect", detail: "no Location header" };
+          return tag({
+            url,
+            kind: "error",
+            status,
+            error: "redirect",
+            detail: "no Location header",
+          });
         let next: URL;
         try {
           next = new URL(location, url);
         } catch {
-          return {
+          return tag({
             url,
             kind: "error",
             status,
             error: "redirect",
             detail: `bad Location "${location}"`,
-          };
+          });
         }
         const from = new URL(url);
         if (next.protocol !== "https:" || next.host !== from.host || hop >= maxRedirects) {
-          return {
+          return tag({
             url,
             kind: "error",
             status,
             error: "redirect",
             detail: `not followed to ${next.href}`,
-          };
+          });
         }
         if (options.guard) {
           const g = await options.guard(next.href);
           if (!g.ok)
-            return {
+            return tag({
               url,
               kind: "error",
               status,
               error: "redirect",
               detail: `not followed to ${next.href}: ${g.reason}`,
-            };
+            });
         }
         url = next.href;
         continue;
       }
       if (status >= 500) {
         await res.body?.cancel().catch(() => {});
-        return {
+        return tag({
           url,
           kind: "error",
           status,
           contentType,
           error: "server-error",
           detail: `HTTP ${status}`,
-        };
+        });
       }
-      if (mode === "challenge") {
+      if (mode !== "json") {
         // the endpoint itself: headers only, the body is never read (008 FR-001)
         await res.body?.cancel().catch(() => {});
-        return challengeResult(url, status, contentType, res.headers.get("www-authenticate"));
+        return tag(challengeResult(url, status, contentType, res.headers.get("www-authenticate")));
       }
       if (status < 200 || status >= 300) {
         await res.body?.cancel().catch(() => {});
@@ -244,7 +270,10 @@ export interface FixtureResponse {
 export interface Fixture {
   /** The MCP server URL the fixture describes. */
   target: string;
-  /** URL → response. A URL not listed answers 404. */
+  /**
+   * URL → response. A URL not listed answers 404. A POST to the endpoint reads the entry keyed
+   * `POST <url>` when there is one, else the URL's own entry.
+   */
   responses: Record<string, FixtureResponse>;
 }
 
@@ -257,9 +286,12 @@ export interface RecordingFetcher extends Fetcher {
 export function recordingFetcher(fixture: Fixture): RecordingFetcher {
   const requests: string[] = [];
   const fetcher = (async (url: string, mode: FetchMode = "json"): Promise<FetchResult> => {
-    requests.push(url);
-    const r = fixture.responses[url];
-    if (!r) return { url, kind: "absent", status: 404 };
+    const method = methodOf(mode);
+    requests.push(method === "POST" ? `POST ${url}` : url);
+    const tag = (r: FetchResult): FetchResult => (method === "POST" ? { ...r, method } : r);
+    const r =
+      (method === "POST" ? fixture.responses[`POST ${url}`] : undefined) ?? fixture.responses[url];
+    if (!r) return tag({ url, kind: "absent", status: 404 });
     if (r.error) {
       const detail =
         r.error === "timeout"
@@ -267,30 +299,30 @@ export function recordingFetcher(fixture: Fixture): RecordingFetcher {
           : r.error === "tls"
             ? "CERT_HAS_EXPIRED"
             : "ECONNREFUSED";
-      return { url, kind: "error", status: null, error: r.error, detail };
+      return tag({ url, kind: "error", status: null, error: r.error, detail });
     }
     const status = r.status ?? 200;
     const contentType = r.headers?.["content-type"]?.split(";")[0]?.trim();
     if (status >= 300 && status < 400) {
-      return {
+      return tag({
         url,
         kind: "error",
         status,
         error: "redirect",
         detail: `not followed to ${r.headers?.location ?? "?"}`,
-      };
+      });
     }
     if (status >= 500)
-      return {
+      return tag({
         url,
         kind: "error",
         status,
         contentType,
         error: "server-error",
         detail: `HTTP ${status}`,
-      };
-    if (mode === "challenge")
-      return challengeResult(url, status, contentType, r.headers?.["www-authenticate"]);
+      });
+    if (mode !== "json")
+      return tag(challengeResult(url, status, contentType, r.headers?.["www-authenticate"]));
     if (status < 200 || status >= 300) return { url, kind: "absent", status, contentType };
     const body = typeof r.body === "string" ? safeParse(r.body) : r.body;
     if (!isObject(body))

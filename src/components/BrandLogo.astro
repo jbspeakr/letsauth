@@ -1,0 +1,39 @@
+---
+// Both supplied wordmarks include the icon and outlined lettering. CSS follows the same
+// system/stored theme precedence as the page, including when JavaScript is unavailable.
+---
+
+<span class="brand-logo" aria-hidden="true">
+  <img class="brand-logo__light" src="/brand/wordmark.svg" width="364" height="64" alt="" />
+  <img class="brand-logo__dark" src="/brand/wordmark-dark.svg" width="364" height="64" alt="" />
+</span>
+
+<style>
+  .brand-logo {
+    display: block;
+    width: 11.375rem;
+    aspect-ratio: 364 / 64;
+  }
+  .brand-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .brand-logo .brand-logo__dark {
+    display: none;
+  }
+  :root[data-theme="dark"] .brand-logo__light {
+    display: none;
+  }
+  :root[data-theme="dark"] .brand-logo__dark {
+    display: block;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .brand-logo__light {
+      display: none;
+    }
+    :root:not([data-theme="light"]) .brand-logo__dark {
+      display: block;
+    }
+  }
+</style>

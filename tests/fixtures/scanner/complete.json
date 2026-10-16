@@ -31,7 +31,7 @@
     "https://mcp.example.com/mcp": {
       "status": 401,
       "headers": {
-        "www-authenticate": "Bearer realm=\"mcp\", resource_metadata=\"https://mcp.example.com/.well-known/oauth-protected-resource/mcp\""
+        "www-authenticate": "Bearer realm=\"mcp\", resource_metadata=\"https://mcp.example.com/.well-known/oauth-protected-resource/mcp\", scope=\"read write\""
       }
     }
   }

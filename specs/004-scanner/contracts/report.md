@@ -27,6 +27,8 @@ the site. Produced by `scan()` in `src/scanner/` and, for recorded reports, by `
     "protectedResource": {                 // or null
       "url": "https://mcp.example.com/.well-known/oauth-protected-resource/mcp",
       "location": "path-aware",            // "path-aware" | "root" | "challenge" (008)
+      // "challenge": { url, status, method, step, header, resourceMetadata, scope } (008, 010)
+      // "endpointNote": null | "the listed URL answered HTTP 410 and 410 …" (010)
       "resource": "https://mcp.example.com/mcp",
       "authorizationServers": ["https://auth.example.com"],
       "scopesSupported": ["read", "write"]

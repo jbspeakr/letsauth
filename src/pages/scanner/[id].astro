@@ -27,7 +27,9 @@ const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.
 >
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/scanner/">Scanner</a> <span aria-hidden="true">/</span> Report
+      <a href="/atlas/mcp/">MCP auth atlas</a> <span aria-hidden="true">/</span>
+      <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a> <span aria-hidden="true">/</span>
+      Scan report
     </nav>
     <header class="head">
       <p class="eyebrow">Scan report</p>

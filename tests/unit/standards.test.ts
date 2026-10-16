@@ -83,6 +83,8 @@ const data: Dataset = {
   servers: [],
   observations: [],
   relations,
+  scenarios: [],
+  vulnerabilities: [],
 };
 
 describe("specNodes and withdrawnSpecs (FR-014, SC-006)", () => {

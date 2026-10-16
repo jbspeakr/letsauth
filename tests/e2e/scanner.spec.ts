@@ -26,23 +26,16 @@ async function hideNightlyData(page: Page): Promise<void> {
 }
 
 test.describe("scanner index (US2)", () => {
-  test("lists every listed server alphabetically with a grade and a report link (FR-010)", async ({
+  test("has no list of its own and points at the atlas where the grades show (FR-010)", async ({
     page,
   }) => {
     await page.goto("/scanner/");
-    const rows = page.locator("#scanner-index tbody tr[data-server]");
-    await expect(rows).toHaveCount(views.length);
-    const ids = await rows.evaluateAll((els) => els.map((el) => el.getAttribute("data-server")));
-    expect(ids).toEqual(views.map((v) => v.server.id));
-    for (const v of views.slice(0, 5)) {
-      const row = page.locator(`#scanner-index tr[data-server="${v.server.id}"]`);
-      await expect(row).toHaveAttribute("data-grade", v.grade.letter ?? v.grade.label);
-      // the badge's word, not its decorative letter, carries the grade for every reader
-      await expect(row.locator("[data-grade] .word").first()).toHaveText(
-        v.grade.letter ?? v.grade.label,
-      );
-      await expect(row.locator(`a[href="/scanner/${v.server.id}/"]`).first()).toBeVisible();
-    }
+    await expect(page.locator("#scanner-index")).toHaveCount(0);
+    await expect(page.locator("table tr[data-server]")).toHaveCount(0);
+    const where = page.locator("[aria-labelledby='where-title']");
+    await expect(where.locator("a[href='/atlas/mcp/']")).toBeVisible();
+    await expect(where.locator("a[href='/atlas/mcp/servers/']")).toBeVisible();
+    await expect(page.locator("[data-nightly]")).toHaveCount(2);
   });
 
   test("publishes the grade rule next to the grades (FR-008)", async ({ page }) => {
@@ -56,8 +49,8 @@ test.describe("scanner index (US2)", () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/scanner/");
-    await expect(page.locator("#scanner-index tbody tr[data-server]")).toHaveCount(views.length);
     await expect(page.locator("[data-enhanced]")).toHaveCount(0);
+    await expect(page.locator("a[href='/atlas/mcp/']").first()).toBeVisible();
     await expect(page.locator("#grade-rule li")).toHaveCount(GRADE_RULE.length);
     await context.close();
   });
@@ -76,10 +69,7 @@ test.describe("scanner index (US2)", () => {
     await page.goto("/scanner/");
     await expectNoSeriousA11yViolations(page);
     await hideNightlyData(page);
-    await expect(page).toHaveScreenshot("scanner.png", {
-      fullPage: false,
-      mask: [page.locator("#scanner-index")],
-    });
+    await expect(page).toHaveScreenshot("scanner.png", { fullPage: false });
   });
 });
 
@@ -116,8 +106,9 @@ test.describe("scan report page (US2)", () => {
     );
   });
 
-  test("links the atlas page, the JSON and the grade rule", async ({ page }) => {
+  test("links the atlas, the server page, the JSON and the grade rule", async ({ page }) => {
     await page.goto(`/scanner/${first.server.id}/`);
+    await expect(page.locator(".crumbs a[href='/atlas/mcp/']")).toBeVisible();
     await expect(
       page.locator(`a[href="/atlas/mcp/servers/${first.server.id}/"]`).first(),
     ).toBeVisible();

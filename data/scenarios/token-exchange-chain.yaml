@@ -1,0 +1,285 @@
+id: token-exchange-chain
+title: An orchestrator delegates to a sub-agent with token exchange
+summary: >
+  Alex asks an orchestrator agent for a report. The orchestrator holds a token for the documents
+  API in Alex's name and hands part of the work to a research sub-agent. Each hop exchanges the
+  token it holds for a narrower one with an act claim, so the API can see the whole chain of
+  who acted for whom, and no hop can do more than the one before it.
+actors:
+  - { id: user, kind: user, name: Alex }
+  - { id: orchestrator, kind: agent, name: Orchestrator agent }
+  - { id: as, kind: authorization-server, name: auth.docs.example }
+  - { id: subagent, kind: agent, name: Research sub-agent }
+  - { id: api, kind: resource, name: Documents API }
+features:
+  - mcp.rs.no-passthrough
+  - mcp.rs.audience-validation
+steps:
+  - id: request
+    from: user
+    to: orchestrator
+    message: "Write me a report from this quarter's documents"
+    note: >
+      The orchestrator already holds an access token for the documents API that Alex obtained
+      through the usual authorization code flow.
+    cites: { spec: rfc8693, revision: rfc, section: "1.1. Delegation vs. Impersonation Semantics" }
+    token:
+      name: Alex's access token held by the orchestrator
+      header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+      claims:
+        iss: https://auth.docs.example
+        sub: alex
+        aud: https://api.docs.example
+        client_id: orchestrator
+        scope: docs:read docs:write
+        exp: 1790000000
+        iat: 1789996400
+        jti: a1
+  - id: first-exchange
+    from: orchestrator
+    to: as
+    message: "POST /token: grant_type=token-exchange, subject_token=<Alex's token>, actor_token=<orchestrator credential>, audience=https://api.docs.example, scope=docs:read"
+    note: >
+      Delegation, not impersonation: the orchestrator identifies itself with an actor token and
+      asks for less than it holds.
+    cites: { spec: rfc8693, revision: rfc, section: "2.1. Request" }
+  - id: first-delegated
+    from: as
+    to: orchestrator
+    message: "Delegated token: sub=alex, act.sub=orchestrator, scope=docs:read"
+    cites: { spec: rfc8693, revision: rfc, section: "4.1. act (Actor) Claim" }
+    token:
+      name: Delegated token for the orchestrator
+      header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+      claims:
+        iss: https://auth.docs.example
+        sub: alex
+        aud: https://api.docs.example
+        client_id: orchestrator
+        scope: docs:read
+        act: { sub: orchestrator }
+        may_act: { sub: research-subagent }
+        exp: 1789998200
+        iat: 1789996500
+        jti: a2
+      note: may_act says which party the subject allows to act on this token next; the authorization server checks it on the following exchange.
+  - id: hand-over
+    from: orchestrator
+    to: subagent
+    message: "Task: summarise the quarter's documents; here is the delegated token to exchange"
+    note: >
+      The sub-agent does not present this token to the API. It is the subject token for the
+      sub-agent's own exchange.
+    cites: { spec: rfc8693, revision: rfc, section: "1.1. Delegation vs. Impersonation Semantics" }
+    token:
+      name: Delegated token, handed to the sub-agent
+      header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+      claims:
+        iss: https://auth.docs.example
+        sub: alex
+        aud: https://api.docs.example
+        client_id: orchestrator
+        scope: docs:read
+        act: { sub: orchestrator }
+        may_act: { sub: research-subagent }
+        exp: 1789998200
+        iat: 1789996500
+        jti: a2
+  - id: second-exchange
+    from: subagent
+    to: as
+    message: "POST /token: grant_type=token-exchange, subject_token=<delegated token>, actor_token=<sub-agent credential>, audience=https://api.docs.example, scope=docs:read"
+    cites: { spec: rfc8693, revision: rfc, section: "2.1. Request" }
+  - id: may-act-check
+    from: as
+    to: as
+    message: "Check may_act on the subject token names the actor; keep scope within the subject token's"
+    note: >
+      The chain can only grow by parties the previous token authorised, and never wider.
+    cites: { spec: rfc8693, revision: rfc, section: "4.4. may_act (Authorized Actor) Claim" }
+  - id: second-delegated
+    from: as
+    to: subagent
+    message: "Delegated token with a nested act chain"
+    cites: { spec: rfc8693, revision: rfc, section: "4.1. act (Actor) Claim" }
+    token:
+      name: Delegated token for the sub-agent
+      header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+      claims:
+        iss: https://auth.docs.example
+        sub: alex
+        aud: https://api.docs.example
+        client_id: research-subagent
+        scope: docs:read
+        act: { sub: research-subagent, act: { sub: orchestrator } }
+        exp: 1789997900
+        iat: 1789996600
+        jti: a3
+      note: The outermost act is the current actor; each nested act is the party it received authority from.
+  - id: api-call
+    from: subagent
+    to: api
+    message: "GET /documents?quarter=2026-Q3 with Authorization: Bearer <delegated token>"
+    cites: { spec: rfc9068, revision: rfc, section: "4. Validating JWT Access Tokens" }
+    token:
+      name: Delegated token as presented
+      header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+      claims:
+        iss: https://auth.docs.example
+        sub: alex
+        aud: https://api.docs.example
+        client_id: research-subagent
+        scope: docs:read
+        act: { sub: research-subagent, act: { sub: orchestrator } }
+        exp: 1789997900
+        iat: 1789996600
+        jti: a3
+  - id: api-validate
+    from: api
+    to: api
+    message: "Validate signature, iss, aud and exp; enforce docs:read; log sub and the act chain"
+    note: >
+      The audit record says the sub-agent read documents for Alex by way of the orchestrator,
+      and the API can refuse actors it does not expect.
+    cites: { spec: rfc8693, revision: rfc, section: "4.1. act (Actor) Claim" }
+  - id: documents
+    from: api
+    to: subagent
+    message: "200 with the documents"
+    cites: { spec: rfc9068, revision: rfc, section: "4. Validating JWT Access Tokens" }
+toggles:
+  - id: token-passthrough
+    name: Token passthrough
+    kind: attack
+    summary: >
+      The orchestrator hands Alex's original token to the sub-agent and the sub-agent presents
+      it as is. No exchange, no act claim, full docs:write scope: the API sees Alex, cannot tell
+      which agent is calling, and a sub-agent that goes wrong can write and delete in Alex's
+      name.
+    cites: { spec: rfc8693, revision: rfc, section: "1.1. Delegation vs. Impersonation Semantics" }
+    violates: [mcp.rs.no-passthrough]
+    replaces:
+      first-exchange: []
+      first-delegated: []
+      hand-over:
+        - id: hand-over-raw
+          from: orchestrator
+          to: subagent
+          message: "Task plus Alex's token, unchanged"
+          cites: { spec: rfc8693, revision: rfc, section: "1.1. Delegation vs. Impersonation Semantics" }
+          token:
+            name: Alex's token, forwarded
+            header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+            claims:
+              iss: https://auth.docs.example
+              sub: alex
+              aud: https://api.docs.example
+              client_id: orchestrator
+              scope: docs:read docs:write
+              exp: 1790000000
+              iat: 1789996400
+              jti: a1
+      second-exchange: []
+      may-act-check: []
+      second-delegated: []
+      api-call:
+        - id: api-call-raw
+          from: subagent
+          to: api
+          message: "GET /documents with Authorization: Bearer <Alex's token>"
+          note: >
+            Nothing in the token says a sub-agent is calling. The API's audit trail names Alex
+            and the orchestrator's client id, and the scope allows writes the task never needed.
+          cites: { spec: rfc8693, revision: rfc, section: "1.1. Delegation vs. Impersonation Semantics" }
+          token:
+            name: Alex's token as presented by the sub-agent
+            header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+            claims:
+              iss: https://auth.docs.example
+              sub: alex
+              aud: https://api.docs.example
+              client_id: orchestrator
+              scope: docs:read docs:write
+              exp: 1790000000
+              iat: 1789996400
+              jti: a1
+  - id: scope-accumulation
+    name: Scope accumulation
+    kind: misconfiguration
+    summary: >
+      The authorization server grants the sub-agent's exchange request more scope than the
+      subject token carried: the sub-agent asked for docs:read docs:admin and got it, although
+      the token it exchanged only had docs:read. Authority grew at a hop that should only ever
+      narrow it.
+    cites: { spec: rfc8693, revision: rfc, section: "2.2.1. Successful Response" }
+    replaces:
+      second-exchange:
+        - id: second-exchange-wider
+          from: subagent
+          to: as
+          message: "POST /token: grant_type=token-exchange, subject_token=<delegated token>, actor_token=<sub-agent credential>, scope=docs:read docs:admin"
+          cites: { spec: rfc8693, revision: rfc, section: "2.1. Request" }
+      may-act-check:
+        - id: may-act-check-no-scope-bound
+          from: as
+          to: as
+          message: "Check may_act; grant the requested scope without comparing it to the subject token's"
+          note: >
+            The specification leaves the issued token's scope to the authorization server's
+            policy. A policy that lets a delegated token exceed its subject token breaks the
+            chain's one guarantee.
+          cites: { spec: rfc8693, revision: rfc, section: "2.2.1. Successful Response" }
+      second-delegated:
+        - id: second-delegated-wider
+          from: as
+          to: subagent
+          message: "Delegated token with docs:admin the subject token never had"
+          cites: { spec: rfc8693, revision: rfc, section: "4.2. scope (Scopes) Claim" }
+          token:
+            name: Delegated token, wider than its subject token
+            header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+            claims:
+              iss: https://auth.docs.example
+              sub: alex
+              aud: https://api.docs.example
+              client_id: research-subagent
+              scope: docs:read docs:admin
+              act: { sub: research-subagent, act: { sub: orchestrator } }
+              exp: 1789997900
+              iat: 1789996600
+              jti: a3
+  - id: may-act-unchecked
+    name: may_act not checked
+    kind: misconfiguration
+    summary: >
+      The authorization server exchanges the delegated token for any actor that presents it,
+      without checking that the subject token's may_act names that actor. Whoever obtains the
+      orchestrator's delegated token can extend the chain in Alex's name.
+    cites: { spec: rfc8693, revision: rfc, section: "4.4. may_act (Authorized Actor) Claim" }
+    replaces:
+      second-exchange:
+        - id: second-exchange-by-stranger
+          from: subagent
+          to: as
+          message: "POST /token: grant_type=token-exchange, subject_token=<delegated token>, actor_token=<credential of an agent the token never authorised>"
+          cites: { spec: rfc8693, revision: rfc, section: "2.1. Request" }
+      may-act-check: []
+      second-delegated:
+        - id: second-delegated-to-stranger
+          from: as
+          to: subagent
+          message: "Delegated token with an actor the subject never allowed"
+          cites: { spec: rfc8693, revision: rfc, section: "4.1. act (Actor) Claim" }
+          token:
+            name: Delegated token for an unauthorised actor
+            header: { typ: at+jwt, alg: ES256, kid: docs-2026 }
+            claims:
+              iss: https://auth.docs.example
+              sub: alex
+              aud: https://api.docs.example
+              client_id: stranger-agent
+              scope: docs:read
+              act: { sub: stranger-agent, act: { sub: orchestrator } }
+              exp: 1789997900
+              iat: 1789996600
+              jti: a4

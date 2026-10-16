@@ -1,6 +1,8 @@
 ---
 import { cellKey, featureInRevision, type Matrix, type RevisionDiff } from "@/lib/atlas";
 import { CATEGORY_LABEL, PARTY_LABEL, PARTY_SHORT } from "@/lib/labels";
+import type { ScanView } from "@/lib/scanner";
+import GradeBadge from "./GradeBadge.astro";
 import ObservationDetail from "./ObservationDetail.astro";
 import StatusCell from "./StatusCell.astro";
 
@@ -8,9 +10,15 @@ interface Props {
   matrix: Matrix;
   /** Diff against the previous revision, used to badge columns whose level changed. */
   diff?: RevisionDiff;
+  /**
+   * The nightly scanner's latest view per server id. Its grade sits next to the server's name
+   * and links to the report; it is derived from the cells by a published rule and is never a
+   * sort key.
+   */
+  scans?: Map<string, ScanView>;
 }
 
-const { matrix, diff } = Astro.props;
+const { matrix, diff, scans } = Astro.props;
 const { columns, rows, cells, revision } = matrix;
 
 // group columns by category for the top header row
@@ -47,7 +55,15 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
       <tr class="features">
         <th scope="col" class="server-head">
           <span class="server-head__label">Server</span>
-          <span class="server-head__hint">{rows.length} listed, A to Z</span>
+          <span class="server-head__hint">
+            {rows.length} listed, A to Z
+            {scans && (
+              <>
+                {" · "}
+                <a href="/scanner/">nightly scan grade</a>
+              </>
+            )}
+          </span>
         </th>
         {
           columns.map((f) => {
@@ -106,7 +122,24 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
         rows.map((server) => (
           <tr data-server={server.id} data-name={server.name.toLowerCase()}>
             <th scope="row" class="server-cell">
-              <a href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
+              <span class="server-cell__row">
+                <a class="server-link" href={`/atlas/mcp/servers/${server.id}/`}>{server.name}</a>
+                {(() => {
+                  const scan = scans?.get(server.id);
+                  if (!scan) return null;
+                  const word = scan.grade.letter ? `grade ${scan.grade.letter}` : scan.grade.label.toLowerCase();
+                  return (
+                    <a
+                      class="grade-link"
+                      href={`/scanner/${server.id}/`}
+                      data-grade={scan.grade.letter ?? scan.grade.label}
+                      aria-label={`${server.name}, nightly scan: ${word}. Open the report`}
+                    >
+                      <GradeBadge grade={scan.grade} variant="cell" />
+                    </a>
+                  );
+                })()}
+              </span>
               {server.authClaimed && (
                 <span class="claim" title={`Authentication as listed by the source: ${server.authClaimed}`}>
                   {server.authClaimed}
@@ -333,14 +366,34 @@ const shortLabel = (id: string) => id.split(".").slice(2).join(".") || id;
     font-size: var(--text-sm);
     line-height: 1.2;
   }
-  .server-cell a {
+  .server-cell__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .server-link {
     color: var(--ink);
     text-decoration: none;
   }
-  .server-cell a:hover {
+  .server-link:hover {
     color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 0.2em;
+  }
+  .grade-link {
+    display: inline-flex;
+    flex: none;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  .grade-link:hover {
+    transform: scale(1.08);
+  }
+  .server-head__hint a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
   .claim {
     display: block;

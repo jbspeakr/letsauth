@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { currentRevision } from "@/lib/atlas";
 import { getDataset } from "@/lib/data";
-import { PASSIVE_CHECKS, runChecks } from "@/scanner/checks";
+import { type CheckOutcome, PASSIVE_CHECKS, runChecks } from "@/scanner/checks";
 import { type Fixture, recordingFetcher } from "@/scanner/fetch";
 import { type Guard, guardUrl } from "@/scanner/guard";
 import { probe } from "@/scanner/probe";
@@ -25,12 +25,13 @@ async function statuses(name: string, guard?: Guard) {
   const f = fixture(name);
   const fetcher = recordingFetcher(f);
   const p = await probe(f.target, { fetcher, guard });
-  const out: Record<string, { status: ObservationStatus; evidence: string }> = {};
+  const out: Record<string, CheckOutcome> = {};
   for (const run of runChecks(p, features)) out[run.feature.id] = run.outcome;
   return { probe: p, requests: fetcher.requests, out };
 }
 
 const ENDPOINT = "https://mcp.example.com/mcp";
+const POST_ENDPOINT = `POST ${ENDPOINT}`;
 const PRM_PATH = "https://mcp.example.com/.well-known/oauth-protected-resource/mcp";
 const PRM_ROOT = "https://mcp.example.com/.well-known/oauth-protected-resource";
 const POINTER = "https://mcp.example.com/oauth/prm.json";
@@ -38,13 +39,14 @@ const AS_RFC = "https://auth.example.com/.well-known/oauth-authorization-server"
 const AS_OIDC = "https://auth.example.com/.well-known/openid-configuration";
 
 describe("the passive features of the current revision", () => {
-  it("are the thirteen the decision table covers, server party first", () => {
+  it("are the fourteen the decision table covers, server party first", () => {
     expect(features.map((f) => f.id)).toEqual([
       "mcp.prm",
       "mcp.prm.authorization-servers",
       "mcp.prm.scopes-supported",
       "mcp.prm.well-known",
       "mcp.prm.www-authenticate",
+      "mcp.rs.scope-challenge",
       "mcp.prm.no-offline-access",
       "mcp.as.issuer-match",
       "mcp.as.metadata",
@@ -80,8 +82,11 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
       `${ENDPOINT} — HTTP 401; WWW-Authenticate resource_metadata: ${PRM_PATH}`,
     );
     expect(out["mcp.as.pkce-s256"]?.evidence).toContain("S256");
-    // the endpoint was asked once, and nothing of its body was read (008 FR-001, SC-003)
-    expect(requests.filter((u) => u === ENDPOINT)).toHaveLength(1);
+    expect(out["mcp.rs.scope-challenge"]?.evidence).toContain("scope: [read, write]");
+    for (const o of Object.values(out)) expect(o.via).toBeDefined();
+    // the endpoint was asked once (the GET answered 401, so the ladder stopped), and nothing of
+    // its body was read (008 FR-001, SC-003)
+    expect(requests.filter((u) => u.includes(ENDPOINT))).toHaveLength(1);
     const endpoint = p.requests.find((r) => r.url === ENDPOINT);
     expect(endpoint).toMatchObject({ status: 401, ok: false });
     expect(p.prm?.location).toBe("path-aware");
@@ -93,6 +98,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
       PRM_PATH,
       PRM_ROOT,
       ENDPOINT,
+      POST_ENDPOINT,
       "https://auth.example.com/.well-known/oauth-authorization-server/tenant",
       "https://auth.example.com/.well-known/openid-configuration/tenant",
       "https://auth.example.com/tenant/.well-known/openid-configuration",
@@ -103,17 +109,18 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
     expect(out["mcp.as.issuer-match"]?.status).toBe("supported");
   });
 
-  it("no-prm: well-known unsupported, everything else unknown (the endpoint answered 404)", async () => {
+  it("no-prm: well-known unsupported, everything else unknown (the endpoint answered 404 to both steps)", async () => {
     const { requests, out } = await statuses("no-prm");
-    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT]);
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT, POST_ENDPOINT]);
     expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
     expect(out["mcp.prm.well-known"]?.evidence).toContain("HTTP 404");
     for (const id of Object.keys(out).filter((k) => k !== "mcp.prm.well-known")) {
       expect(out[id]?.status, id).toBe("unknown");
     }
     expect(out["mcp.prm.www-authenticate"]?.evidence).toBe(
-      `${ENDPOINT} — HTTP 404; no 401 challenge to an unauthenticated GET, nothing to judge`,
+      `${ENDPOINT} — HTTP 404; no 401 challenge to an unauthenticated request (GET HTTP 404, POST HTTP 404), nothing to judge`,
     );
+    expect(out["mcp.rs.scope-challenge"]?.status).toBe("unknown");
     expect(out["mcp.prm"]?.evidence).toContain("none reached through the challenge");
   });
 
@@ -140,7 +147,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
 
   it("no-as: PRM checks judged, AS metadata unsupported, the other AS checks unknown", async () => {
     const { requests, out } = await statuses("no-as");
-    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC, AS_OIDC]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, POST_ENDPOINT, AS_RFC, AS_OIDC]);
     expect(out["mcp.prm"]?.status).toBe("supported");
     expect(out["mcp.as.metadata"]?.status).toBe("unsupported");
     for (const id of [
@@ -164,7 +171,7 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
 
   it("empty-servers: authorization_servers unsupported and no issuer to check", async () => {
     const { requests, out } = await statuses("empty-servers");
-    expect(requests).toEqual([PRM_PATH, ENDPOINT]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, POST_ENDPOINT]);
     expect(out["mcp.prm.authorization-servers"]?.status).toBe("unsupported");
     expect(out["mcp.as.metadata"]?.status).toBe("unknown");
     expect(out["mcp.as.metadata"]?.evidence).toContain("no authorization server named");
@@ -176,9 +183,10 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
     expect(out["mcp.prm.no-offline-access"]?.evidence).toContain("offline_access");
   });
 
-  it("no-scopes: nothing advertised, so the offline_access check is unknown and scopes unsupported", async () => {
+  it("no-scopes: nothing advertised anywhere, so the offline_access check is unknown and scopes unsupported", async () => {
     const { out } = await statuses("no-scopes");
     expect(out["mcp.prm.no-offline-access"]?.status).toBe("unknown");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("prm.silent");
     expect(out["mcp.prm.scopes-supported"]?.status).toBe("unsupported");
   });
 
@@ -219,6 +227,9 @@ describe("decision table over recorded responses (FR-001, FR-003, SC-002)", () =
       "challenge-pointer",
       "challenge-neither",
       "challenge-pointer-private",
+      "challenge-post",
+      "stale-sse",
+      "redirect-landing",
     ]) {
       const { out } = await statuses(name);
       for (const o of Object.values(out)) expect(o.evidence.length).toBeLessThanOrEqual(300);
@@ -249,14 +260,20 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
   it("challenge-pointer: the report's grade is not withheld for discovery", async () => {
     const f = fixture("challenge-pointer");
     const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
-    expect(report.grade.reasons.join(" ")).not.toMatch(/well-known|challenge/i);
+    // the discovery MUST is met through the challenge; the only reason left is the scope SHOULD
+    expect(report.grade.label).not.toBe("Withheld");
+    expect(report.grade.reasons.join(" ")).not.toMatch(/MUST/);
     expect(report.discovered?.protectedResource?.location).toBe("challenge");
     expect(report.discovered?.challenge).toEqual({
       url: ENDPOINT,
       status: 401,
+      method: "GET",
+      step: "get",
       header: `Bearer realm="mcp", resource_metadata="${POINTER}"`,
       resourceMetadata: POINTER,
+      scope: null,
     });
+    expect(report.discovered?.endpointNote).toBeNull();
   });
 
   it("challenge-no-pointer: a 401 without the parameter is unsupported, quoting the header", async () => {
@@ -294,11 +311,11 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
     expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("WWW-Authenticate: absent");
   });
 
-  it("challenge-405: any status but 401 is unknown with the status named, nothing else moves", async () => {
+  it("challenge-405: a 405 to both steps is unknown with both named, nothing else moves", async () => {
     const { requests, out } = await statuses("challenge-405");
-    expect(requests).toEqual([PRM_PATH, ENDPOINT, AS_RFC]);
+    expect(requests).toEqual([PRM_PATH, ENDPOINT, POST_ENDPOINT, AS_RFC]);
     expect(out["mcp.prm.www-authenticate"]?.status).toBe("unknown");
-    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("HTTP 405");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain("GET HTTP 405, POST HTTP 405");
     expect(out["mcp.prm.well-known"]?.status).toBe("supported");
     expect(out["mcp.as.metadata"]?.status).toBe("supported");
   });
@@ -337,6 +354,98 @@ describe("the discovery challenge (008 FR-002, FR-003, FR-004)", () => {
     const { requests, out } = await statuses("challenge-pointer-http", guardUrl);
     expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT]);
     expect(out["mcp.prm"]?.evidence).toContain("only https: URLs are scanned");
+  });
+});
+
+describe("composable discovery strategies (010)", () => {
+  it("challenge-post: a GET answered 405 is followed by one empty POST, whose 401 is judged", async () => {
+    const { probe: p, requests, out } = await statuses("challenge-post");
+    expect(requests).toEqual([PRM_PATH, PRM_ROOT, ENDPOINT, POST_ENDPOINT, POINTER, AS_RFC]);
+    expect(p.challenge).toMatchObject({ method: "POST", step: "post-empty", status: 401 });
+    expect(p.endpointRequests.map((r) => r.method ?? "GET")).toEqual(["GET", "POST"]);
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("supported");
+    expect(out["mcp.prm.www-authenticate"]?.via).toBe("challenge.resource-metadata");
+    expect(out["mcp.rs.scope-challenge"]?.status).toBe("supported");
+    expect(out["mcp.rs.scope-challenge"]?.evidence).toContain("scope: [read]");
+    expect(out["mcp.prm"]?.status).toBe("supported");
+    expect(p.prm?.location).toBe("challenge");
+    expect(p.endpointNote).toBeUndefined();
+  });
+
+  it("the ladder stops after a failure to connect: no POST after a timeout", async () => {
+    const { requests } = await statuses("challenge-timeout");
+    expect(requests.filter((u) => u.includes(ENDPOINT))).toEqual([ENDPOINT]);
+  });
+
+  it("stale-sse: an endpoint gone on both steps leaves the challenge unknown and notes the stale URL", async () => {
+    const SSE = "https://mcp.example.com/sse";
+    const { probe: p, requests, out } = await statuses("stale-sse");
+    expect(requests).toEqual([
+      "https://mcp.example.com/.well-known/oauth-protected-resource/sse",
+      SSE,
+      `POST ${SSE}`,
+      AS_RFC,
+    ]);
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unknown");
+    expect(out["mcp.prm"]?.status).toBe("supported");
+    expect(p.endpointNote).toContain("HTTP 410 and 410");
+    expect(p.endpointNote).toContain("/mcp");
+    const f = fixture("stale-sse");
+    const report = await scan({ url: f.target }, data, { fetcher: recordingFetcher(f) });
+    expect(report.discovered?.endpointNote).toBe(p.endpointNote);
+  });
+
+  it("redirect-landing: a GET redirected off the host is followed by a POST, whose bare 401 fails both discovery cells", async () => {
+    const ROOT = "https://mcp.example.com";
+    const { probe: p, requests, out } = await statuses("redirect-landing");
+    expect(requests).toEqual([
+      `${ROOT}/.well-known/oauth-protected-resource`,
+      ROOT,
+      `POST ${ROOT}`,
+    ]);
+    expect(out["mcp.prm.well-known"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.www-authenticate"]?.evidence).toContain(
+      "WWW-Authenticate: Bearer, no resource_metadata",
+    );
+    expect(out["mcp.rs.scope-challenge"]?.status).toBe("unsupported");
+    expect(p.endpointNote).toBeUndefined();
+  });
+
+  it("as-scopes: with no scopes in the metadata or the challenge, an authorization server without offline_access settles the SHOULD", async () => {
+    const { out } = await statuses("as-scopes");
+    expect(out["mcp.prm.no-offline-access"]?.status).toBe("supported");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("as.scopes");
+    expect(out["mcp.prm.no-offline-access"]?.evidence).toMatch(/^https:\/\/auth\.example\.com\//);
+    expect(out["mcp.prm.scopes-supported"]?.status).toBe("unsupported");
+  });
+
+  it("as-scopes-offline: an authorization server that offers offline_access leaves the server's choice unknown", async () => {
+    const { out } = await statuses("as-scopes-offline");
+    expect(out["mcp.prm.no-offline-access"]?.status).toBe("unknown");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("prm.silent");
+    expect(out["mcp.prm.no-offline-access"]?.evidence).toContain("offers offline_access");
+  });
+
+  it("challenge-scope-offline: a challenge that asks for offline_access fails the SHOULD", async () => {
+    const { out } = await statuses("challenge-scope-offline");
+    expect(out["mcp.prm.no-offline-access"]?.status).toBe("unsupported");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("challenge.scope");
+    expect(out["mcp.rs.scope-challenge"]?.status).toBe("supported");
+  });
+
+  it("the metadata's own scopes win over the challenge and the authorization server", async () => {
+    const { out } = await statuses("offline-access");
+    expect(out["mcp.prm.no-offline-access"]?.via).toBe("prm.scopes");
+    const { out: ok } = await statuses("complete");
+    expect(ok["mcp.prm.no-offline-access"]?.via).toBe("prm.scopes");
+  });
+
+  it("every check ends in a fallback that always decides", async () => {
+    const { probe: p } = await statuses("prm-timeout");
+    for (const [id, check] of Object.entries(PASSIVE_CHECKS)) {
+      expect(() => check(p), id).not.toThrow();
+    }
   });
 });
 

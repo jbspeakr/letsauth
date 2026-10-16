@@ -1,0 +1,16 @@
+---
+import ChainPage from "@/components/ChainPage.astro";
+import { getDataset } from "@/lib/data";
+import type { Scenario } from "@/schema";
+
+export function getStaticPaths() {
+  return getDataset().scenarios.map((scenario) => ({
+    params: { scenario: scenario.id },
+    props: { scenario },
+  }));
+}
+
+const { scenario } = Astro.props as { scenario: Scenario };
+---
+
+<ChainPage scenario={scenario} />
