@@ -127,7 +127,7 @@ replace the secret in Scaleway.
 The pull request is opened by the scanner's own identity, so CI runs on it like on any other.
 Nothing is merged without review. `specs/004-scanner/contracts/job.md` is the contract.
 
-**Environment of the job**: `SCANNER_REPO` (`jbspeakr/letsauth`), `SCANNER_BASE` (`main`), and
+**Environment of the job**: `SCANNER_REPO` (`letsauthlab/letsauth`), `SCANNER_BASE` (`main`), and
 the scanner's credentials, which live in the job definition on Scaleway, never in the image or
 the repository:
 
@@ -148,7 +148,7 @@ Set up once, by the owner:
    Read and write* (*Metadata: Read-only* is added automatically); nothing else. *Where can this
    GitHub App be installed?* Only on this account.
 2. On the App's page note the *App ID*, then *Generate a private key*; a `.pem` file downloads.
-3. *Install App* → only `jbspeakr/letsauth`.
+3. *Install App* → only `letsauthlab/letsauth`.
 4. In the Scaleway job definition set `SCANNER_APP_ID` to the App ID and the secret
    `SCANNER_APP_PRIVATE_KEY` to the `.pem` contents (as is, with `\n` escapes, or
    base64-encoded on one line: all three are accepted).
@@ -188,7 +188,7 @@ Set up once, by the owner:
    - command: `pnpm scan:nightly`,
    - cron schedule: `17 3 * * *` (UTC),
    - resources: 1 vCPU, 1 GB memory, timeout 30 minutes, no private network,
-   - environment variables: `SCANNER_REPO=jbspeakr/letsauth`, `SCANNER_BASE=main`,
+   - environment variables: `SCANNER_REPO=letsauthlab/letsauth`, `SCANNER_BASE=main`,
    - secrets: `SCANNER_APP_ID` and `SCANNER_APP_PRIVATE_KEY` (see "The scanner's GitHub App"), or
      the fallback `SCANNER_TOKEN`, as secret references (Secret Manager) or, where the
      definition offers no secret field, as environment variables.
@@ -233,7 +233,7 @@ to see their server's report asks for it to be listed; a contributor who wants f
 ## Opting out
 
 A server owner who does not want their server scanned withdraws it from the atlas through the
-[issue form](https://github.com/jbspeakr/letsauth/issues/new?template=observation.yml) ("withdraw
+[issue form](https://github.com/letsauthlab/letsauth/issues/new?template=observation.yml) ("withdraw
 my server"); a withdrawn server is never contacted again. The scanner only ever reads what a
 server publishes for every client, the well-known documents and the challenge it sends to anyone
 without a token, and identifies itself in every request.

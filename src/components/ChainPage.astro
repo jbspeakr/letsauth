@@ -27,7 +27,7 @@ const exercised = scenario.features.flatMap((id) => {
   return f ? [f] : [];
 });
 const violated = (toggle?.violates ?? []).map((id) => featureSupport(data, id));
-const repo = "https://github.com/jbspeakr/letsauth";
+const repo = "https://github.com/letsauthlab/letsauth";
 const title = toggle ? `${scenario.title} · ${toggle.name}` : scenario.title;
 const description = toggle
   ? `${scenario.title}, with ${toggle.name.toLowerCase()} (${TOGGLE_KIND_LABEL[toggle.kind].toLowerCase()}) turned on: ${toggle.summary.trim()}`

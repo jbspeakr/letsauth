@@ -13,9 +13,9 @@ MCP, A2A and agent delegation meet OAuth, OpenID Connect and workload identity, 
 
 <br>
 
-[![CI](https://img.shields.io/github/actions/workflow/status/jbspeakr/letsauth/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/jbspeakr/letsauth/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/github/actions/workflow/status/jbspeakr/letsauth/deploy.yml?branch=main&style=flat-square&label=deploy)](https://github.com/jbspeakr/letsauth/actions/workflows/deploy.yml)
-[![Scanner](https://img.shields.io/github/actions/workflow/status/jbspeakr/letsauth/scanner-deploy.yml?branch=main&style=flat-square&logo=scaleway&logoColor=white&label=scanner)](https://github.com/jbspeakr/letsauth/actions/workflows/scanner-deploy.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/letsauthlab/letsauth/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/letsauthlab/letsauth/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/github/actions/workflow/status/letsauthlab/letsauth/deploy.yml?branch=main&style=flat-square&label=deploy)](https://github.com/letsauthlab/letsauth/actions/workflows/deploy.yml)
+[![Scanner](https://img.shields.io/github/actions/workflow/status/letsauthlab/letsauth/scanner-deploy.yml?branch=main&style=flat-square&logo=scaleway&logoColor=white&label=scanner)](https://github.com/letsauthlab/letsauth/actions/workflows/scanner-deploy.yml)
 [![Site](https://img.shields.io/website?url=https%3A%2F%2Fletsauth.eu%2F&style=flat-square&label=letsauth.eu&up_message=live&down_message=down)](https://letsauth.eu/)
 <br>
 [![Code: MIT](https://img.shields.io/badge/code-MIT-006b5d?style=flat-square)](LICENSE)

@@ -15,7 +15,7 @@ const data = getDataset();
 const view = latestScan(data, server);
 const report = reportFromView(view, "1970-01-01T00:00:00Z");
 const unscanned = unscannedFeatures(data);
-const repo = "https://github.com/jbspeakr/letsauth";
+const repo = "https://github.com/letsauthlab/letsauth";
 const gradeWord = view.grade.letter ? `grade ${view.grade.letter}` : view.grade.label.toLowerCase();
 ---
 

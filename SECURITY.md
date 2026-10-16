@@ -4,7 +4,7 @@
 
 Report a security problem in letsauth.eu or in this repository privately, by either route:
 
-- a [private security advisory](https://github.com/jbspeakr/letsauth/security/advisories/new) on
+- a [private security advisory](https://github.com/letsauthlab/letsauth/security/advisories/new) on
   GitHub, or
 - email to `letsauth@janbrennenstuhl.eu`.
 

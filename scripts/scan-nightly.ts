@@ -8,7 +8,7 @@
  *                     show up as <app-slug>[bot]
  *   SCANNER_TOKEN     fallback when no App is configured: a fine-grained personal token with
  *                     contents and pull requests write on the repository
- *   SCANNER_REPO      owner/name (default jbspeakr/letsauth)
+ *   SCANNER_REPO      owner/name (default letsauthlab/letsauth)
  *   SCANNER_BASE      base branch (default main)
  *   SCANNER_WORKDIR   where to clone (default a fresh directory under the system temp dir)
  *
@@ -87,7 +87,7 @@ async function credentials(): Promise<Credentials> {
   );
 }
 
-const repo = process.env.SCANNER_REPO ?? "jbspeakr/letsauth";
+const repo = process.env.SCANNER_REPO ?? "letsauthlab/letsauth";
 const base = process.env.SCANNER_BASE ?? "main";
 const workdir = process.env.SCANNER_WORKDIR ?? mkdtempSync(join(tmpdir(), "letsauth-scan-"));
 const now = new Date();
