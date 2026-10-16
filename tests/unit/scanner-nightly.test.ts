@@ -3,7 +3,9 @@ import {
   branchFor,
   closeSuperseded,
   commitMessage,
+  describeError,
   redact,
+  retryingFetch,
   runStamp,
   upsertPullRequest,
 } from "@/scanner/nightly";
@@ -154,5 +156,72 @@ describe("redact", () => {
     expect(out).not.toContain(token);
     expect(out).not.toContain(header);
     expect(out).toBe("Command failed: git -c http.extraheader=AUTHORIZATION: basic *** push (***)");
+  });
+});
+
+describe("retryingFetch", () => {
+  const dropped = () =>
+    Object.assign(new TypeError("fetch failed"), {
+      cause: Object.assign(new Error("other side closed"), { code: "UND_ERR_SOCKET" }),
+    });
+
+  it("tries a dropped request again and returns the response", async () => {
+    let calls = 0;
+    const flaky = retryingFetch(
+      async () => {
+        calls++;
+        if (calls === 1) throw dropped();
+        return new Response("[]", { status: 200 });
+      },
+      { delayMs: 0 },
+    );
+    const response = await flaky("https://api.github.com/x");
+    expect(response.status).toBe(200);
+    expect(calls).toBe(2);
+  });
+
+  it("returns an HTTP error status without retrying", async () => {
+    let calls = 0;
+    const refused = retryingFetch(
+      async () => {
+        calls++;
+        return new Response("nope", { status: 403 });
+      },
+      { delayMs: 0 },
+    );
+    expect((await refused("https://api.github.com/x")).status).toBe(403);
+    expect(calls).toBe(1);
+  });
+
+  it("gives up after the last attempt with the original error", async () => {
+    let calls = 0;
+    const down = retryingFetch(
+      async () => {
+        calls++;
+        throw dropped();
+      },
+      { attempts: 3, delayMs: 0 },
+    );
+    await expect(down("https://api.github.com/x")).rejects.toThrow("fetch failed");
+    expect(calls).toBe(3);
+  });
+});
+
+describe("describeError", () => {
+  it("names the cause Node's fetch hides behind 'fetch failed'", () => {
+    const error = new TypeError("fetch failed", {
+      cause: Object.assign(new Error("getaddrinfo ENOTFOUND api.github.com"), {
+        code: "ENOTFOUND",
+      }),
+    });
+    expect(describeError(error)).toBe(
+      "fetch failed: getaddrinfo ENOTFOUND api.github.com (ENOTFOUND)",
+    );
+  });
+
+  it("is the message alone when there is no cause", () => {
+    expect(describeError(new Error("listing pull requests: HTTP 401"))).toBe(
+      "listing pull requests: HTTP 401",
+    );
   });
 });

@@ -174,6 +174,52 @@ export async function closeSuperseded(options: {
   return closed;
 }
 
+/**
+ * Wraps `fetchImpl` so a request that fails before any response (a dropped connection, a reset,
+ * a DNS hiccup: Node's "fetch failed") is tried again after a pause. An HTTP error status is a
+ * response and is returned as is. The nightly run talks to GitHub once at the start and again
+ * after a scan of several minutes, long enough for an idle kept-alive connection to be dropped
+ * on the way.
+ */
+export function retryingFetch(
+  fetchImpl: FetchLike,
+  options: { attempts?: number; delayMs?: number } = {},
+): FetchLike {
+  const attempts = options.attempts ?? 3;
+  const delayMs = options.delayMs ?? 2000;
+  return async (url, init) => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await fetchImpl(url, init);
+      } catch (error) {
+        if (attempt >= attempts) throw error;
+        console.warn(`${describeError(error)}; retrying (${attempt + 1} of ${attempts})`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+      }
+    }
+  };
+}
+
+/**
+ * An error's message with its causes, e.g. `fetch failed: other side closed (UND_ERR_SOCKET)`:
+ * Node's fetch says only "fetch failed" and keeps the reason in `cause`.
+ */
+export function describeError(error: unknown): string {
+  const parts: string[] = [];
+  let current: unknown = error;
+  for (let depth = 0; current !== undefined && current !== null && depth < 4; depth++) {
+    if (current instanceof Error) {
+      const code = (current as { code?: unknown }).code;
+      parts.push(typeof code === "string" ? `${current.message} (${code})` : current.message);
+      current = current.cause;
+    } else {
+      parts.push(String(current));
+      break;
+    }
+  }
+  return parts.join(": ");
+}
+
 /** Replaces every secret (and its base64 forms in an Authorization header) in `text` with ***. */
 export function redact(text: string, secrets: readonly string[]): string {
   let out = text;
