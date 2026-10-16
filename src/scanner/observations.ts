@@ -68,7 +68,7 @@ export function summarise(results: RunResult[], startedAt: string, revisionId: s
   );
   lines.push("");
   lines.push(
-    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public metadata was read: the well-known documents, and the challenge the endpoint returns to one unauthenticated request (status and headers only, no body); every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`.`,
+    `${plural(appended, "observation")} appended by \`${OBSERVER}\`. Only public metadata was read: the well-known documents, and the challenge the endpoint returns to an unauthenticated request without a JSON-RPC message (a GET, then an empty POST when the GET was routed elsewhere; status and headers only, no body read); every evidence field starts with the URL that decided the status. Cells that could not be judged are recorded as \`unknown\`, never as \`unsupported\`. A note names a listed URL that looks stale; fix the server file, not the observations.`,
   );
   lines.push("");
   lines.push("| Server | Grade | Appended | Could not judge | Notes |");
@@ -77,7 +77,7 @@ export function summarise(results: RunResult[], startedAt: string, revisionId: s
     const unknown = r.report ? r.report.checks.filter((c) => c.status === "unknown").length : 0;
     const gradeText = r.report ? r.report.grade.label : "–";
     const changed = r.appended.map((o) => `\`${o.feature}\` ${o.status}`).join(", ");
-    const note = r.error ? `error: ${r.error}` : "";
+    const note = r.error ? `error: ${r.error}` : (r.report?.discovered?.endpointNote ?? "");
     lines.push(
       `| ${r.server.name} (\`${r.server.id}\`) | ${gradeText} | ${r.appended.length}${changed ? `: ${changed}` : ""} | ${unknown} | ${note} |`,
     );

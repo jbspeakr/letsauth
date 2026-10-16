@@ -1,18 +1,21 @@
 import { type Challenge, parseChallenge } from "./challenge";
-import type { FetchError, Fetcher, FetchResult } from "./fetch";
+import { ENDPOINT_LADDER, endpointNote } from "./discovery";
+import type { FetchError, Fetcher, FetchMethod, FetchResult } from "./fetch";
 import type { Guard } from "./guard";
 import { wellKnownAsUrls, wellKnownPrmUrls } from "./urls";
 
 /**
  * Reads the public metadata of one MCP server: the protected resource metadata at its two
- * well-known locations; the challenge the endpoint returns to one unauthenticated request (008);
- * when no well-known document exists, the document the challenge points at; then the first
- * authorization server's metadata at its three locations. Records every request. Judges
- * nothing; the checks do that.
+ * well-known locations; the challenge the endpoint returns to an unauthenticated request (008),
+ * asked in the ladder `discovery.ts` declares (010); when no well-known document exists, the
+ * document the challenge points at; then the first authorization server's metadata at its three
+ * locations. Records every request. Judges nothing; the checks do that.
  */
 
 export interface RequestRecord {
   url: string;
+  /** Absent means GET. */
+  method?: FetchMethod;
   status: number | null;
   /** True when a JSON object was fetched. */
   ok: boolean;
@@ -44,12 +47,18 @@ export interface AsInfo {
   clientIdMetadataDocumentSupported?: unknown;
   registrationEndpoint?: string;
   authorizationResponseIssParameterSupported?: unknown;
+  /** RFC 8414 `scopes_supported`, when the field is an array of strings. */
+  scopesSupported?: string[];
 }
 
-/** The endpoint's answer to the one unauthenticated request (008). */
+/** The endpoint's answer to the decisive unauthenticated request (008, 010). */
 export interface ChallengeInfo extends Challenge {
   url: string;
   status: number;
+  /** The request that got this answer. */
+  method: FetchMethod;
+  /** The ladder step (`discovery.ts`) that got it. */
+  step: string;
   /** The WWW-Authenticate header as received; absent when the server sent none. */
   header?: string;
 }
@@ -68,8 +77,13 @@ export interface Probe {
   wellKnownLast?: RequestRecord;
   /** found: the endpoint answered 401. absent: any other definite status. error: no answer. */
   challengeOutcome: Outcome;
+  /** The decisive request of the ladder: the 401, or the last step tried. */
   challengeLast?: RequestRecord;
+  /** Every request of the endpoint ladder, in order. */
+  endpointRequests: RequestRecord[];
   challenge?: ChallengeInfo;
+  /** A note for the maintainer when the listed URL itself looks stale; never an observation. */
+  endpointNote?: string;
   /** The fetch of the challenge's `resource_metadata` pointer, when one was followed. */
   pointerOutcome?: Outcome;
   pointerLast?: RequestRecord;
@@ -103,6 +117,7 @@ function toRecord(r: FetchResult): RequestRecord {
     status: r.status,
     ok: r.kind === "found" && r.json !== undefined,
   };
+  if (r.method && r.method !== "GET") rec.method = r.method;
   if (r.contentType) rec.contentType = r.contentType;
   if (r.error) rec.error = r.error;
   if (r.detail) rec.detail = r.detail;
@@ -192,6 +207,7 @@ async function probeAs(issuer: string, options: ProbeOptions): Promise<AsCacheEn
         typeof doc.registration_endpoint === "string" ? doc.registration_endpoint : undefined,
       authorizationResponseIssParameterSupported:
         doc.authorization_response_iss_parameter_supported,
+      scopesSupported: stringList(doc.scopes_supported),
     };
     entry = { requests, as, outcome, last };
   } else {
@@ -226,6 +242,7 @@ export async function probe(target: string, options: ProbeOptions): Promise<Prob
     prmOutcome: "absent",
     wellKnownOutcome: "absent",
     challengeOutcome: "absent",
+    endpointRequests: [],
     asOutcome: "no-issuer",
     othersNotChecked: [],
   };
@@ -243,17 +260,32 @@ export async function probe(target: string, options: ProbeOptions): Promise<Prob
     out.prm = prmInfoOf(wellKnown.result, location);
   }
 
-  // 2. the endpoint: one unauthenticated GET, headers only (008 FR-001)
-  const answer = await options.fetcher(target, "challenge");
-  const challengeRec = toRecord(answer);
-  requests.push(challengeRec);
-  out.challengeOutcome = answer.kind;
-  out.challengeLast = challengeRec;
-  if (answer.status !== null && answer.kind !== "error") {
-    const parsed = parseChallenge(answer.wwwAuthenticate);
-    out.challenge = { url: answer.url, status: answer.status, ...parsed };
-    if (answer.wwwAuthenticate) out.challenge.header = answer.wwwAuthenticate;
+  // 2. the endpoint: the unauthenticated ladder, headers only (008 FR-001, 010)
+  const answers: FetchResult[] = [];
+  for (const step of ENDPOINT_LADDER) {
+    if (!step.when(answers)) continue;
+    const answer = await options.fetcher(target, step.mode);
+    answers.push(answer);
+    const rec = toRecord(answer);
+    requests.push(rec);
+    out.endpointRequests.push(rec);
+    out.challengeOutcome = answer.kind;
+    out.challengeLast = rec;
+    if (answer.status !== null && answer.kind !== "error") {
+      const parsed = parseChallenge(answer.wwwAuthenticate);
+      out.challenge = {
+        url: answer.url,
+        status: answer.status,
+        method: answer.method ?? "GET",
+        step: step.id,
+        ...parsed,
+      };
+      if (answer.wwwAuthenticate) out.challenge.header = answer.wwwAuthenticate;
+    }
+    if (answer.kind === "found") break;
   }
+  const note = endpointNote(answers);
+  if (note) out.endpointNote = note;
 
   // 3. the pointer, only when the well-known locations gave nothing (008 FR-003)
   const pointer = out.challenge?.resourceMetadata;

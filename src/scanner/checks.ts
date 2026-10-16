@@ -1,20 +1,15 @@
-import type { Feature, ObservationStatus } from "../schema";
+import type { Feature } from "../schema";
 import type { Probe, RequestRecord } from "./probe";
+import { type Check, type CheckOutcome, firstOf, type Strategy, strategy } from "./strategies";
 import { sameIssuer } from "./urls";
 
 /**
  * One check per passively observable feature: the decision table in
- * specs/004-scanner/data-model.md, as code. A check is a pure function of the probe. Evidence is
- * deterministic (URL, HTTP status or failure, the deciding field and value) so two runs over the
- * same responses write byte-identical observations.
+ * specs/004-scanner/data-model.md (rows added by 008 and 010), as code. A check is an ordered
+ * list of strategies (`strategies.ts`); each strategy is a pure function of the probe. Evidence
+ * is deterministic (URL, HTTP status or failure, the deciding field and value) so two runs over
+ * the same responses write byte-identical observations.
  */
-
-export interface CheckOutcome {
-  status: ObservationStatus;
-  evidence: string;
-}
-
-export type Check = (probe: Probe) => CheckOutcome;
 
 const EVIDENCE_MAX = 300;
 
@@ -44,12 +39,20 @@ function show(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+const recordOf = (probe: Probe, url: string | undefined) =>
+  probe.requests.find((r) => r.url === url);
+
 /** The well-known requests of a probe, as words for the evidence. */
 function wellKnownTried(probe: Probe): string {
   return probe.requests
     .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
     .map((r) => httpWord(r))
     .join(", ");
+}
+
+/** Every request of the endpoint ladder, as words: `GET HTTP 405, POST HTTP 400`. */
+function endpointTried(probe: Probe): string {
+  return probe.endpointRequests.map((r) => `${r.method ?? "GET"} ${httpWord(r)}`).join(", ");
 }
 
 /** How the challenge route ended, as words for the evidence. */
@@ -59,7 +62,7 @@ function challengeWord(probe: Probe): string {
     return `challenge pointer ${probe.pointerLast ? httpWord(probe.pointerLast) : "not followed"}`;
   }
   if (probe.challengeOutcome === "found") return "challenge without resource_metadata";
-  return `endpoint ${httpWord(probe.challengeLast)}`;
+  return `endpoint ${endpointTried(probe) || httpWord(probe.challengeLast)}`;
 }
 
 /** Why no PRM could be judged: the decisive request and a word for the reader. */
@@ -94,7 +97,7 @@ function asMissing(probe: Probe): CheckOutcome {
         status: "unknown",
         evidence: evidence(
           probe.prm.url,
-          probe.requests.find((r) => r.url === probe.prm?.url),
+          recordOf(probe, probe.prm.url),
           "no authorization server named in the protected resource metadata",
         ),
       };
@@ -109,7 +112,18 @@ function asMissing(probe: Probe): CheckOutcome {
       evidence: evidence(url, last, "could not fetch the authorization server metadata"),
     };
   }
-  const tried = probe.requests
+  return {
+    status: "unknown",
+    evidence: evidence(
+      url,
+      last,
+      `no authorization server metadata at a well-known location (${asTried(probe)})`,
+    ),
+  };
+}
+
+function asTried(probe: Probe): string {
+  return probe.requests
     .filter(
       (r) =>
         probe.issuer &&
@@ -118,223 +132,328 @@ function asMissing(probe: Probe): CheckOutcome {
     )
     .map((r) => httpWord(r))
     .join(", ");
-  return {
-    status: "unknown",
-    evidence: evidence(
-      url,
-      last,
-      `no authorization server metadata at a well-known location (${tried})`,
-    ),
-  };
 }
 
-function withPrm(
-  probe: Probe,
-  judge: (prm: NonNullable<Probe["prm"]>, rec: RequestRecord | undefined) => CheckOutcome,
-): CheckOutcome {
-  if (!probe.prm) return prmMissing(probe);
-  return judge(
-    probe.prm,
-    probe.requests.find((r) => r.url === probe.prm?.url),
+type Prm = NonNullable<Probe["prm"]>;
+type As = NonNullable<Probe["as"]>;
+type Ch = NonNullable<Probe["challenge"]>;
+
+/** A strategy over the protected resource metadata; passes when none was found. */
+function fromPrm(
+  id: string,
+  title: string,
+  judge: (prm: Prm, rec: RequestRecord | undefined, probe: Probe) => CheckOutcome | undefined,
+): Strategy {
+  return strategy(id, title, (probe) =>
+    probe.prm ? judge(probe.prm, recordOf(probe, probe.prm.url), probe) : undefined,
   );
 }
 
-function withAs(
-  probe: Probe,
-  judge: (as: NonNullable<Probe["as"]>, rec: RequestRecord | undefined) => CheckOutcome,
-): CheckOutcome {
-  if (!probe.as) return asMissing(probe);
-  return judge(
-    probe.as,
-    probe.requests.find((r) => r.url === probe.as?.url),
+/** A strategy over the authorization server metadata; passes when none was found. */
+function fromAs(
+  id: string,
+  title: string,
+  judge: (as: As, rec: RequestRecord | undefined, probe: Probe) => CheckOutcome | undefined,
+): Strategy {
+  return strategy(id, title, (probe) =>
+    probe.as ? judge(probe.as, recordOf(probe, probe.as.url), probe) : undefined,
   );
 }
 
-export const PASSIVE_CHECKS: Record<string, Check> = {
-  // judged from the well-known locations alone: a document reached through the challenge's
-  // pointer does not count here (008 FR-004)
-  "mcp.prm.well-known": (probe) => {
-    if (probe.prm && probe.prm.location !== "challenge") {
-      const rec = probe.requests.find((r) => r.url === probe.prm?.url);
+/** A strategy over a 401 challenge; passes when the endpoint gave none. */
+function fromChallenge(
+  id: string,
+  title: string,
+  judge: (c: Ch, rec: RequestRecord | undefined, probe: Probe) => CheckOutcome | undefined,
+): Strategy {
+  return strategy(id, title, (probe) =>
+    probe.challenge && probe.challengeOutcome === "found"
+      ? judge(probe.challenge, probe.challengeLast, probe)
+      : undefined,
+  );
+}
+
+/** The fallback when no strategy could read a PRM-based requirement. */
+const PRM_UNKNOWN = strategy("prm.missing", "no protected resource metadata was found", prmMissing);
+/** The fallback when no strategy could read an AS-based requirement. */
+const AS_UNKNOWN = strategy("as.missing", "no authorization server metadata was found", asMissing);
+
+/** The fallback for a requirement read from the endpoint's challenge. */
+const CHALLENGE_UNKNOWN = strategy(
+  "challenge.missing",
+  "the endpoint gave no 401 challenge to any step of the ladder",
+  (probe) => {
+    const rec = probe.challengeLast;
+    const url = rec?.url ?? probe.target;
+    if (probe.challengeOutcome === "error") {
       return {
-        status: "supported",
-        evidence: evidence(probe.prm.url, rec, `found at the ${probe.prm.location} location`),
-      };
-    }
-    const last = probe.wellKnownLast;
-    const url = last?.url ?? probe.target;
-    if (probe.wellKnownOutcome === "absent") {
-      const tried = probe.requests
-        .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
-        .map(
-          (r) =>
-            `${r.url.endsWith("/oauth-protected-resource") ? "root" : "path-aware"} ${httpWord(r)}`,
-        )
-        .join(", ");
-      return {
-        status: "unsupported",
-        evidence: evidence(url, last, `not at either well-known location (${tried})`),
+        status: "unknown",
+        evidence: evidence(url, rec, `could not reach the endpoint (${endpointTried(probe)})`),
       };
     }
     return {
       status: "unknown",
-      evidence: evidence(url, last, "could not fetch the well-known protected resource metadata"),
-    };
-  },
-
-  // the endpoint's answer to one unauthenticated GET (008 FR-002); headers only
-  "mcp.prm.www-authenticate": (probe) => {
-    const rec = probe.challengeLast;
-    const url = rec?.url ?? probe.target;
-    if (probe.challengeOutcome === "error") {
-      return { status: "unknown", evidence: evidence(url, rec, "could not reach the endpoint") };
-    }
-    const c = probe.challenge;
-    if (!c || probe.challengeOutcome !== "found") {
-      return {
-        status: "unknown",
-        evidence: evidence(
-          url,
-          rec,
-          "no 401 challenge to an unauthenticated GET, nothing to judge",
-        ),
-      };
-    }
-    if (c.resourceMetadata) {
-      return {
-        status: "supported",
-        evidence: evidence(url, rec, `WWW-Authenticate resource_metadata: ${c.resourceMetadata}`),
-      };
-    }
-    return {
-      status: "unsupported",
       evidence: evidence(
         url,
         rec,
-        `WWW-Authenticate: ${c.header ?? "absent"}, no resource_metadata parameter`,
+        `no 401 challenge to an unauthenticated request (${endpointTried(probe)}), nothing to judge`,
       ),
     };
   },
+);
 
-  "mcp.prm": (probe) =>
-    withPrm(probe, (prm, rec) => ({
-      status: "supported",
-      evidence: evidence(prm.url, rec, `resource: ${show(prm.resource)}`),
-    })),
+/** A simple `supported` / `unsupported` on a field of a document. */
+function fieldOutcome(
+  url: string,
+  rec: RequestRecord | undefined,
+  ok: boolean,
+  yes: string,
+  no: string,
+): CheckOutcome {
+  return ok
+    ? { status: "supported", evidence: evidence(url, rec, yes) }
+    : { status: "unsupported", evidence: evidence(url, rec, no) };
+}
 
-  "mcp.prm.authorization-servers": (probe) =>
-    withPrm(probe, (prm, rec) =>
-      prm.authorizationServers.length > 0
-        ? {
+/**
+ * The strategies of every passive check, in the order they are tried. The decision table in
+ * specs/004-scanner/data-model.md is the prose form of this table.
+ */
+export const CHECK_STRATEGIES: Record<string, readonly Strategy[]> = {
+  // judged from the well-known locations alone: a document reached through the challenge's
+  // pointer does not count here (008 FR-004)
+  "mcp.prm.well-known": [
+    strategy(
+      "prm.well-known",
+      "the protected resource metadata at the path-aware or root well-known location",
+      (probe) => {
+        if (probe.prm && probe.prm.location !== "challenge") {
+          return {
             status: "supported",
             evidence: evidence(
-              prm.url,
-              rec,
-              `authorization_servers: ${show(prm.authorizationServers)}`,
+              probe.prm.url,
+              recordOf(probe, probe.prm.url),
+              `found at the ${probe.prm.location} location`,
             ),
-          }
-        : {
+          };
+        }
+        const last = probe.wellKnownLast;
+        const url = last?.url ?? probe.target;
+        if (probe.wellKnownOutcome === "absent") {
+          const tried = probe.requests
+            .filter((r) => r.url.includes("/.well-known/oauth-protected-resource"))
+            .map(
+              (r) =>
+                `${r.url.endsWith("/oauth-protected-resource") ? "root" : "path-aware"} ${httpWord(r)}`,
+            )
+            .join(", ");
+          return {
             status: "unsupported",
-            evidence: evidence(
-              prm.url,
-              rec,
-              `authorization_servers: ${show(prm.doc.authorization_servers)}`,
-            ),
-          },
-    ),
-
-  "mcp.prm.scopes-supported": (probe) =>
-    withPrm(probe, (prm, rec) =>
-      prm.scopesSupported && prm.scopesSupported.length > 0
-        ? {
-            status: "supported",
-            evidence: evidence(prm.url, rec, `scopes_supported: ${show(prm.scopesSupported)}`),
-          }
-        : {
-            status: "unsupported",
-            evidence: evidence(prm.url, rec, `scopes_supported: ${show(prm.doc.scopes_supported)}`),
-          },
-    ),
-
-  "mcp.prm.no-offline-access": (probe) =>
-    withPrm(probe, (prm, rec) => {
-      if (!prm.scopesSupported) {
+            evidence: evidence(url, last, `not at either well-known location (${tried})`),
+          };
+        }
         return {
           status: "unknown",
           evidence: evidence(
-            prm.url,
-            rec,
-            "scopes_supported: absent, so no scope is advertised to judge",
+            url,
+            last,
+            "could not fetch the well-known protected resource metadata",
           ),
         };
-      }
-      return prm.scopesSupported.includes("offline_access")
-        ? {
-            status: "unsupported",
-            evidence: evidence(
-              prm.url,
-              rec,
-              `scopes_supported includes offline_access: ${show(prm.scopesSupported)}`,
-            ),
-          }
-        : {
-            status: "supported",
-            evidence: evidence(
-              prm.url,
-              rec,
-              `scopes_supported without offline_access: ${show(prm.scopesSupported)}`,
-            ),
-          };
-    }),
+      },
+    ),
+  ],
 
-  "mcp.as.metadata": (probe) => {
-    if (probe.as) {
-      const rec = probe.requests.find((r) => r.url === probe.as?.url);
-      return {
-        status: "supported",
-        evidence: evidence(probe.as.url, rec, `issuer: ${show(probe.as.doc.issuer)}`),
-      };
-    }
-    if (probe.asOutcome === "absent") {
-      const tried = probe.requests
-        .filter((r) => probe.issuer && r.url.startsWith(new URL(probe.issuer).origin))
-        .map((r) => httpWord(r))
-        .join(", ");
-      return {
-        status: "unsupported",
-        evidence: evidence(
-          probe.asLast?.url ?? probe.issuer ?? probe.target,
-          probe.asLast,
-          `not at any of the three well-known locations (${tried})`,
-        ),
-      };
-    }
-    return asMissing(probe);
-  },
+  // the endpoint's answer to the unauthenticated ladder (008 FR-002, 010); headers only
+  "mcp.prm.www-authenticate": [
+    fromChallenge(
+      "challenge.resource-metadata",
+      "the resource_metadata parameter of the 401 challenge",
+      (c, rec) =>
+        c.resourceMetadata
+          ? {
+              status: "supported",
+              evidence: evidence(
+                c.url,
+                rec,
+                `WWW-Authenticate resource_metadata: ${c.resourceMetadata}`,
+              ),
+            }
+          : {
+              status: "unsupported",
+              evidence: evidence(
+                c.url,
+                rec,
+                `WWW-Authenticate: ${c.header ?? "absent"}, no resource_metadata parameter`,
+              ),
+            },
+    ),
+    CHALLENGE_UNKNOWN,
+  ],
 
-  "mcp.as.issuer-match": (probe) =>
-    withAs(probe, (as, rec) =>
-      typeof as.doc.issuer === "string" && sameIssuer(as.doc.issuer, as.issuer)
+  // the scope parameter of the same challenge (010): nothing more is sent
+  "mcp.rs.scope-challenge": [
+    fromChallenge("challenge.scope", "the scope parameter of the 401 challenge", (c, rec) =>
+      c.scope && c.scope.length > 0
         ? {
             status: "supported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `issuer: ${as.doc.issuer} equals the issuer the PRM named`,
-            ),
+            evidence: evidence(c.url, rec, `WWW-Authenticate scope: ${show(c.scope)}`),
           }
         : {
             status: "unsupported",
             evidence: evidence(
-              as.url,
+              c.url,
               rec,
-              `issuer: ${show(as.doc.issuer)}, PRM named ${as.issuer}`,
+              `WWW-Authenticate: ${c.header ?? "absent"}, no scope parameter`,
             ),
           },
     ),
+    CHALLENGE_UNKNOWN,
+  ],
 
-  "mcp.as.https": (probe) =>
-    withAs(probe, (as, rec) => {
+  "mcp.prm": [
+    fromPrm(
+      "prm.document",
+      "a protected resource metadata document, by either route",
+      (prm, rec) => ({
+        status: "supported",
+        evidence: evidence(prm.url, rec, `resource: ${show(prm.resource)}`),
+      }),
+    ),
+    PRM_UNKNOWN,
+  ],
+
+  "mcp.prm.authorization-servers": [
+    fromPrm("prm.authorization-servers", "authorization_servers in the document", (prm, rec) =>
+      fieldOutcome(
+        prm.url,
+        rec,
+        prm.authorizationServers.length > 0,
+        `authorization_servers: ${show(prm.authorizationServers)}`,
+        `authorization_servers: ${show(prm.doc.authorization_servers)}`,
+      ),
+    ),
+    PRM_UNKNOWN,
+  ],
+
+  "mcp.prm.scopes-supported": [
+    fromPrm("prm.scopes", "scopes_supported in the document", (prm, rec) =>
+      fieldOutcome(
+        prm.url,
+        rec,
+        (prm.scopesSupported?.length ?? 0) > 0,
+        `scopes_supported: ${show(prm.scopesSupported)}`,
+        `scopes_supported: ${show(prm.doc.scopes_supported)}`,
+      ),
+    ),
+    PRM_UNKNOWN,
+  ],
+
+  // three places a server can tell what scopes it wants, read in order of how directly they
+  // speak for the server: its own metadata, its challenge, then its authorization server
+  "mcp.prm.no-offline-access": [
+    fromPrm(
+      "prm.scopes",
+      "scopes_supported in the protected resource metadata",
+      (prm, rec) =>
+        prm.scopesSupported
+          ? fieldOutcome(
+              prm.url,
+              rec,
+              !prm.scopesSupported.includes("offline_access"),
+              `scopes_supported without offline_access: ${show(prm.scopesSupported)}`,
+              `scopes_supported includes offline_access: ${show(prm.scopesSupported)}`,
+            )
+          : undefined, // the document is silent on scopes: the next source may speak
+    ),
+    fromChallenge(
+      "challenge.scope",
+      "the scope parameter of the 401 challenge, when the metadata names no scopes",
+      (c, rec) =>
+        c.scope && c.scope.length > 0
+          ? fieldOutcome(
+              c.url,
+              rec,
+              !c.scope.includes("offline_access"),
+              `WWW-Authenticate scope without offline_access: ${show(c.scope)}`,
+              `WWW-Authenticate scope includes offline_access: ${show(c.scope)}`,
+            )
+          : undefined,
+    ),
+    fromAs(
+      "as.scopes",
+      "scopes_supported of the authorization server, when neither the metadata nor the challenge names scopes: a server cannot request a scope its authorization server does not issue",
+      (as, rec) =>
+        as.scopesSupported && !as.scopesSupported.includes("offline_access")
+          ? {
+              status: "supported",
+              evidence: evidence(
+                as.url,
+                rec,
+                `the authorization server's scopes_supported has no offline_access: ${show(as.scopesSupported)}; the server advertises no scopes of its own`,
+              ),
+            }
+          : undefined, // the AS offers it or says nothing: whether this server asks for it is not advertised
+    ),
+    fromPrm("prm.silent", "nothing advertised anywhere", (prm, rec, probe) => ({
+      status: "unknown",
+      evidence: evidence(
+        prm.url,
+        rec,
+        probe.as?.scopesSupported?.includes("offline_access")
+          ? "scopes_supported: absent; the authorization server offers offline_access, and whether this server requests it is not advertised"
+          : "scopes_supported: absent, so no scope is advertised to judge",
+      ),
+    })),
+    PRM_UNKNOWN,
+  ],
+
+  "mcp.as.metadata": [
+    strategy(
+      "as.well-known",
+      "the authorization server metadata at one of the three well-known locations",
+      (probe) => {
+        if (probe.as) {
+          return {
+            status: "supported",
+            evidence: evidence(
+              probe.as.url,
+              recordOf(probe, probe.as.url),
+              `issuer: ${show(probe.as.doc.issuer)}`,
+            ),
+          };
+        }
+        if (probe.asOutcome === "absent") {
+          return {
+            status: "unsupported",
+            evidence: evidence(
+              probe.asLast?.url ?? probe.issuer ?? probe.target,
+              probe.asLast,
+              `not at any of the three well-known locations (${asTried(probe)})`,
+            ),
+          };
+        }
+        return undefined;
+      },
+    ),
+    AS_UNKNOWN,
+  ],
+
+  "mcp.as.issuer-match": [
+    fromAs("as.issuer", "the issuer field against the issuer the PRM named", (as, rec) =>
+      fieldOutcome(
+        as.url,
+        rec,
+        typeof as.doc.issuer === "string" && sameIssuer(as.doc.issuer, as.issuer),
+        `issuer: ${as.doc.issuer} equals the issuer the PRM named`,
+        `issuer: ${show(as.doc.issuer)}, PRM named ${as.issuer}`,
+      ),
+    ),
+    AS_UNKNOWN,
+  ],
+
+  "mcp.as.https": [
+    fromAs("as.endpoints", "every endpoint URL in the metadata", (as, rec) => {
       const entries = Object.entries(as.endpoints);
       const plain = entries
         .filter(([, v]) => !v.startsWith("https://"))
@@ -363,79 +482,66 @@ export const PASSIVE_CHECKS: Record<string, Check> = {
         ),
       };
     }),
+    AS_UNKNOWN,
+  ],
 
-  "mcp.as.pkce-s256": (probe) =>
-    withAs(probe, (as, rec) =>
-      as.codeChallengeMethodsSupported?.includes("S256")
-        ? {
-            status: "supported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `code_challenge_methods_supported: ${show(as.codeChallengeMethodsSupported)}`,
-            ),
-          }
-        : {
-            status: "unsupported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `code_challenge_methods_supported: ${show(as.doc.code_challenge_methods_supported)}`,
-            ),
-          },
+  "mcp.as.pkce-s256": [
+    fromAs("as.pkce", "code_challenge_methods_supported in the metadata", (as, rec) =>
+      fieldOutcome(
+        as.url,
+        rec,
+        as.codeChallengeMethodsSupported?.includes("S256") ?? false,
+        `code_challenge_methods_supported: ${show(as.codeChallengeMethodsSupported)}`,
+        `code_challenge_methods_supported: ${show(as.doc.code_challenge_methods_supported)}`,
+      ),
     ),
+    AS_UNKNOWN,
+  ],
 
-  "mcp.as.cimd": (probe) =>
-    withAs(probe, (as, rec) =>
-      as.clientIdMetadataDocumentSupported === true
-        ? {
-            status: "supported",
-            evidence: evidence(as.url, rec, "client_id_metadata_document_supported: true"),
-          }
-        : {
-            status: "unsupported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `client_id_metadata_document_supported: ${show(as.clientIdMetadataDocumentSupported)}`,
-            ),
-          },
+  "mcp.as.cimd": [
+    fromAs("as.cimd", "client_id_metadata_document_supported in the metadata", (as, rec) =>
+      fieldOutcome(
+        as.url,
+        rec,
+        as.clientIdMetadataDocumentSupported === true,
+        "client_id_metadata_document_supported: true",
+        `client_id_metadata_document_supported: ${show(as.clientIdMetadataDocumentSupported)}`,
+      ),
     ),
+    AS_UNKNOWN,
+  ],
 
-  "mcp.as.dcr": (probe) =>
-    withAs(probe, (as, rec) =>
-      as.registrationEndpoint
-        ? {
-            status: "supported",
-            evidence: evidence(as.url, rec, `registration_endpoint: ${as.registrationEndpoint}`),
-          }
-        : {
-            status: "unsupported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `registration_endpoint: ${show(as.doc.registration_endpoint)}`,
-            ),
-          },
+  "mcp.as.dcr": [
+    fromAs("as.registration", "registration_endpoint in the metadata", (as, rec) =>
+      fieldOutcome(
+        as.url,
+        rec,
+        as.registrationEndpoint !== undefined,
+        `registration_endpoint: ${as.registrationEndpoint}`,
+        `registration_endpoint: ${show(as.doc.registration_endpoint)}`,
+      ),
     ),
+    AS_UNKNOWN,
+  ],
 
-  "mcp.as.iss-param": (probe) =>
-    withAs(probe, (as, rec) =>
-      as.authorizationResponseIssParameterSupported === true
-        ? {
-            status: "supported",
-            evidence: evidence(as.url, rec, "authorization_response_iss_parameter_supported: true"),
-          }
-        : {
-            status: "unsupported",
-            evidence: evidence(
-              as.url,
-              rec,
-              `authorization_response_iss_parameter_supported: ${show(as.authorizationResponseIssParameterSupported)}`,
-            ),
-          },
+  "mcp.as.iss-param": [
+    fromAs("as.iss", "authorization_response_iss_parameter_supported in the metadata", (as, rec) =>
+      fieldOutcome(
+        as.url,
+        rec,
+        as.authorizationResponseIssParameterSupported === true,
+        "authorization_response_iss_parameter_supported: true",
+        `authorization_response_iss_parameter_supported: ${show(as.authorizationResponseIssParameterSupported)}`,
+      ),
     ),
+    AS_UNKNOWN,
+  ],
 };
+
+/** The checks, composed from their strategies. */
+export const PASSIVE_CHECKS: Record<string, Check> = Object.fromEntries(
+  Object.entries(CHECK_STRATEGIES).map(([id, strategies]) => [id, firstOf(strategies)]),
+);
 
 export interface CheckRun {
   feature: Feature;
@@ -454,3 +560,5 @@ export function runChecks(probe: Probe, features: Feature[]): CheckRun[] {
     return { feature, outcome: check(probe) };
   });
 }
+
+export type { Check, CheckOutcome } from "./strategies";

@@ -29,7 +29,7 @@ definite `404`/`4xx`.
 | `mcp.prm` | `prm` found | never (the document may be announced only in a `WWW-Authenticate` challenge, which a passive scan does not provoke) | `prm` not found |
 | `mcp.prm.authorization-servers` | `prm.authorization_servers` is a non-empty array of strings | `prm` found and the field is absent, empty or not an array of strings | `prm` not found |
 | `mcp.prm.scopes-supported` | `prm.scopes_supported` is a non-empty array of strings | `prm` found and the field is absent or empty | `prm` not found |
-| `mcp.prm.no-offline-access` | `prm.scopes_supported` is present and does not contain `offline_access` | `prm.scopes_supported` contains `offline_access` | `prm` not found, or `scopes_supported` absent (nothing is advertised, so nothing can be judged) |
+| `mcp.prm.no-offline-access` | the first of these that names scopes has no `offline_access`: `prm.scopes_supported`; the challenge's `scope` parameter; or, when neither names scopes, the authorization server's `scopes_supported` (it cannot issue a scope it does not list) | the first of `prm.scopes_supported` and the challenge's `scope` that names scopes contains `offline_access` | `prm` not found; or no source names scopes; or only the authorization server does and it offers `offline_access` (whether this server requests it is not advertised) (010) |
 | `mcp.as.metadata` | `as` found at any of the three locations | every location answered a definite 4xx | no issuer known, or any location errored and none was found |
 | `mcp.as.issuer-match` | `as.issuer` equals the issuer used to build the URL (string equality after removing one trailing slash from both) | `as` found and `issuer` differs or is absent | `as` not found |
 | `mcp.as.https` | every `*_endpoint` value (and `jwks_uri`) in `as` is an `https:` URL | none of them is `https:` | `as` not found; **partial** when some but not all are `https:` |
@@ -39,9 +39,15 @@ definite `404`/`4xx`.
 | `mcp.as.iss-param` | `as.authorization_response_iss_parameter_supported === true` | `as` found and the field is absent or not `true` | `as` not found |
 
 Added by 008 (`specs/008-discovery-challenge/data-model.md`): the `mcp.prm.www-authenticate` row,
-judged from the endpoint's answer to one unauthenticated `GET`; `prm` may now come from the
+judged from the endpoint's answer to an unauthenticated request; `prm` may now come from the
 challenge's `resource_metadata` pointer when the well-known locations had nothing, in which case
 `mcp.prm.well-known` is still judged from the well-known locations alone.
+
+Added by 010 (`specs/010-discovery-strategies/data-model.md`): the endpoint is asked in a ladder
+(`GET`, then an empty `POST` when the `GET` was routed elsewhere), the `mcp.rs.scope-challenge`
+row (the `scope` parameter of the same 401), the scope fallbacks of `mcp.prm.no-offline-access`
+above, and the `via` field naming the strategy that decided each cell. Every check is an ordered
+list of strategies ending in a fallback that always decides.
 
 A check for a passive feature that this table does not cover fails the run with a message naming
 the feature, so a new passive feature cannot be silently skipped (research R5).
@@ -77,7 +83,8 @@ never edits or removes an entry. The file is written by appending YAML entries t
 | `wellKnownPrmUrls(serverUrl)` | URL | string[] | path-aware then root (research R4); one entry when the path is empty |
 | `wellKnownAsUrls(issuer)` | URL | string[] | the three MCP locations in order; two when the issuer has no path |
 | `guardUrl(url, resolve)` | string, resolver | `{ ok: true, url } \| { ok: false, reason }` | research R3 |
-| `probe(target, fetcher)` | URL, fetcher | `Probe` | every request made, the documents found, the challenge read (008), the issuer judged |
+| `probe(target, fetcher)` | URL, fetcher | `Probe` | every request made, the documents found, the challenge read through the ladder (008, 010), the issuer judged, a note when the listed URL looks stale |
+| `firstOf(strategies)` | ordered strategies | `Check` | the first strategy that decides; the last always does (010) |
 | `runChecks(probe, checks)` | probe, check list | `CheckResult[]` | the decision table |
 | `grade(results)` | results with levels | `Grade` | FR-008 |
 | `scan(target, data, fetcher, now)` | | `Report` | `probe` → `runChecks` → `grade`, plus the observations |

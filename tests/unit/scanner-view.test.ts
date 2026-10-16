@@ -41,8 +41,8 @@ function withObservations(observations: Observation[]): Dataset {
 }
 
 describe("passiveChecks", () => {
-  it("returns the thirteen passive server-party features, MCP server party first", () => {
-    expect(checks).toHaveLength(13);
+  it("returns the fourteen passive server-party features, MCP server party first", () => {
+    expect(checks).toHaveLength(14);
     const parties = checks.map((c) => c.feature.party);
     expect(parties.indexOf("authorization-server")).toBe(parties.lastIndexOf("mcp-server") + 1);
     for (const c of checks) expect(c.entry.level).toBeDefined();
@@ -139,7 +139,7 @@ describe("reportFromView", () => {
       discovered: null,
       observations: [],
     });
-    expect(r.checks).toHaveLength(13);
+    expect(r.checks).toHaveLength(14);
     expect(r.grade.letter).toBe("A");
   });
 });

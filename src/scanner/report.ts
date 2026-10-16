@@ -35,6 +35,8 @@ export interface CheckResult {
   evidence: string;
   /** When the status was observed; absent on a recorded report for a cell never scanned. */
   observedAt?: string;
+  /** The strategy that decided (`checks.ts`); absent on a recorded report. */
+  via?: string;
 }
 
 export interface Discovered {
@@ -45,13 +47,19 @@ export interface Discovered {
     authorizationServers: string[];
     scopesSupported?: string[];
   } | null;
-  /** The endpoint's answer to the one unauthenticated request; null when it gave no answer. */
+  /** The endpoint's answer to the unauthenticated ladder; null when it gave no answer. */
   challenge: {
     url: string;
     status: number;
+    /** The request that got the answer, and the ladder step (010). */
+    method: "GET" | "POST";
+    step: string;
     header: string | null;
     resourceMetadata: string | null;
+    scope: string[] | null;
   } | null;
+  /** A note for the maintainer when the listed URL looks stale (010); never an observation. */
+  endpointNote: string | null;
   authorizationServer: {
     issuer: string;
     url: string;
@@ -133,10 +141,14 @@ function discoveredOf(p: Probe): Discovered {
       ? {
           url: p.challenge.url,
           status: p.challenge.status,
+          method: p.challenge.method,
+          step: p.challenge.step,
           header: p.challenge.header ?? null,
           resourceMetadata: p.challenge.resourceMetadata ?? null,
+          scope: p.challenge.scope ?? null,
         }
       : null,
+    endpointNote: p.endpointNote ?? null,
     authorizationServer: p.as
       ? {
           issuer: p.as.issuer,
@@ -186,6 +198,7 @@ export async function scan(
       status: outcome.status,
       evidence: outcome.evidence,
       observedAt: now,
+      via: outcome.via,
     };
   });
   const observations: Observation[] = target.serverId
