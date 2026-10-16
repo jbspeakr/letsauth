@@ -157,4 +157,4 @@
   method: manual
   observedAt: 2026-10-16T19:42:46Z
   observedBy: jbspeakr
-  evidence: "https://forum.figma.com/report-a-problem-6/figma-s-approach-breaks-the-core-promise-of-mcp-52507 — the registration endpoint admits a client by its client_name against Figma's list of supported clients; an unlisted name gets HTTP 403 (Figma staff: the mcp:connect scope is gated to supported clients during the beta)"
+  evidence: "https://forum.figma.com/ask-the-community-7/how-to-access-mcp-oauth-scope-mcp-connect-50630 — Figma staff (2026-04-02): the mcp:connect scope is not available to general third-party OAuth apps, MCP access is limited to supported clients and integrations; users in the thread report HTTP 403 from the advertised registration_endpoint"
