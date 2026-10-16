@@ -142,11 +142,12 @@ the repository:
 
 Set up once, by the owner:
 
-1. GitHub → Settings → Developer settings → GitHub Apps → New GitHub App. Name it, for example,
+1. The `letsauthlab` organisation → Settings → Developer settings → GitHub Apps → New GitHub App
+   (`https://github.com/organizations/letsauthlab/settings/apps/new`). Name it, for example,
    `letsauth-scanner` (the name becomes the bot's name). Homepage: `https://letsauth.eu/scanner/`.
    Untick *Webhook → Active*. Repository permissions: *Contents: Read and write*, *Pull requests:
    Read and write* (*Metadata: Read-only* is added automatically); nothing else. *Where can this
-   GitHub App be installed?* Only on this account.
+   GitHub App be installed?* Only on this account (the organisation).
 2. On the App's page note the *App ID*, then *Generate a private key*; a `.pem` file downloads.
 3. *Install App* → only `letsauthlab/letsauth`.
 4. In the Scaleway job definition set `SCANNER_APP_ID` to the App ID and the secret
