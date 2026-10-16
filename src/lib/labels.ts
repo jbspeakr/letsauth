@@ -1,4 +1,5 @@
 import type {
+  ActorKind,
   FeatureCategory,
   FeatureParty,
   ObservationStatus,
@@ -6,7 +7,23 @@ import type {
   SpecBody,
   SpecFamily,
   SpecMaturity,
+  ToggleKind,
 } from "../schema";
+
+export const ACTOR_KIND_LABEL: Record<ActorKind, string> = {
+  user: "User",
+  agent: "Agent",
+  "mcp-client": "MCP client",
+  "mcp-server": "MCP server",
+  "authorization-server": "Authorization server",
+  resource: "Resource",
+  idp: "Identity provider",
+};
+
+export const TOGGLE_KIND_LABEL: Record<ToggleKind, string> = {
+  attack: "Attack",
+  misconfiguration: "Misconfiguration",
+};
 
 export const STATUS_META: Record<ObservationStatus, { glyph: string; label: string }> = {
   supported: { glyph: "✓", label: "Supported" },

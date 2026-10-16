@@ -74,6 +74,8 @@ function obs(
 
 const data: Dataset = {
   relations: [],
+  scenarios: [],
+  vulnerabilities: [],
   specs: [
     {
       id: SPEC,

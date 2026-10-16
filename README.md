@@ -29,6 +29,7 @@ MCP, A2A and agent delegation meet OAuth, OpenID Connect and workload identity, 
 
 [**Open the MCP auth atlas**](https://letsauth.eu/atlas/mcp/) ·
 [**See the standards map**](https://letsauth.eu/atlas/standards/) ·
+[**Step through a delegation chain**](https://letsauth.eu/explorer/) ·
 [**Read a scanner report**](https://letsauth.eu/scanner/) ·
 [**Get the data**](https://letsauth.eu/atlas/mcp/data.json)
 
@@ -65,10 +66,11 @@ require and what real servers do:
 |---|---|---|
 | 🗺️ | **[MCP auth atlas](https://letsauth.eu/atlas/mcp/)** | Which public MCP servers support which features of the MCP Authorization specification: one matrix of servers against requirements, with a page per server, per feature and per revision. Export: [`data.json`](https://letsauth.eu/atlas/mcp/data.json). |
 | 🕸️ | **[Agent auth atlas](https://letsauth.eu/atlas/standards/)** | The specifications, drafts and EU acts behind agent authorization as one map of what builds on, profiles, competes with and replaces what, with maturity and dated revisions per document. Export: [`data.json`](https://letsauth.eu/atlas/standards/data.json). |
+| 🔗 | **[Delegation chain explorer](https://letsauth.eu/explorer/)** | Scenarios of how authority travels from a person to an agent to an API, step by step, with the decoded token at each hop and toggles for the attacks and misconfigurations that break the chain. Every step cites a specification revision. Export: [`data.json`](https://letsauth.eu/explorer/data.json). |
 | 🔍 | **[Scanner](https://letsauth.eu/scanner/)** | A passive scanner that reads each listed server's public OAuth metadata every night, grades it against the MCP Authorization specification and opens one pull request of observations. One report per server at `/scanner/<id>/` and `/scanner/<id>.json`. |
 
-Next on the [roadmap](docs/roadmap.md): the delegation chain explorer, breach anatomies, agents
-under EU rules, and a changelog generated from the data.
+Next on the [roadmap](docs/roadmap.md): breach anatomies, agents under EU rules, and a changelog
+generated from the data.
 
 ## How it works
 
@@ -91,6 +93,7 @@ Everything the site shows is yours to download under CC BY 4.0:
 ```sh
 curl -s https://letsauth.eu/atlas/mcp/data.json | jq '.servers | length'
 curl -s https://letsauth.eu/atlas/standards/data.json | jq '.relations[0]'
+curl -s https://letsauth.eu/explorer/data.json | jq '.scenarios[0].toggles | length'
 curl -s https://letsauth.eu/scanner/notion.json | jq '.grade'
 ```
 

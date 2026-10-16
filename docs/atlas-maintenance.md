@@ -80,6 +80,21 @@ builds on, profiles or replaces, in the row of its publishing body.
 - `pnpm validate:data` rejects an unknown spec, a self relation, a duplicate, a missing note and
   a cycle, naming `data/relations.yaml[i].field`.
 
+## Add a scenario (delegation chain explorer)
+
+1. Create `data/scenarios/<id>.yaml` (`id` equals the file name). Declare the actors in lane
+   order, the features the chain exercises, the steps in order and the toggles. Every step and
+   every toggle needs `cites: { spec, revision, section }` with the document's own heading, and
+   the revision must already exist in `data/specs/`.
+2. A step that carries a token gets `token: { name, header?, claims, note? }` with the claims
+   as the specification's example would show them. Do not write change marks; the explorer
+   derives them from the previous token in the chain.
+3. A toggle maps a baseline step id to the steps that replace it (an empty list removes the
+   step). Replacement ids may reuse the replaced step's id and no other. `violates` lists the
+   feature ids the toggle defeats, so the page can point at the atlas.
+4. `pnpm validate:data`, then open `/explorer/<id>/` and each toggle page in `pnpm dev`. The
+   e2e tests count diagram rows against list entries for every page.
+
 ## Seed or list a server
 
 - One file per server in `data/servers/<id>.yaml`. `listed` says why it is in the atlas and

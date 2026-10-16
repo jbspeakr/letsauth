@@ -59,4 +59,34 @@ const relations = defineCollection({
   },
 });
 
-export const collections = { specs, features, servers, observations, relations };
+const scenarios = defineCollection({
+  loader: {
+    name: "letsauth-scenarios",
+    load: async ({ store }) => {
+      store.clear();
+      for (const scenario of getDataset().scenarios) {
+        store.set({ id: scenario.id, data: scenario });
+      }
+    },
+  },
+});
+
+const vulnerabilities = defineCollection({
+  loader: {
+    name: "letsauth-vulnerabilities",
+    load: async ({ store }) => {
+      store.clear();
+      for (const v of getDataset().vulnerabilities) store.set({ id: v.id, data: v });
+    },
+  },
+});
+
+export const collections = {
+  specs,
+  features,
+  servers,
+  observations,
+  relations,
+  scenarios,
+  vulnerabilities,
+};

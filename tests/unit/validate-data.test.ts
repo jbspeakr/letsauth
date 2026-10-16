@@ -32,6 +32,18 @@ describe("scripts/validate-data.ts", () => {
     expect(result.stderr).toMatch(/relations\.yaml\[2\]\.note: required for a "competes-with"/);
   });
 
+  it("names file and field for a broken scenario (003 FR-002)", () => {
+    expect(result.stderr).toMatch(
+      /scenarios\/broken\.yaml\.features\[0\]: feature "mcp\.as\.nope"/,
+    );
+    expect(result.stderr).toMatch(/scenarios\/broken\.yaml\.steps\[1\]\.to: actor "nobody"/);
+    expect(result.stderr).toMatch(
+      /scenarios\/broken\.yaml\.steps\[1\]\.cites: revision ".*1999-01-01"/,
+    );
+    expect(result.stderr).toMatch(/toggles\[0\]\.replaces\.missing: step "missing" does not exist/);
+    expect(result.stderr).toMatch(/replaces\.missing\[0\]\.id: step id "ask" collides/);
+  });
+
   it("passes on the real data", () => {
     const ok = run("scripts/validate-data.ts", []);
     expect(ok.status, ok.stderr).toBe(0);

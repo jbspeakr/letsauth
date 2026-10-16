@@ -26,7 +26,8 @@ the command line and in CI. A product that needs a field the model lacks amends 
 ```
  specifications ─┐                                    ┌─▶ /atlas/mcp        matrix, server, feature, revision pages
  vendor docs ────┼─▶ pull request ─▶ data/ (YAML) ─▶ build ─┼─▶ /atlas/standards  the standards map
- nightly scanner ┘        ▲                           ├─▶ /scanner          report per server, grade
+ nightly scanner ┘        ▲                           ├─▶ /explorer         delegation chains, toggles, tokens
+                          │                           ├─▶ /scanner          report per server, grade
                           │                           └─▶ *.json            exports under CC BY 4.0
                    review: CI green,
                    evidence opened
@@ -44,16 +45,16 @@ the command line and in CI. A product that needs a field the model lacks amends 
 ## Repository layout
 
 ```
-data/            the dataset: specs, features, servers, observations, relations (YAML)
+data/            the dataset: specs, features, servers, observations, relations, scenarios (YAML)
 docs/            this documentation, the roadmap and the research notes
 public/          static assets copied as is: brand SVGs, favicon, social card, robots.txt
 scripts/         command-line entry points: validate-data, scan, scan-nightly, append-only check,
                  and the generators for brand and README assets
 specs/           Spec Kit artifacts per feature: spec, plan, tasks, contracts
 src/
-  components/    Astro components and the Svelte islands (matrix, standards map, scan report)
+  components/    Astro components and the Svelte islands (matrix, standards map, explorer, scan report)
   layouts/       Base (header, footer, theme) and Document (long-form pages)
-  lib/           pure functions over the dataset: atlas matrix, standards graph, exports, citations
+  lib/           pure functions over the dataset: atlas matrix, standards graph, chains, exports, citations
   pages/         routes; file-system routing, every page pre-rendered
   scanner/       the passive scanner: url guard, fetch, checks, grade, observations, nightly job
   schema/        Zod schemas, the contract for data/
@@ -67,8 +68,8 @@ tests/
 
 ## The site
 
-- **Astro 7** with strict TypeScript. Content is data-driven: the pages under `src/pages/atlas/`
-  and `src/pages/scanner/` are generated from the dataset at build time.
+- **Astro 7** with strict TypeScript. Content is data-driven: the pages under `src/pages/atlas/`,
+  `src/pages/explorer/` and `src/pages/scanner/` are generated from the dataset at build time.
 - **Svelte 5** islands only where interaction needs them: the matrix filters, the standards map
   and the scan report. Every page reads fully without JavaScript, and no page ships more than
   150 kB of compressed JavaScript.
@@ -79,8 +80,8 @@ tests/
   `unknown` is a dashed ring, a derived status (no observation) a faint dot. The distinction is
   the honesty of the atlas and is kept everywhere.
 - **Budgets** are enforced in CI with Lighthouse: performance and accessibility at or above 95 on
-  the atlas, the standards map and the scanner pages. WCAG 2.2 AA, both themes, reduced motion,
-  phone width without horizontal scroll.
+  the atlas, the standards map, the explorer and the scanner pages. WCAG 2.2 AA, both themes,
+  reduced motion, phone width without horizontal scroll.
 - **Search** is Pagefind, built from the rendered pages.
 
 ## The scanner

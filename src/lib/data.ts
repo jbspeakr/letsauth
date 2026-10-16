@@ -11,10 +11,15 @@ import {
   observationSchema,
   type Relation,
   relationSchema,
+  type Scenario,
   type Server,
   type Spec,
+  type Step,
+  scenarioSchema,
   serverSchema,
   specSchema,
+  type Vulnerability,
+  vulnerabilitySchema,
 } from "../schema";
 
 export interface Dataset {
@@ -24,6 +29,10 @@ export interface Dataset {
   observations: Observation[];
   /** Edges between specs, from `data/relations.yaml`. */
   relations: Relation[];
+  /** Explorer scenarios, from `data/scenarios/`. */
+  scenarios: Scenario[];
+  /** Vulnerabilities, from `data/vulnerabilities/` (validated here, rendered by 005). */
+  vulnerabilities: Vulnerability[];
   /** Where each loaded observation came from (`data/observations/<id>.yaml[i]`), for messages. */
   locations?: WeakMap<Observation, string>;
 }
@@ -94,6 +103,8 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
   const servers: Server[] = [];
   const observations: Observation[] = [];
   const relations: Relation[] = [];
+  const scenarios: Scenario[] = [];
+  const vulnerabilities: Vulnerability[] = [];
 
   for (const f of listYaml(join(root, "specs"))) {
     const spec = loadFile(f, root, specSchema, issues);
@@ -132,6 +143,23 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
       observations.push(obs);
     }
   }
+  for (const f of listYaml(join(root, "scenarios"))) {
+    const scenario = loadFile(f, root, scenarioSchema, issues);
+    if (!scenario) continue;
+    const fileId = basename(f).replace(/\.ya?ml$/, "");
+    if (scenario.id !== fileId) {
+      issues.push({
+        path: `${relPath(f, root)}.id`,
+        message: `must equal the file name "${fileId}", got "${scenario.id}"`,
+      });
+      continue;
+    }
+    scenarios.push(scenario);
+  }
+  for (const f of listYaml(join(root, "vulnerabilities"))) {
+    const vulnerability = loadFile(f, root, vulnerabilitySchema, issues);
+    if (vulnerability) vulnerabilities.push(vulnerability);
+  }
   const relationsFile = join(root, "relations.yaml");
   if (existsSync(relationsFile)) {
     // entries are validated one by one so a bad entry does not hide the others from crossCheck
@@ -150,7 +178,19 @@ export function loadDataset(root = DATA_ROOT): { data: Dataset; issues: DataIssu
       relations.push(parsed.data);
     }
   }
-  return { data: { specs, features, servers, observations, relations, locations }, issues };
+  return {
+    data: {
+      specs,
+      features,
+      servers,
+      observations,
+      relations,
+      scenarios,
+      vulnerabilities,
+      locations,
+    },
+    issues,
+  };
 }
 
 /** Relation rules the data model states (rule 7) that a per-entry schema cannot express. */
@@ -218,6 +258,97 @@ export function crossCheckRelations(data: Dataset): DataIssue[] {
   return issues;
 }
 
+/** Scenario rules (data model, rule 2 and specs/003-delegation-explorer/data-model.md). */
+export function crossCheckScenarios(data: Dataset): DataIssue[] {
+  const issues: DataIssue[] = [];
+  const revisionKeys = new Set<string>();
+  for (const spec of data.specs) {
+    for (const rev of spec.revisions) revisionKeys.add(`${spec.id}@${rev.id}`);
+  }
+  const featureIds = new Set(data.features.map((f) => f.id));
+  const scenarioIds = new Set(data.scenarios.map((s) => s.id));
+  const vulnerabilityIds = new Set(data.vulnerabilities.map((v) => v.id));
+
+  for (const scenario of data.scenarios) {
+    const file = `data/scenarios/${scenario.id}.yaml`;
+    const actorIds = new Set(scenario.actors.map((a) => a.id));
+    const stepIds = new Set(scenario.steps.map((s) => s.id));
+    const checkStep = (step: Step, at: string) => {
+      for (const end of ["from", "to"] as const) {
+        if (!actorIds.has(step[end])) {
+          issues.push({ path: `${at}.${end}`, message: `actor "${step[end]}" is not declared` });
+        }
+      }
+      const key = `${step.cites.spec}@${step.cites.revision}`;
+      if (!revisionKeys.has(key)) {
+        issues.push({ path: `${at}.cites`, message: `revision "${key}" does not exist` });
+      }
+    };
+    scenario.features.forEach((id, i) => {
+      if (!featureIds.has(id)) {
+        issues.push({ path: `${file}.features[${i}]`, message: `feature "${id}" does not exist` });
+      }
+    });
+    scenario.steps.forEach((step, i) => {
+      checkStep(step, `${file}.steps[${i}]`);
+    });
+    scenario.toggles.forEach((toggle, j) => {
+      const at = `${file}.toggles[${j}]`;
+      const key = `${toggle.cites.spec}@${toggle.cites.revision}`;
+      if (!revisionKeys.has(key)) {
+        issues.push({ path: `${at}.cites`, message: `revision "${key}" does not exist` });
+      }
+      // ids over the chain this toggle produces: a replacement may reuse the replaced id only
+      const chainIds = new Set<string>();
+      for (const step of scenario.steps) {
+        if (!(step.id in toggle.replaces)) chainIds.add(step.id);
+      }
+      for (const [stepId, replacements] of Object.entries(toggle.replaces)) {
+        if (!stepIds.has(stepId)) {
+          issues.push({
+            path: `${at}.replaces.${stepId}`,
+            message: `step "${stepId}" does not exist in this scenario`,
+          });
+        }
+        replacements.forEach((step, k) => {
+          const stepAt = `${at}.replaces.${stepId}[${k}]`;
+          checkStep(step, stepAt);
+          if (chainIds.has(step.id)) {
+            issues.push({
+              path: `${stepAt}.id`,
+              message: `step id "${step.id}" collides with another step in the toggled chain`,
+            });
+          }
+          chainIds.add(step.id);
+        });
+      }
+      toggle.violates?.forEach((id, i) => {
+        if (!featureIds.has(id)) {
+          issues.push({ path: `${at}.violates[${i}]`, message: `feature "${id}" does not exist` });
+        }
+      });
+      if (toggle.vulnerability && !vulnerabilityIds.has(toggle.vulnerability)) {
+        issues.push({
+          path: `${at}.vulnerability`,
+          message: `vulnerability "${toggle.vulnerability}" does not exist`,
+        });
+      }
+    });
+  }
+  for (const v of data.vulnerabilities) {
+    const file = `data/vulnerabilities/${v.id}.yaml`;
+    if (v.scenario && !scenarioIds.has(v.scenario)) {
+      issues.push({ path: `${file}.scenario`, message: `scenario "${v.scenario}" does not exist` });
+    }
+    v.features.forEach((id, i) => {
+      if (!featureIds.has(id)) {
+        issues.push({ path: `${file}.features[${i}]`, message: `feature "${id}" does not exist` });
+      }
+    });
+  }
+  return issues;
+}
+
 /** Cross-reference checks from the data model that a per-file schema cannot express. */
 export function crossCheck(data: Dataset): DataIssue[] {
   const issues: DataIssue[] = [];
@@ -279,6 +410,7 @@ export function crossCheck(data: Dataset): DataIssue[] {
     }
   }
   issues.push(...crossCheckRelations(data));
+  issues.push(...crossCheckScenarios(data));
   return issues;
 }
 

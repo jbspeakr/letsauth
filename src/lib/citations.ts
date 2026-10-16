@@ -1,4 +1,4 @@
-import type { FeatureRevision, RevisionRef } from "../schema";
+import type { Citation, RevisionRef } from "../schema";
 import type { Dataset } from "./data";
 
 export interface ResolvedCitation {
@@ -26,7 +26,7 @@ export function resolveRevision(data: Dataset, ref: RevisionRef): ResolvedCitati
   };
 }
 
-/** Resolves a feature's per-revision entry to a citation with its section. */
-export function resolveCitation(data: Dataset, entry: FeatureRevision): ResolvedCitation {
+/** Resolves a citation (a feature's per-revision entry, or a scenario step's) with its section. */
+export function resolveCitation(data: Dataset, entry: Citation): ResolvedCitation {
   return { ...resolveRevision(data, entry), section: entry.section };
 }
