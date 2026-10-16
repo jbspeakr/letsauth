@@ -114,6 +114,20 @@ Append to `data/observations/<server-id>.yaml`; never edit or remove an entry. T
 `passive-scan` over `manual` over `vendor-claim`). Use `unknown` to record that you looked and
 could not tell, `not-applicable` when the feature cannot apply to that server.
 
+The quickest way is the command, which validates the entry against the schema and the dataset
+before it appends anything:
+
+```sh
+pnpm observe figma mcp.as.dcr partial --by jbspeakr \
+  --evidence "https://… — registration admits allowlisted client names only; others get HTTP 403"
+pnpm validate:data
+```
+
+`--method` is `manual` by default, or `vendor-claim`; `--revision` defaults to the current one;
+`--at` defaults to now. Then open a pull request. A manual entry stands against the nightly
+scanner until the scanner sees something new for that cell (`scanner.md` › Running it); until
+then each run summary lists the cell as "held by hand" when the scan disagrees.
+
 ## Scanner observations
 
 The passive scanner (`docs/scanner.md`) writes observations with `observedBy: scanner@<version>`

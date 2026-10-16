@@ -190,9 +190,13 @@ append-only check passes.
   `observedBy: scanner@<version>`, the revision and feature it judged against, the metadata URL it
   read as the start of `evidence`, and a short deterministic note of the field and value that
   decided the status, so two runs over the same responses produce byte-identical evidence.
-- **FR-005**: The scanner MUST append an observation for a cell only when the cell's current
-  observation is not from the same scanner version or differs in status or evidence; it MUST
-  never edit or remove an existing observation.
+- **FR-005**: The scanner MUST append an observation for a cell only when its own newest
+  observation of that cell is absent, is from another scanner version, or differs in status or
+  evidence from what it now sees; a newer manual or vendor-claim observation MUST stand until
+  then, and the run summary MUST name every cell so held when it disagrees with the scan. The
+  scanner MUST never edit or remove an existing observation. (Until 2026-10-16 the rule compared
+  with the cell's current observation of any method, so a hand-recorded restriction was written
+  over by the next night's advertisement.)
 - **FR-006**: The nightly run MUST scan every listed server that is not withdrawn, has an HTTP
   transport and is not listed as open or API-key (those have no OAuth to judge), MUST open at most one pull request per run, MUST open none when nothing was
   appended, and the pull request description MUST list the servers scanned, the cells appended

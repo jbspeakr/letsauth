@@ -23,7 +23,9 @@ For a server URL `https://h/p` it fetches, with `GET` over HTTPS and no credenti
    server may answer `GET` with 405 before authenticating, as the transport allows, and
    authenticates the `POST` like a client's first call). Only the status and the
    `WWW-Authenticate` header are read, and the body is cancelled before a byte of it is
-   consumed. A 401 with a `resource_metadata` parameter is the other discovery mechanism the
+   consumed. A `registration_endpoint` in the metadata says that registration is offered, not
+   that it is open to any client; the atlas carries that distinction as a manual `partial`.
+   A 401 with a `resource_metadata` parameter is the other discovery mechanism the
    specification allows (`mcp.prm.www-authenticate`); its `scope` parameter is the scope
    challenge (`mcp.rs.scope-challenge`); any other status on every step is `unknown`, never a
    failure. A failure to connect ends the ladder;
@@ -87,10 +89,15 @@ pnpm scan --all --write --summary out.md  # what the nightly job runs
 pnpm scan notion --json                   # the report as JSON (contracts/report.md)
 ```
 
-`--write` appends only what the append rule says: a cell with no observation, a cell whose
-current observation was not written by this scanner version, or a cell whose status or evidence
-changed. Nothing is edited; `pnpm check:append-only` passes by construction. A contributor who
-runs `--write` opens a pull request with the result like any other data change.
+`--write` appends only what the append rule says. The scanner compares with its own last
+observation of a cell, never with a person's: it writes when it has none, when its last one came
+from an older scanner version, or when the status or the evidence differ from what it sees now.
+A newer `manual` or `vendor-claim` observation therefore stands until the scanner sees something
+new; when such an observation disagrees with the scan (Figma advertises a registration endpoint
+that only admits allowlisted client names, recorded by hand as `partial`), the run summary names
+the cell as "held by hand" instead of writing over it. Nothing is edited;
+`pnpm check:append-only` passes by construction. A contributor who runs `--write` opens a pull
+request with the result like any other data change.
 
 ## The nightly job
 

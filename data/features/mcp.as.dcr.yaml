@@ -2,7 +2,9 @@ id: mcp.as.dcr
 name: "Dynamic Client Registration offered"
 description: >
   The authorization server exposes a registration_endpoint (RFC 7591) so clients can register
-  themselves at runtime.
+  themselves at runtime. A passive scan sees only the advertised endpoint; whether registration
+  is open to any client or limited to an allowlist is a manual observation, recorded as partial
+  when limited.
 category: registration
 party: authorization-server
 observable: passive

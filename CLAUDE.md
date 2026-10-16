@@ -21,6 +21,8 @@ front page and advertises the lab; keep working notes out of it.
   baselines live in `tests/e2e/__screenshots__` and must come from Playwright's pinned Chromium:
   `pnpm test:e2e --update-snapshots` with that build, or the `refresh-screenshots` label on the
   pull request (see `docs/atlas-maintenance.md`). Update them only for intended changes.
+- `pnpm observe <server> <feature> <status> --by <handle> --evidence <url|note>` — appends one
+  validated manual observation (`docs/atlas-maintenance.md`). Observations are never edited.
 - `pnpm check:append-only` — fails if an existing observation entry was edited or removed.
 - `pnpm scan <url>|<server-id>|--all [--write]` — the passive scanner (`docs/scanner.md`). The only
   command in the repo that contacts a third-party server; `--write` appends observations.

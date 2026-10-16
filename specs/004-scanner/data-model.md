@@ -67,11 +67,15 @@ the feature, so a new passive feature cannot be silently skipped (research R5).
 
 ### Append rule
 
-Let `current` be the atlas's current cell for (server, feature, revision): the newest
-observation, ties broken by method strength. The scanner appends its observation when
-`current` is absent, when `current.observedBy` is not `scanner@<this version>`, or when
-`current.status` or `current.evidence` differ from the scanner's. It never appends otherwise and
-never edits or removes an entry. The file is written by appending YAML entries to the end of
+Let `mine` be the newest observation for (server, feature, revision) written by the scanner
+(`method: passive-scan`, `observedBy: scanner@*`), whatever newer entries a person added. The
+scanner appends its observation when `mine` is absent, when `mine.observedBy` is not
+`scanner@<this version>`, or when `mine.status` or `mine.evidence` differ from the scanner's. It
+never appends otherwise and never edits or removes an entry. A newer `manual` or `vendor-claim`
+observation therefore stays the atlas's current cell until the scanner sees something new; when
+it disagrees with the scan, the run reports the cell as held (`heldCells`: feature, the standing
+status, method and observer, and the scan's status) and the summary lists it under Notes.
+(Changed 2026-10-16; before, the comparison was with the current cell of any method.) The file is written by appending YAML entries to the end of
 `data/observations/<server>.yaml`, so `pnpm check:append-only` passes by construction.
 
 ## Derivations
@@ -89,6 +93,7 @@ never edits or removes an entry. The file is written by appending YAML entries t
 | `grade(results)` | results with levels | `Grade` | FR-008 |
 | `scan(target, data, fetcher, now)` | | `Report` | `probe` → `runChecks` → `grade`, plus the observations |
 | `toAppend(report, data)` | report, dataset | `Observation[]` | the append rule |
+| `heldCells(report, data)` | report, dataset | `HeldCell[]` | the cells a newer human observation holds against the scan |
 | `appendObservations(file, entries)` | path, entries | void | appends YAML entries; creates the file when missing |
 
 ### Site (`src/lib/scanner.ts`)

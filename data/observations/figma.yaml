@@ -148,3 +148,13 @@
   observedAt: 2026-10-16T01:18:16Z
   observedBy: scanner@0.2.0
   evidence: https://api.figma.com/.well-known/oauth-authorization-server — HTTP 200; all 3 endpoints use https
+- server: figma
+  feature: mcp.as.dcr
+  revision:
+    spec: mcp-authorization
+    revision: 2026-07-28
+  status: partial
+  method: manual
+  observedAt: 2026-10-16T19:42:46Z
+  observedBy: jbspeakr
+  evidence: "https://forum.figma.com/report-a-problem-6/figma-s-approach-breaks-the-core-promise-of-mcp-52507 — the registration endpoint admits a client by its client_name against Figma's list of supported clients; an unlisted name gets HTTP 403 (Figma staff: the mcp:connect scope is gated to supported clients during the beta)"
