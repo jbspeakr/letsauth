@@ -17,8 +17,8 @@ no backend.
 **Storage**: `data/vulnerabilities/*.yaml`, three toggles in `data/scenarios/mcp-authorization.yaml` ·
 **Testing**: Vitest (schema, ordering, replay resolution, controls, export, validator messages),
 Playwright (index, page, navigation, export, no-JS, phone width, axe, screenshots) ·
-**Constraints**: pages are plain HTML; the explorer's screenshot baselines change because the
-scenario gains three toggles; two new URLs join the Lighthouse list.
+**Constraints**: pages are plain HTML; new screenshot baselines for the two pages come from the
+label workflow (the explorer's stayed within tolerance); two new URLs join the Lighthouse list.
 
 ## Constitution Check
 
