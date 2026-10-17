@@ -123,6 +123,7 @@ pre {
   border-radius: var(--radius);
   padding: var(--space-4) var(--space-5);
   overflow-x: auto;
+  font-size: var(--text-xs);
   line-height: 1.55;
 }
 
@@ -254,8 +255,161 @@ hr {
   color: var(--line-strong);
 }
 
+/*
+ * Page head: the one opening every page shares. A breadcrumb (on pages below a section root)
+ * sits in front of it; inside come the eyebrow, the h1, the lede, an optional meta line and an
+ * optional row of facts. Nothing is centred and nothing sits beside the title.
+ */
 .page-head {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-7);
+}
+
+.page-head h1 {
+  max-width: 24ch;
+}
+
+.page-head .lede {
+  margin-bottom: 0;
+}
+
+/* ids, dates, status tags and small actions under the lede */
+.page-head__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-4) 0 0;
+  max-width: none;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.page-head__meta code {
+  font-size: var(--text-xs);
+}
+
+/* a row of headline numbers: a small label over a large figure */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-7);
+  margin: 0;
+}
+
+.facts > div {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+}
+
+.facts dt {
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.facts dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-xl);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.facts dd.muted {
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+/* a lesser figure next to the main one, like "/ 897" */
+.facts .of {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  color: var(--ink-faint);
+}
+
+/* words instead of a figure, like a list of classes */
+.facts .words {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+/* the facts row under a page head sits on its own hairline */
+.page-head .facts {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+/* page foot: the closing note every data page ends with, over a hairline */
+.page-foot {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+.page-foot h2 {
+  font-size: var(--text-lg);
+  margin-top: 0;
+}
+
+.page-foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  max-width: none;
+}
+
+/* a count after a heading */
+.n {
+  margin-left: 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.55em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-faint);
+  vertical-align: 0.15em;
+}
+
+/* a secondary remark */
+.note {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+}
+
+/* a card that carries a warning (withdrawn, expired) */
+.notice {
+  border-color: color-mix(in oklch, var(--accent-2) 50%, transparent);
+  background: var(--accent-2-soft);
+}
+
+/* the live count and the apply/reset pair in a filter toolbar */
+.actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.count {
+  margin: 0 0 0 auto;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .button {

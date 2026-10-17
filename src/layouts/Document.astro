@@ -2,8 +2,9 @@
 import Base from "@/layouts/Base.astro";
 
 /**
- * A long-form text page (about, imprint, privacy and the like): breadcrumb, eyebrow, title,
- * lede, prose body and a dated footer line. Pages put their sections in the default slot.
+ * A long-form text page (about, imprint, privacy, contribute and the like): breadcrumb, the
+ * shared page head, a prose body and a dated foot line. Pages put their sections in the
+ * default slot.
  */
 interface Props {
   title: string;
@@ -13,50 +14,67 @@ interface Props {
   /** The h1. Defaults to the title. */
   heading?: string;
   lede?: string;
-  /** ISO date (YYYY-MM-DD) the text was last changed. */
-  updated: string;
+  /** The trail before the page's own title. Defaults to Home. */
+  crumbs?: { href: string; label: string }[];
+  /** ISO date (YYYY-MM-DD) the text was last changed; omit on pages that are not dated. */
+  updated?: string;
 }
 
-const { title, description, path, eyebrow, heading, lede, updated } = Astro.props;
-const updatedLabel = new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
+const {
+  title,
+  description,
+  path,
+  eyebrow,
+  heading,
+  lede,
+  crumbs = [{ href: "/", label: "Home" }],
+  updated,
+} = Astro.props;
+const updatedLabel = updated
+  ? new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+  : undefined;
 ---
 
 <Base title={title} description={description} path={path}>
-  <article class="wrap doc">
+  <article class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb">
-      <a href="/">Home</a> <span aria-hidden="true">/</span> {title}
+      {
+        crumbs.map((c) => (
+          <>
+            <a href={c.href}>{c.label}</a> <span aria-hidden="true">/</span>{" "}
+          </>
+        ))
+      }
+      {title}
     </nav>
-    <header class="doc__head">
+    <header class="page-head">
       <p class="eyebrow">{eyebrow}</p>
       <h1>{heading ?? title}</h1>
       {lede && <p class="lede">{lede}</p>}
     </header>
     <div class="prose doc__body">
       <slot />
-      <p class="doc__updated">
-        Last updated <time datetime={updated}>{updatedLabel}</time>
-      </p>
     </div>
+    {
+      updated && (
+        <footer class="page-foot prose">
+          <p class="doc__updated">
+            Last updated <time datetime={updated}>{updatedLabel}</time>
+          </p>
+        </footer>
+      )
+    }
   </article>
 </Base>
 
 <style>
-  .doc__head {
-    margin-bottom: var(--space-6);
-  }
-  .doc__head h1 {
-    max-width: 22ch;
-  }
   .doc__updated {
-    max-width: none;
-    margin-top: var(--space-7);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
+    margin: 0;
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--ink-faint);
