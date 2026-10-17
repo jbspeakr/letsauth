@@ -7,7 +7,6 @@ validates it, so a server gains, when stated:
 {
   "id": "github",
   // …as before…
-  "authClaimed": "oauth2.1-no-dcr",
   "access": {
     "class": "public",
     "method": "manual",
@@ -25,4 +24,5 @@ validates it, so a server gains, when stated:
 }
 ```
 
-Both fields are absent when not stated. `version` stays 1 (additive).
+Both fields are absent when not stated. `authClaimed` is gone from every server. `version` stays 1:
+nothing ever read the label, and the export is a snapshot of the model, not a stable API.

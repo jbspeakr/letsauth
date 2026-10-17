@@ -7,8 +7,9 @@
 Amend the Server entity with two optional, evidenced Classification fields, `access` and `auth`
 (schema, data model, docs); seed them for the listed servers from vendor pages; show them as
 pills on the matrix with filters and grouping in the existing island, and as evidenced lines on
-the server page; switch the scanner's target selection and the grade from `authClaimed` to
-`auth.class`; add an `authSuggestion` to the report and a disagreement note to the run summary.
+the server page; switch the scanner's target selection and the grade from the directory's
+`authClaimed` label to `auth.class` and drop the label; add an `authSuggestion` to the report and
+a disagreement note to the run summary.
 No new entity, dependency or page. One new library module (`src/lib/classes.ts`) holds the
 labels, descriptions and the two helpers every view uses.
 
@@ -67,7 +68,6 @@ tests/fixtures/bad-data/servers/*.yaml
 | Model amendment and views in one pull request | This thread was given one branch; the amendment is the first commit and the owner can split it before merging | A second branch needs the owner's word (`CLAUDE.md`, branch rules) |
 | Classes on the server file, not as observations | They are about the server as a whole, not a requirement of a revision; observations cite a revision | Two pseudo-features would need a citation they do not have, and would put a non-requirement in the matrix |
 | The scanner suggests, a person states | A 401 does not prove OAuth; a vendor page does | Writing the class from the scan would make the scanner the author of a statement it cannot evidence |
-| `authClaimed` kept | Provenance of the seed; no code reads it any more | Removing it is a migration for no gain |
 
 ## Revision history
 

@@ -100,8 +100,6 @@ builds on, profiles or replaces, in the row of its publishing body.
 
 - One file per server in `data/servers/<id>.yaml`. `listed` says why it is in the atlas and
   `source` is the public page that lists it (required unless `listed: opt-in`).
-- `authClaimed` is the source's own label (`oauth2.1`, `oauth2.1-no-dcr`, `api-key`, `open`),
-  shown on the server page as a claim, never as an observation.
 - `access` and `auth` are the server's two classes (`docs/data-model.md` › Server): who can
   connect (`public`, `closed`, `unknown`) and how the endpoint authenticates clients (`oauth`,
   `api-key`, `none`, `unknown`). Each is `{ class, method, evidence, observedAt, observedBy }`

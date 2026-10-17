@@ -69,9 +69,6 @@ test.describe("server page (US2)", () => {
     if (url) await expect(access.locator(`a[href="${url}"]`)).toBeVisible();
     const auth = page.locator("dd[data-class='auth']");
     await expect(auth).toHaveAttribute("data-value", classified.auth.class);
-    // the directory's label, when present, stays a claim below the classes
-    if (classified.authClaimed)
-      await expect(page.getByText("Authentication as listed")).toBeVisible();
   });
 
   test("a server nobody classified reads as a derived unknown (009 FR-002)", async ({ page }) => {

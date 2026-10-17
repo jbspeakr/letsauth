@@ -42,11 +42,6 @@ describe("hasNoOAuth (009 FR-005)", () => {
     expect(hasNoOAuth({ ...base, auth: stated("api-key") })).toBe(true);
     expect(hasNoOAuth({ ...base, auth: stated("none") })).toBe(true);
   });
-
-  it("never reads the directory's label (SC-003)", () => {
-    expect(hasNoOAuth({ ...base, authClaimed: "open" })).toBe(false);
-    expect(hasNoOAuth({ ...base, authClaimed: "api-key" })).toBe(false);
-  });
 });
 
 describe("countBy", () => {

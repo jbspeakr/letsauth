@@ -119,8 +119,8 @@ with a pointer carries a disagreement note.
 4. **Given** a scan whose endpoint accepted an unauthenticated request with 200, **When** the
    server's stated class is `oauth`, **Then** the Notes column names the disagreement; nothing is
    written to the server file or the observations.
-5. **Given** the `authClaimed` label still on a server, **When** anything decides what to scan or
-   grade, **Then** the label plays no part.
+5. **Given** a server file, **When** it is read, **Then** nothing about authentication comes from a
+   directory label: `auth` with evidence is the only statement, and `authClaimed` is not in the model.
 
 ---
 
@@ -162,9 +162,8 @@ with a pointer carries a disagreement note.
   group rows by either, with the state in the URL; rows MUST stay alphabetical within a group,
   and the page MUST render the full alphabetical matrix with the classes without JavaScript.
 - **FR-004**: The server page MUST show each class with its meaning, method, handle, date and
-  evidence; the directory's `authClaimed` MUST remain shown as a claim and MUST NOT be rendered
-  as a class.
-- **FR-005**: The scanner's target list and the grade MUST use `auth.class`, never `authClaimed`:
+  evidence; a server nobody classified MUST read as a derived unknown.
+- **FR-005**: The scanner's target list and the grade MUST use `auth.class`:
   `api-key` and `none` are not scanned and read "No OAuth" with the class in the reason; `oauth`,
   `unknown` and a missing statement are scanned.
 - **FR-006**: The scan report MUST carry an `authSuggestion` derived from the probe (`oauth`,
@@ -172,14 +171,15 @@ with a pointer carries a disagreement note.
   disagrees with it. The scanner MUST NOT write a class.
 - **FR-007**: The seeded statements MUST each cite a vendor page (or, where none settles the
   question, say so and state `unknown`), carry a date and a handle, and MUST NOT be copied from
-  `authClaimed` under `method: manual`.
+  the directory's label under `method: manual`. The label (`authClaimed`) is removed from the
+  schema and from every server file; git history keeps what the directory said.
 - **FR-008**: The JSON exports MUST carry the two fields as written; `docs/data-model.md`,
   `docs/atlas-maintenance.md` and `docs/scanner.md` MUST describe them and the scanner's use of
   them.
 
 ### Key Entities
 
-- **Server** gains `access` and `auth` (FR-001). `authClaimed` stays as the directory's label.
+- **Server** gains `access` and `auth` (FR-001) and loses `authClaimed` (FR-007).
 - **Classification**: a dated, evidenced statement about the server as a whole. Not an
   observation; corrected in place.
 - **Report** (scanner) gains `discovered.authSuggestion`; the run summary gains a note.
@@ -192,8 +192,8 @@ with a pointer carries a disagreement note.
   page; a reader can reach a view of only public OAuth servers in two selections.
 - **SC-002**: After seeding, at least 30 of the 39 listed servers carry a stated `auth` with a
   vendor page as evidence; every server without one reads as derived unknown, never as a class.
-- **SC-003**: No code path reads `authClaimed` to decide scanning or grading (verified by unit
-  tests over `latestScan` and over the target selection rule).
+- **SC-003**: Scanning and grading decide on `auth.class` alone; a missing or `unknown` class is
+  scanned and graded like OAuth (verified by unit tests over `latestScan` and `hasNoOAuth`).
 - **SC-004**: Over recorded responses, `authSuggestion` is `oauth` for every fixture with a
   challenge pointer or a metadata document, `none` for a fixture answering 200, and null for a
   bare 401 or a failure (verified by unit tests).
@@ -209,5 +209,5 @@ with a pointer carries a disagreement note.
   evidence and date is met by the Classification shape.
 - The scanner suggests but never writes a class: a 401 is not proof of OAuth (a bearer challenge
   may guard an API key), so the vendor page stays the evidence and a person states the class.
-- `authClaimed` stays. It is the source's own label, useful as provenance, and removing it would
-  be a migration for no gain. It no longer drives anything.
+- `authClaimed` goes. Once `auth` carries an evidenced class, a second, unevidenced word about
+  authentication is one field too many; the owner asked to keep the model simple.

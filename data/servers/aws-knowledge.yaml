@@ -6,7 +6,6 @@ homepage: https://aws.github.io/
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: open
 access:
   class: public
   method: manual

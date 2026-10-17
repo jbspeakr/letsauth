@@ -8,9 +8,6 @@ export type ServerTransport = z.infer<typeof serverTransport>;
 export const serverListed = z.enum(["opt-in", "public-directory", "maintainer-added"]);
 export type ServerListed = z.infer<typeof serverListed>;
 
-export const authClaimed = z.enum(["oauth2.1", "oauth2.1-no-dcr", "api-key", "open", "unknown"]);
-export type AuthClaimed = z.infer<typeof authClaimed>;
-
 /**
  * Who can connect (009). `public`: anyone, creating an account by self-service where one is
  * needed. `closed`: an existing contract, a tenant an admin must enable, a sales process or a
@@ -60,7 +57,6 @@ export const serverSchema = z
     transport: serverTransport,
     listed: serverListed,
     source: httpsUrl.optional(),
-    authClaimed: authClaimed.optional(),
     access: accessSchema.optional(),
     auth: authSchema.optional(),
     withdrawn: z

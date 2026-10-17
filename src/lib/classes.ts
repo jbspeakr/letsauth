@@ -63,7 +63,7 @@ export const AUTH_DESCRIPTION: Record<AuthClass, string> = {
  * does not scan it and the grade reads "No OAuth". An `unknown` class is scanned like OAuth, so
  * the scan can say what the endpoint's challenge suggests.
  */
-export function hasNoOAuth(server: Pick<Server, "auth" | "authClaimed">): boolean {
+export function hasNoOAuth(server: Pick<Server, "auth">): boolean {
   const auth = authOf(server).value;
   return auth === "api-key" || auth === "none";
 }

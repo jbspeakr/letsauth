@@ -233,7 +233,7 @@ and the well-known document is missing is withheld, and only a server that offer
 on discovery. MAY-level and deprecated requirements are listed and never change
 the grade. Servers whose `auth` class (`docs/data-model.md` › Server, roadmap 009) is `api-key`
 or `none` are neither scanned nor graded ("No OAuth"); the class is an evidenced statement on the
-server file, not the directory's `authClaimed` label.
+server file.
 
 ## What there is not
 

@@ -46,7 +46,8 @@ Each statement cites the vendor's own documentation page for its MCP server, rea
 2026-10-17; `method: manual`. Where no page settles a question the class is `unknown` with the
 evidence saying what was looked at, rather than a guess or a copy of the directory's label
 (`method: vendor-claim` is reserved for a statement that only repeats a directory). The directory
-label stays in `authClaimed` as provenance.
+label (`authClaimed`) is removed; `auth` with evidence replaces it, and the git history keeps
+what the directory said.
 
 ## R5. Grouping without a second table
 

@@ -6,7 +6,7 @@
 |---|---|---|
 | `access` | Classification? | `class`: `public`, `closed`, `unknown` |
 | `auth` | Classification? | `class`: `oauth`, `api-key`, `none`, `unknown` |
-| `authClaimed` | enum? | unchanged: the directory's label, provenance only |
+| `authClaimed` | — | removed: the directory's label, replaced by `auth` with evidence |
 
 ## Classification (new shape)
 

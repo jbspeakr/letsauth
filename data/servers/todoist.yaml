@@ -6,7 +6,6 @@ homepage: https://todoist.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1
 access:
   class: public
   method: manual

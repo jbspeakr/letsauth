@@ -141,20 +141,11 @@ const classes = [
                           </span>
                         </span>
                       ) : (
-                        <span class="muted"> nobody has stated this yet; the directory's label below is not an observation</span>
+                        <span class="muted"> nobody has stated this yet</span>
                       )}
                     </dd>
                   </>
                 ))}
-                {server.authClaimed && (
-                  <>
-                    <dt>Authentication as listed</dt>
-                    <dd>
-                      <code>{server.authClaimed}</code>
-                      <span class="muted"> (the source's own label, not an observation)</span>
-                    </dd>
-                  </>
-                )}
                 <dt>Why it is listed</dt>
                 <dd>
                   {LISTED_LABEL[server.listed]}{" "}

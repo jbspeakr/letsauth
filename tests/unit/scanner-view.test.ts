@@ -83,14 +83,10 @@ describe("latestScan (FR-007)", () => {
     expect(open.grade.reasons[0]).toContain("no authentication");
   });
 
-  it("grades on the stated class, never on the directory's label (009 SC-003)", () => {
+  it("grades a missing or unknown class like OAuth (009 SC-003)", () => {
     const all = withObservations(checks.map((c) => obs(c.feature.id, "unsupported")));
-    const claimedOpen = latestScan(all, {
-      ...server,
-      authClaimed: "open" as const,
-      auth: undefined,
-    });
-    expect(claimedOpen.grade.letter).toBe("F");
+    const missing = latestScan(all, { ...server, auth: undefined });
+    expect(missing.grade.letter).toBe("F");
     const unknown = latestScan(all, {
       ...server,
       auth: {

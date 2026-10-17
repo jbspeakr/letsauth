@@ -5,7 +5,6 @@ homepage: https://clickup.com
 transport: streamable-http
 listed: public-directory
 source: https://github.com/jaw9c/awesome-remote-mcp-servers
-authClaimed: oauth2.1-no-dcr
 access:
   class: public
   method: manual

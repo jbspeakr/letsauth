@@ -38,3 +38,4 @@ never touches the network in tests.
 
 - [x] T016 `docs/atlas-maintenance.md`, `docs/scanner.md`, `docs/roadmap.md` (row 009), `src/pages/scanner/index.astro`
 - [x] T017 `pnpm check`; refresh the matrix and server page screenshots through the `refresh-screenshots` label on the pull request (baselines committed by the workflow)
+- [x] T018 Remove `authClaimed` from `src/schema/server.ts`, every `data/servers/*.yaml`, the server page, docs and tests (owner's call: keep the model simple)
