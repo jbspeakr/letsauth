@@ -46,7 +46,7 @@ export const ACCESS_DESCRIPTION: Record<AccessClass, string> = {
   public:
     "Anyone can connect; where an account is needed, anyone can create one by self-service sign-up.",
   closed:
-    "Connecting needs something not available by self-service: an existing contract, a tenant an admin must enable, an allowlisted client, a sales process or a private beta.",
+    "Connecting needs something not available by self-service: an existing contract, a tenant an admin must enable, a sales process or a private beta. A catalog of approved clients is not one: any account connects through a listed client.",
   unknown: "Not yet established; the evidence says what was looked at.",
 };
 

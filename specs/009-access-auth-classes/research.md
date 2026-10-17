@@ -18,8 +18,10 @@ a separate `data/classes/` entity (rejected: one more file per server for two li
 ## R2. Which classes?
 
 **Access**: `public`, `closed`, `unknown`. The line is self-service: a server that needs an
-account anyone can create is public; one that needs a contract, a tenant's admin, an allowlist, a
-sales process or a private beta is closed. Three values keep the filter legible; the evidence note
+account anyone can create is public; one that needs a contract, a tenant's admin, a sales
+process or a private beta is closed. A catalog of approved clients (Figma, Vercel) is not an
+obstacle to the person, who connects through any listed client, so it does not make a server
+closed; the evidence note records it. Three values keep the filter legible; the evidence note
 says which obstacle makes a server closed.
 
 **Auth**: `oauth`, `api-key`, `none`, `unknown`. `oauth` covers every OAuth 2.x grant the server's

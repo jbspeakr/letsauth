@@ -131,7 +131,10 @@ with a pointer carries a disagreement note.
 - A server uses an OAuth grant without user consent (Plaid's client credentials): the class is
   `oauth` and the server's `notes` field keeps saying what kind; the matrix cells say what the
   authorization server supports.
-- A server is `closed` for access but `oauth` for auth (Stack Overflow for Teams): both are
+- A server admits only clients from a catalog it approves (Figma, Vercel): the person still
+  connects with any account through a listed client, so access is `public` and the evidence note
+  carries the catalog restriction; it is a fact about client authors, not about who can connect.
+- A server is `closed` for access but `oauth` for auth (Box, Zoom): both are
   shown; access never changes what the scanner does, since the scanner reads only what the server
   publishes to everyone.
 - A class statement cites a page that later changes: the statement is corrected in place by pull

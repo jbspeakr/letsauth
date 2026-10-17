@@ -13,8 +13,10 @@ export type AuthClaimed = z.infer<typeof authClaimed>;
 
 /**
  * Who can connect (009). `public`: anyone, creating an account by self-service where one is
- * needed. `closed`: an existing contract, a tenant an admin must enable, an allowlisted client, a
- * sales process or a private beta stands in the way. `unknown`: not yet established.
+ * needed. `closed`: an existing contract, a tenant an admin must enable, a sales process or a
+ * private beta stands in the way. A catalog of approved clients is not an obstacle to the person
+ * (any account connects through a listed client), so it does not make a server closed; the
+ * evidence note records it. `unknown`: not yet established.
  */
 export const accessClass = z.enum(["public", "closed", "unknown"]);
 export type AccessClass = z.infer<typeof accessClass>;
