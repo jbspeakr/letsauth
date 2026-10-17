@@ -111,7 +111,9 @@ test.describe("scan report page (US2)", () => {
     await expect(page.locator(".crumbs a[href='/mcp/']")).toBeVisible();
     await expect(page.locator(`.crumbs a[href='/mcp/servers/${first.server.id}/']`)).toBeVisible();
     await expect(page.locator(`a[href="/mcp/servers/${first.server.id}/"]`).first()).toBeVisible();
-    await expect(page.locator(`a[href="/mcp/servers/${first.server.id}/scan.json"]`).first()).toBeVisible();
+    await expect(
+      page.locator(`a[href="/mcp/servers/${first.server.id}/scan.json"]`).first(),
+    ).toBeVisible();
     await expect(page.locator("#rule-title")).toBeVisible();
     const response = await page.request.get(`/mcp/servers/${first.server.id}/scan.json`);
     expect(response.ok()).toBe(true);
