@@ -10,6 +10,8 @@
         "http://localhost/atlas/standards/rfc8693/index.html",
         "http://localhost/explorer/index.html",
         "http://localhost/explorer/mcp-authorization/index.html",
+        "http://localhost/breaches/index.html",
+        "http://localhost/breaches/cve-2025-4144/index.html",
         "http://localhost/scanner/index.html",
         "http://localhost/scanner/notion/index.html"
       ],
